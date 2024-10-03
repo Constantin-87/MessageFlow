@@ -1,0 +1,347 @@
+﻿@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject ApplicationDbContext DbContext
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject ILogger<UserAddEditForm> Logger
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManagementService UserManagementService
+
+
+@if(ApplicationUser is not null){
+    <EditForm Model="ApplicationUser" OnValidSubmit="HandleSubmit" FormName="AddEditUserForm">
+        <h3>
+            @Title
+        </h3>
+        @if (IsEditMode)
+        {
+            <input type="hidden" name=" ApplicationUser.Id" value="@ApplicationUser.Id" />
+        }
+
+        @if (!string.IsNullOrEmpty(DisplayMessage))
+        {
+            var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
+            <div class="alert alert-@statusMessageClass" role="alert">
+                @DisplayMessage
+            </div>
+        }
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+
+        <!-- Company Dropdown - Visible only for SuperAdmin -->
+        @if (isSuperAdmin)
+        {
+            <div class="form-floating mb-3">
+                <InputSelect ValueExpression="@(()=>ApplicationUser.CompanyId)"
+                             Value="@ApplicationUser.CompanyId"
+                             ValueChanged="@(async (int value) => await LoadTeamsForCompany(value))"
+                             class="form-control">
+                    <option value="">Select a Company</option>
+                    @foreach (var company in companies)
+                    {
+                        <option value="@company.Id">@company.CompanyName</option>
+                    }
+                </InputSelect>
+                <label for="company">Company</label>
+                <ValidationMessage For="() => ApplicationUser.CompanyId" class="text-danger" />
+            </div>
+        }
+
+        <!-- Team Multi-Select Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="teamDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Select Teams
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="teamDropdown">
+                @if (availableTeams?.Any() == true)
+                {
+                    @foreach (var team in availableTeams)
+                    {
+                        <li class="dropdown-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="team-@team.Id" @onchange="(e) => ToggleTeamSelection(team.Id, e)" checked="@IsTeamSelected(team.Id)" />
+                                <label class="form-check-label" for="team-@team.Id">
+                                    @team.TeamName
+                                </label>
+                            </div>
+                        </li>
+                    }
+                }
+            </ul>
+        </div>
+        <ValidationMessage For="() => selectedTeams" class="text-danger" />
+
+        <!-- Display selected teams below the dropdown -->
+        @if (selectedTeams.Any())
+        {
+            <h5>Selected Teams:</h5>
+            <ul>
+                @foreach (var teamId in selectedTeams)
+                {
+                    var selectedTeam = availableTeams.FirstOrDefault(t => t.Id == teamId);
+                    if (selectedTeam != null)
+                    {
+                        <li>@selectedTeam.TeamName</li>
+                    }
+                }
+            </ul>
+        }
+
+        <!-- Username -->
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="ApplicationUser.UserName" class="form-control" placeholder="Enter Username" />
+            <label for="username">Username</label>
+            <ValidationMessage For="() => ApplicationUser.UserName" class="text-danger" />
+        </div>
+
+        <!-- Email -->
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="ApplicationUser.Email" class="form-control" placeholder="Enter Email" />
+            <label for="email">Email</label>
+            <ValidationMessage For="() => ApplicationUser.Email" class="text-danger" />
+        </div>
+
+        <!-- Phone Number -->
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="ApplicationUser.PhoneNumber" class="form-control" placeholder="Enter Phone Number" />
+            <label for="phoneNumber">Phone Number</label>
+            <ValidationMessage For="() => ApplicationUser.PhoneNumber" class="text-danger" />
+        </div>
+
+        <!-- Password -->
+        <div class="form-floating mb-3">
+            <InputText @bind-Value="UsrPass"
+                       type="password"
+                       class="form-control"
+                       placeholder="Enter Password" />
+            <label for="password">Password</label>
+            <ValidationMessage For="() => UsrPass" class="text-danger" />
+        </div>
+
+        <!-- Role Dropdown -->
+        <div class="form-floating mb-3">
+            <InputSelect @bind-Value="selectedRole"
+                         class="form-control">
+                <option value="">Select a Role</option>
+                @foreach (var role in availableRoles)
+                {
+                    @if (isSuperAdmin || role != "SuperAdmin")
+                    {
+                        <option value="@role">@role</option>
+                    }
+                }
+            </InputSelect>
+            <label for="role">Role</label>
+            <ValidationMessage For="() => selectedRole" class="text-danger" />
+        </div>
+
+
+        <!-- Lockout Enabled Checkbox -->
+        <div class="form-check mb-3">
+            <InputCheckbox @bind-Value="ApplicationUser.LockoutEnabled" class="form-check-input" id="lockoutEnabled" />
+            <label class="form-check-label" for="lockoutEnabled">Lockout Enabled</label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-100 btn btn-lg btn-primary">Submit</button>
+    </EditForm>
+}
+
+
+@code {
+
+    [Parameter]
+    public bool IsEditMode { get; set; } = false;
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public EventCallback<ApplicationUser> OnValidSubmit { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+    private string Title => IsEditMode ? $"Edit User {ApplicationUser.UserName}" : "Create New User";
+    private bool isSuperAdmin = false;
+    private ApplicationUser ApplicationUser = new();
+    private List<Company> companies = new();
+    private List<Team> availableTeams = new();
+    private List<string> availableRoles = new();
+    private List<int> selectedTeams { get; set; } = new();
+    private string UsrPass = string.Empty;
+    private int currentCompanyId;
+    private string selectedRole = string.Empty;
+    private string? messageFromCookie;
+    private string? DisplayMessage => Message ?? messageFromCookie;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // When in edit mode, fetch the user data and prepopulate fields
+        if (IsEditMode && !string.IsNullOrEmpty(UserId))
+        {
+            // Load the user's details by their Id
+            ApplicationUser = await UserManager.FindByIdAsync(UserId);
+            if (ApplicationUser == null)
+            {
+                SetErrorMessage(new List<string> { "User not found" });
+                return;
+            }
+
+            // Load the teams for the user's company
+            if (ApplicationUser.CompanyId > 0)
+            {
+                await LoadTeamsForCompany(ApplicationUser.CompanyId);
+            }
+
+            var userRoles = await UserManagementService.GetUserRolesAsync(ApplicationUser.Id);
+            if (userRoles != null && userRoles.Any())
+            {
+                selectedRole = userRoles.First();
+            }
+
+            selectedTeams = await UserManagementService.GetUserTeamsAsync(ApplicationUser.Id);
+
+        }
+
+        // Fetch additional data (companies, roles, etc.)
+        var loggedInUser = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext.User);
+        if (loggedInUser != null)
+        {
+            isSuperAdmin = await UserManager.IsInRoleAsync(loggedInUser, "SuperAdmin");
+            currentCompanyId = loggedInUser.CompanyId;
+            companies = await DbContext.Companies.ToListAsync();
+            availableRoles = await UserManagementService.GetAvailableRolesAsync();
+
+            if (!isSuperAdmin)
+            {
+                ApplicationUser.CompanyId = currentCompanyId;
+                await LoadTeamsForCompany(currentCompanyId);
+            }
+
+            // Remove SuperAdmin role if logged-in user is not a SuperAdmin or selected company is not company 00000
+            UpdateSuperAdminRole();
+        }
+
+        // Check for any status messages stored in cookies
+        if (HttpContext != null && HttpContext.Request.Cookies.ContainsKey(IdentityRedirectManager.StatusCookieName))
+        {
+            messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            (bool success, string errorMessage) result;
+
+            if (!IsEditMode)
+            {
+                // Create user
+                result = await UserManagementService.CreateUserAsync(ApplicationUser, UsrPass, selectedTeams, selectedRole);
+            }
+            else
+            {
+                // Update user
+                result = await UserManagementService.UpdateUserAsync(ApplicationUser, UsrPass, selectedTeams, selectedRole);
+            }
+
+            if (!result.success)
+            {
+                SetErrorMessage(new List<string> { result.errorMessage });
+            }
+            else
+            {
+                SetSuccessMessage(result.errorMessage);
+                await Task.Delay(2000);
+                if (OnValidSubmit.HasDelegate)
+                {
+                    await OnValidSubmit.InvokeAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "An error occurred while handling user creation/update.");
+            SetErrorMessage(new List<string> { "An unexpected error occurred. Please try again." });
+        }
+    }
+
+    
+    private async Task LoadTeamsForCompany(int companyId)
+    {
+        if (companyId > 0)
+        {
+            ApplicationUser.CompanyId = companyId;
+            availableTeams = await UserManagementService.GetTeamsForCompanyAsync(companyId);
+
+            // Dynamically update the roles based on the selected company
+            UpdateSuperAdminRole();
+
+            // No need to call ToggleTeamSelection, just ensure selectedTeams is correctly populated
+            foreach (var teamId in selectedTeams)
+            {
+                if (!selectedTeams.Contains(teamId))
+                {
+                    selectedTeams.Add(teamId);
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void UpdateSuperAdminRole()
+    {
+        // Remove SuperAdmin role if the logged-in user is not a SuperAdmin or the selected company is not company 00000
+        if (!(isSuperAdmin && ApplicationUser.CompanyId == 6))
+        {
+            availableRoles.Remove("SuperAdmin");
+        }
+        else if (!availableRoles.Contains("SuperAdmin"))
+        {
+            // Ensure SuperAdmin is re-added if the conditions are met
+            availableRoles.Add("SuperAdmin");
+        }
+    }
+
+    private void ToggleTeamSelection(int teamId, ChangeEventArgs e)
+    {
+        bool isChecked = (bool)e.Value;
+        if (isChecked)
+        {
+            if (!selectedTeams.Contains(teamId))
+            {
+                selectedTeams.Add(teamId);
+            }
+        }
+        else
+        {
+            if (selectedTeams.Contains(teamId))
+            {
+                selectedTeams.Remove(teamId);
+            }
+        }
+    }
+
+    private bool IsTeamSelected(int teamId) => selectedTeams.Contains(teamId);
+    
+    private void SetErrorMessage(IEnumerable<string> errors)
+    {
+        Message = $"Error: {string.Join(", ", errors)}";
+    }
+
+    private void SetSuccessMessage(string message)
+    {
+        Message = message;
+    }
+}

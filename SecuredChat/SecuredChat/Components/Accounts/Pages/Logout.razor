@@ -1,0 +1,23 @@
+﻿@page "/Accounts/Logout"
+@inject SignInManager<ApplicationUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject ILogger<Logout> Logger
+
+<PageTitle>Logging Out</PageTitle>
+
+<h3>Logging Out...</h3>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Perform the logout process
+        await SignInManager.SignOutAsync();
+
+        // Log the logout action
+        Logger.LogInformation("User logged out.");
+        System.Console.WriteLine("User logged out at {0}", DateTime.Now);
+
+        // Redirect to home page after logout
+        NavigationManager.NavigateTo("/");
+    }
+}

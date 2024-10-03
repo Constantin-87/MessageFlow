@@ -1,0 +1,193 @@
+﻿@page "/Accounts/UserAccounts"
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject UserManagementService UserManagementService
+
+<h3>User Accounts</h3>
+
+<!-- Button to create a new user account -->
+<button class="btn btn-primary mb-3" @onclick="NavigateToCreateUser">Create New User Account</button>
+
+<!-- Table to display the user accounts -->
+@if (users == null)
+{
+    <p>Loading...</p>
+}
+else if (users.Count == 0)
+{
+    <p>No user accounts available.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Company Name</th>
+                <th>Role</th>
+                <th>Teams</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>@user.PhoneNumber</td>
+                    <td>@user.CompanyName</td>
+                    <td>@user.Role</td> <!-- Display the role of the user -->
+                    <td>@string.Join(", ", user.Teams)</td> <!-- Display teams -->
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => NavigateToEditUser(user.Id)">Edit</button> <!-- Edit button -->
+                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(user.Id, user.UserName)">Delete</button> <!-- Delete button -->
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Delete confirmation -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal show" tabindex="-1" role="dialog" style="display:block;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="close" aria-label="Close" @onclick="CancelDelete">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the user @userNameToDelete?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="DeleteUser">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<UserInfo> users;
+    private bool showDeleteConfirmation = false;
+    private string? userIdToDelete;
+    private string? userNameToDelete;
+    private int currentUserCompanyId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<UserInfo> userList = new List<UserInfo>();
+        // Get the logged-in user
+        var loggedInUser = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext.User);
+
+        if (loggedInUser != null)
+        {
+            currentUserCompanyId = loggedInUser.CompanyId;
+
+            if (await UserManager.IsInRoleAsync(loggedInUser, "SuperAdmin"))
+            {
+                // If SuperAdmin, load all users
+                users = await DbContext.Users
+                    .Select(u => new UserInfo
+                        {
+                            Id = u.Id,
+                            UserName = u.UserName,
+                            Email = u.Email,
+                            PhoneNumber = u.PhoneNumber,
+                            CompanyName = DbContext.Companies.FirstOrDefault(c => c.Id == u.CompanyId).CompanyName
+                        }).ToListAsync();               
+            }
+            else
+            {
+                // Otherwise, load users for the logged-in user's company
+                users = await DbContext.Users
+                    .Where(u => u.CompanyId == currentUserCompanyId)
+                    .Select(u => new UserInfo
+                        {
+                            Id = u.Id,
+                            UserName = u.UserName,
+                            Email = u.Email,
+                            PhoneNumber = u.PhoneNumber,
+                            CompanyName = DbContext.Companies.FirstOrDefault(c => c.Id == u.CompanyId).CompanyName
+                        }).ToListAsync();               
+            }
+
+            // Now fetch roles and teams asynchronously for each user
+            foreach (var user in users)
+            {
+                // Fetch user roles
+                user.Role = (await UserManager.GetRolesAsync(await UserManager.FindByIdAsync(user.Id))).FirstOrDefault() ?? string.Empty;
+
+                // Fetch teams
+                user.Teams = await DbContext.UserTeams
+                    .Where(ut => ut.UserId == user.Id)
+                    .Select(ut => DbContext.Teams.FirstOrDefault(t => t.Id == ut.TeamId).TeamName ?? string.Empty)
+                    .ToListAsync();
+            }
+
+            // users = userList;
+        }
+    }
+
+    private void NavigateToCreateUser()
+    {
+        NavigationManager.NavigateTo("/Accounts/Create-user");
+    }
+
+    private void NavigateToEditUser(string userId)
+    {
+        NavigationManager.NavigateTo($"/Accounts/Edit-user/{userId}");
+    }
+
+    private void ConfirmDelete(string userId, string userName)
+    {
+        userIdToDelete = userId;
+        userNameToDelete = userName;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+        userIdToDelete = null;
+        userNameToDelete = null;
+    }
+
+    private async Task DeleteUser()
+    {
+        var success = await UserManagementService.DeleteUserAsync(userIdToDelete);
+        if (success)
+        {
+            // Remove user from the list after deletion
+            users.Remove(users.FirstOrDefault(u => u.Id == userIdToDelete));
+        }
+
+        // Hide the confirmation dialog
+        CancelDelete();
+    }
+
+    // DTO to hold user information with associated company name
+    private class UserInfo
+    {
+        public string Id { get; set; } = string.Empty; // Ensure non-null value
+        public string UserName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty; // Ensure Role is non-nullable
+        public List<string> Teams { get; set; } = new(); // Initialize with an empty list
+    }
+}

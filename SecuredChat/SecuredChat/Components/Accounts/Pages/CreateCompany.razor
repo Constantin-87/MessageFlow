@@ -1,0 +1,28 @@
+﻿@page "/Accounts/Create-company"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject CompanyManagementService CompanyManagementService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Company</PageTitle>
+
+<!-- Pass the company object down to the CompanyForm component -->
+<CompanyAddEditForm IsEditMode="false" Company="company" OnValidSubmit="HandleSubmit" />
+
+@code {
+    private Company company = new Company();
+
+    private async Task HandleSubmit()
+    {
+        var result = await CompanyManagementService.CreateCompanyAsync(company);
+        if (result.success)
+        {
+            NavigationManager.NavigateTo("/Accounts/CompanyAccounts");
+        }
+        else
+        {
+            // Handle the error message, e.g., show a notification to the user
+        }
+    }
+}

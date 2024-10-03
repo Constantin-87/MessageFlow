@@ -1,0 +1,35 @@
+﻿@page "/edit-company/{companyId:int}"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject CompanyManagementService CompanyManagementService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Company</PageTitle>
+
+<CompanyAddEditForm IsEditMode="true" Company="company" OnValidSubmit="HandleSubmit" />
+
+@code {
+    private Company company = new Company();
+
+    [Parameter]
+    public int companyId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        company = await CompanyManagementService.GetCompanyByIdAsync(companyId) ?? new Company();
+    }
+
+    private async Task HandleSubmit()
+    {
+        var result = await CompanyManagementService.UpdateCompanyAsync(company);
+        if (result.success)
+        {
+            NavigationManager.NavigateTo("/Accounts/CompanyAccounts");
+        }
+        else
+        {
+            // Handle the error message
+        }
+    }
+}
