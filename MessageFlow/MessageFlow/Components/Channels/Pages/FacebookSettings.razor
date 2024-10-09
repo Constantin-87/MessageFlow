@@ -1,0 +1,92 @@
+﻿@page "/ChannelSetup/{companyId:int}/Facebook"
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject FacebookService FacebookService
+@inject NavigationManager NavigationManager
+@inject CompanyManagementService CompanyService
+
+<h3>Facebook Connection Settings</h3>
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else if (company != null)
+{
+    <EditForm Model="facebookSettings" OnValidSubmit="HandleValidSubmit" FormName="FacebookSettingsForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="pageId" class="form-label">Page ID</label>
+            <InputText id="pageId" class="form-control" @bind-Value="facebookSettings.PageId" />
+        </div>
+
+        <div class="mb-3">
+            <label for="appId" class="form-label">App ID</label>
+            <InputText id="appId" class="form-control" @bind-Value="facebookSettings.AppId" />
+        </div>
+
+        <div class="mb-3">
+            <label for="appSecret" class="form-label">App Secret</label>
+            <InputText id="appSecret" class="form-control" @bind-Value="facebookSettings.AppSecret" />
+        </div>
+
+        <div class="mb-3">
+            <label for="webhookVerifyToken" class="form-label">Webhook Verify Token</label>
+            <InputText id="webhookVerifyToken" class="form-control" @bind-Value="facebookSettings.WebhookVerifyToken" />
+        </div>
+
+        <div class="mb-3">
+            <label for="accessToken" class="form-label">Access Token</label>
+            <InputText type="text" class="form-control" id="accessToken" @bind-Value="facebookSettings.AccessToken" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+    </EditForm>
+}
+else
+{
+    <p>Company not found.</p>
+}
+
+@code {
+    private FacebookSettingsModel facebookSettings = new();
+    private Company? company;
+    private bool isLoading = true;
+
+
+    [Parameter]
+    public int companyId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        company = await CompanyService.GetCompanyByIdAsync(companyId);
+        if (company != null)
+        {
+            facebookSettings = await FacebookService.GetFacebookSettingsAsync(companyId) ?? new FacebookSettingsModel();
+        }
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var success = await FacebookService.SaveFacebookSettingsAsync(companyId, facebookSettings);
+        if (success)
+        {
+            NavigationManager.NavigateTo($"/ChannelSetup");
+        }
+        else
+        {
+            // Handle error if needed
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/ChannelSetup");
+    }
+}
+

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35303.130
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageFlow", "MessageFlow\MessageFlow\MessageFlow.csproj", "{F77FE31D-0E60-4340-95C8-AF9BBC79CA26}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MessageFlow.Client", "MessageFlow\MessageFlow.Client\MessageFlow.Client.csproj", "{D26C3F9F-5065-43B4-B7E0-BE10CBB8BD36}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F77FE31D-0E60-4340-95C8-AF9BBC79CA26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F77FE31D-0E60-4340-95C8-AF9BBC79CA26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F77FE31D-0E60-4340-95C8-AF9BBC79CA26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F77FE31D-0E60-4340-95C8-AF9BBC79CA26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D26C3F9F-5065-43B4-B7E0-BE10CBB8BD36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D26C3F9F-5065-43B4-B7E0-BE10CBB8BD36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D26C3F9F-5065-43B4-B7E0-BE10CBB8BD36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D26C3F9F-5065-43B4-B7E0-BE10CBB8BD36}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0CD9102C-CCB2-4AB5-832B-90E761CE7447}
+	EndGlobalSection
+EndGlobal

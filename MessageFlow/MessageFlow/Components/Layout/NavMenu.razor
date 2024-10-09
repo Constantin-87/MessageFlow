@@ -1,0 +1,115 @@
+﻿@implements IDisposable
+@inject NavigationManager NavigationManager
+@rendermode RenderMode.InteractiveServer
+
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Secured Chat</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+
+        <AuthorizeView Roles="Agent, AgentManager, Admin, SuperAdmin">
+        <!-- Agent Workspace -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/AgentWorkspace">
+                <span class="bi bi-chat-left-text" aria-hidden="true"></span> Agent Workspace
+            </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="AgentManager, Admin, SuperAdmin">
+        <!-- Manager Workspace -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/AgentManagerWorkspace">
+                <span class="bi bi-clipboard-data" aria-hidden="true"></span> Manager Workspace
+            </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Roles="Admin, SuperAdmin">
+        <!-- Manage Dropdown -->
+        <div class="nav-item px-3 dropdown">
+            <button class="nav-link dropdown-toggle" href="#" @onclick="()=>expandSubMenu = !expandSubMenu">
+                <span class="bi bi-kanban" aria-hidden="true"></span> Manage
+            </button>
+
+            @if (expandSubMenu)
+            {
+
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3 dropdown">
+                        <!-- User Accounts -->
+                        <NavLink class="dropdown-item" href="/Accounts/UserAccounts">
+                            <i class="bi bi-person-fill" aria-hidden="true"></i> User Accounts
+                        </NavLink>
+                    </li>
+
+                        <AuthorizeView Roles="SuperAdmin" Context="CompanyAccountsContext">
+                            <li class="nav-item px-3 dropdown">
+                                <!-- Company Accounts -->
+                                <NavLink class="dropdown-item" href="/Accounts/CompanyAccounts">
+                                    <i class="bi bi-building" aria-hidden="true"></i> Company Accounts
+                                </NavLink>
+                            </li>
+                        </AuthorizeView>
+
+                    <li class="nav-item px-3 dropdown">
+                        <!-- App Setup -->
+                        <NavLink class="dropdown-item" href="/AppSetup">
+                            <i class="bi bi-gear" aria-hidden="true"></i> App Setup
+                        </NavLink>
+                    </li>
+
+                        <AuthorizeView Roles="Admin, SuperAdmin" Context="ChannelSetUpContext">
+                            <li class="nav-item px-3">
+                                <NavLink class="dropdown-item" href="/ChannelSetup">
+                                    <i class="bi bi-gear"></i> Channel Setup
+                                </NavLink>
+                            </li>
+                        </AuthorizeView>
+
+                </ul>
+            }
+            </div>
+        </AuthorizeView>
+
+        <AuthorizeView>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/Accounts/Logout">
+                    <span class="bi bi-arrow-bar-left" aria-hidden="true"></span> Logout
+                </NavLink>
+            </div>
+        </AuthorizeView>
+
+    </nav>
+</div>
+
+@code {
+    private string? currentUrl;
+    private bool expandSubMenu;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}
