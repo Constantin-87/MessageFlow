@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.Components;
 using MessageFlow.Components.Accounts.Services;
@@ -51,6 +50,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddAntiforgery();
 
+builder.Logging.AddDebug();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     // Password settings
@@ -74,7 +75,23 @@ builder.Services.Configure<IdentityOptions>(options =>
 
 builder.WebHost.UseUrls("http://*:5002", "https://*:7164");
 
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+}).AddJsonProtocol();
+
+// Register HttpClient for server-side components
+builder.Services.AddScoped<HttpClient>(sp =>
+{
+    var client = new HttpClient
+    {
+        BaseAddress = new Uri(builder.Configuration.GetValue<string>("ServerBaseAddress"))
+    };
+    return client;
+});
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -98,18 +115,19 @@ app.UseRouting();  // Ensure that UseRouting comes before authentication
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map SignalR hub
+app.MapHub<ChatHub>("/chatHub");
+
 app.MapIdentityApi<ApplicationUser>(); // commented out to make user_logged out redirection
 
 app.UseAntiforgery();
 
 app.MapControllers();
 
+// Map Razor Components (Blazor Server)
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(MessageFlow.Client._Imports).Assembly);
-
-//// Add additional endpoints required by Identity components
-//app.MapAdditionalIdentityEndpoints();
 
 app.Run();

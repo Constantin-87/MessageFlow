@@ -1,0 +1,25 @@
+﻿<div class="team-members">
+    <h4>Team Members</h4>
+    <ul>
+        @foreach (var member in TeamMembersList)
+        {
+            <li>@member.Name (@member.Status)</li>
+        }
+    </ul>
+</div>
+
+@code {
+    private List<TeamMember> TeamMembersList = new();
+
+    public void UpdateTeamMembers(List<TeamMember> members)
+    {
+        TeamMembersList = members;
+        StateHasChanged();
+    }
+
+    public class TeamMember
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Status { get; set; } = "Offline"; // Example: "Online", "Busy"
+    }
+}

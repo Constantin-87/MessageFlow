@@ -1,0 +1,34 @@
+﻿<div class="new-conversations-list">
+    <h4>New Conversations</h4>
+    <ul>
+        @foreach (var conversation in Conversations)
+        {
+            <li @onclick="() => SelectConversation(conversation.Id)">
+                @conversation.Title
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnConversationSelected { get; set; }
+
+    private List<Conversation> Conversations = new();
+
+    public void AddConversation(Conversation conversation)
+    {
+        Conversations.Add(conversation);
+        StateHasChanged();
+    }
+
+    private async Task SelectConversation(string conversationId)
+    {
+        await OnConversationSelected.InvokeAsync(conversationId);
+    }
+
+    public class Conversation
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; } = string.Empty;
+    }
+}

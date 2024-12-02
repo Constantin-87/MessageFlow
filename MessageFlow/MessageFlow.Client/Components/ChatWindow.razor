@@ -1,0 +1,47 @@
+﻿<div class="chat-window">
+    <!-- Yellow Title Bar -->
+    <div class="chat-title">
+        Conversation with: @ConversationPartner
+    </div>
+
+    <!-- Green Chat History Area -->
+    <div class="chat-history">
+        <ul>
+            @foreach (var message in Messages)
+            {
+                <li>@message</li>
+            }
+        </ul>
+    </div>
+
+    <!-- Blue Input Field and Pink Send Button -->
+    <div class="chat-input-area">
+        <input @bind="MessageText" placeholder="Type a message..." />
+        <button @onclick="SendMessage">Send</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? UserId { get; set; }
+    [Parameter] public EventCallback<string> OnNewMessage { get; set; }
+
+    private string ConversationPartner = "Username"; // Replace with actual logic to fetch from Hub
+    private List<string> Messages = new();
+    private string MessageText = "";
+
+    public void AddMessage(string message)
+    {
+        Messages.Add(message);
+        StateHasChanged();
+    }
+
+    private async Task SendMessage()
+    {
+        if (!string.IsNullOrWhiteSpace(MessageText))
+        {
+            await OnNewMessage.InvokeAsync(MessageText);
+            Messages.Add($"You: {MessageText}");
+            MessageText = string.Empty;
+        }
+    }
+}

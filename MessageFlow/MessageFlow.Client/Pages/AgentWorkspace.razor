@@ -1,0 +1,96 @@
+﻿@page "/AgentWorkspace"
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@using Microsoft.AspNetCore.SignalR.Client
+
+<link href="css/AgentWorkspace.css" rel="stylesheet" />
+
+<h3>Agent Workspace</h3>
+
+<div class="workspace-container">
+    <!-- Team Members List (Left Column) -->
+    <div class="team-members">
+        <TeamMembers @ref="TeamMembersRef" />
+    </div>
+
+    <!-- Chat Section (Center Column) -->
+    <div class="chat-section">
+        <ChatWindow @ref="ChatWindowRef" UserId="@UserId" OnNewMessage="SendMessageToHub" />
+    </div>
+
+    <!-- New Conversations List (Right Column) -->
+    <div class="new-conversations-list">
+        <NewConversationsList @ref="NewConversationsListRef" OnConversationSelected="SelectConversation" />
+    </div>
+</div>
+
+@code {
+    private HubConnection? hubConnection;
+    private ChatWindow? ChatWindowRef;
+    private NewConversationsList? NewConversationsListRef;
+    private TeamMembers? TeamMembersRef;
+
+    private string? UserId = "user1"; // Replace with actual logic to fetch user ID
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl("https://localhost:7164/chatHub")
+            .AddJsonProtocol()
+            .Build();
+
+        // Handle receiving messages
+        hubConnection.On<string>("ReceiveMessage", (message) =>
+        {
+            ChatWindowRef?.AddMessage(message);
+        });
+
+        // Handle new conversations added
+        hubConnection.On<NewConversationsList.Conversation>("NewConversationAdded", (conversation) =>
+        {
+            NewConversationsListRef?.AddConversation(conversation);
+        });
+
+        // Handle team members update
+        hubConnection.On<List<TeamMembers.TeamMember>>("UpdateTeamMembers", (members) =>
+        {
+            TeamMembersRef?.UpdateTeamMembers(members);
+        });
+
+        await hubConnection.StartAsync();
+
+        // Add hardcoded team members for demo
+        TeamMembersRef?.UpdateTeamMembers(new List<TeamMembers.TeamMember>
+        {
+            new() { Name = "Alice", Status = "Online" },
+            new() { Name = "Bob", Status = "Busy" },
+            new() { Name = "Charlie", Status = "Offline" },
+            new() { Name = "Diana", Status = "Online" },
+            new() { Name = "Eve", Status = "Away" }
+        });
+    }
+
+    private async Task SendMessageToHub(string message)
+    {
+        if (hubConnection is not null && UserId is not null)
+        {
+            await hubConnection.SendAsync("SendMessageToAgent", UserId, message);
+        }
+    }
+
+    private async Task SelectConversation(string conversationId)
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("SelectConversation", conversationId);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

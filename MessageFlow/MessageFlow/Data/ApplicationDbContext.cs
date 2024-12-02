@@ -4,6 +4,7 @@
     using Microsoft.EntityFrameworkCore;
     using MessageFlow.Models;
 
+
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)

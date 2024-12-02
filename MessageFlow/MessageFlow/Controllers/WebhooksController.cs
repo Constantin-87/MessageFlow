@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using MessageFlow.Components.Accounts.Services;
 using System.Text;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
 
 
 [Route("api/[controller]")]
@@ -13,12 +14,14 @@ public class WebhookController : ControllerBase
     private readonly ILogger<WebhookController> _logger;
     private readonly FacebookService _facebookService;
     private readonly CompanyManagementService _companyService;
+    private readonly IHubContext<ChatHub> _chatHub;
 
-    public WebhookController(ILogger<WebhookController> logger, FacebookService facebookService, CompanyManagementService companyService)
+    public WebhookController(ILogger<WebhookController> logger, FacebookService facebookService, CompanyManagementService companyService, IHubContext<ChatHub> chatHub)
     {
         _logger = logger;
         _facebookService = facebookService;
         _companyService = companyService;
+        _chatHub = chatHub;
     }
 
     [HttpGet]
@@ -76,8 +79,13 @@ public class WebhookController : ControllerBase
 
                             _logger.LogInformation($"Message received from {senderId} for Page ID {pageId}: {messageText}");
 
-                            // Process the message according to your logic
-                            // e.g., Forward to your app's logic, respond to the message, etc.
+                            // Send message to connected agents via SignalR
+                            await _chatHub.Clients.All.SendAsync("ReceiveMessage", new
+                            {
+                                senderId,
+                                pageId,
+                                messageText
+                            });
                         }
                     }
                     else
