@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using System.Diagnostics.CodeAnalysis;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Components.Channels.Services
 {
-    internal sealed class IdentityRedirectManager(NavigationManager navigationManager)
+    internal class IdentityRedirectManager(NavigationManager navigationManager)
     {
         public const string StatusCookieName = "Identity.StatusMessage";
 

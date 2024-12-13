@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="MessageFlow.Components.Accounts.Services.CompanyManagementService">
+    <Position X="26.75" Y="9.75" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AAABQAAAAAAMAAAAAAAAAAAAoABAAAAAAAAAAAgAAAA=</HashCode>
+      <FileName>Components\Accounts\Services\CompanyManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.IdentityNoOpEmailSender" BaseTypeListCollapsed="true">
+    <Position X="18.5" Y="8.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAIAAAAIAAAAAAAAAAAAAAAgAAAIAA=</HashCode>
+      <FileName>Components\Accounts\Services\IdentityNoOpEmailSender.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.IdentityRedirectManager">
+    <Position X="27.75" Y="5.5" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAAAAAAAAAIAAAEQAAAAEAAAAAAAQIAAA=</HashCode>
+      <FileName>Components\Accounts\Services\IdentityRedirectManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.IdentityUserAccessor">
+    <Position X="16.5" Y="5.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Components\Accounts\Services\IdentityUserAccessor.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.PersistingRevalidatingAuthenticationStateProvider">
+    <Position X="23.75" Y="5.5" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AUAAgAAAASAAAAAAAAAIAAAAAAAAAAAUABAAQAAACAA=</HashCode>
+      <FileName>Components\Accounts\Services\PersistingRevalidatingAuthenticationStateProvider.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.TeamsManagementService">
+    <Position X="22" Y="3" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAAgAAAAIAAAAAAAAAACAAAAAAA=</HashCode>
+      <FileName>Components\Accounts\Services\TeamsManagementService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Components.Accounts.Services.FacebookService">
+    <Position X="26" Y="3" Width="4.75" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAgAAAAAAAAEAAAAAAAIAgAAAAA=</HashCode>
+      <FileName>Components\Channels\Services\FacebookService.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UserManagementService">
+    <Position X="6.5" Y="3.25" Width="3.75" />
+    <TypeIdentifier>
+      <HashCode>AAABBABAAAAAAgAAAAAIAAAgIgABABAAAAAAAAQEAAE=</HashCode>
+      <FileName>Components\Accounts\Services\UserManagementService.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_roleManager" />
+      <Field Name="_userManager" />
+      <Field Name="_dbContext" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="FacebookWebhook">
+    <Position X="14.75" Y="7.5" Width="3.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAQAAACAAAAAAIAAEAAAQAAgAAAAAAAA=</HashCode>
+      <FileName>Controllers\FacebookWebhook.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ChatHub">
+    <Position X="16.5" Y="3.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAABAAAQAAAAAAAAAAAAAAAgg=</HashCode>
+      <FileName>Hubs\ChatHub.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Data.ApplicationDbContext">
+    <Position X="6.5" Y="7" Width="4" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAAAAAAAAAAAAAAAAFAAgAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>Data\ApplicationDbContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Models.ApplicationUser">
+    <Position X="10.75" Y="4.25" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAIAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\ApplicationUser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Models.Company">
+    <Position X="21.5" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAACSAAAAAAAAAAAAAAAAAIAAAgAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Company.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Models.FacebookSettingsModel">
+    <Position X="19" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAIAAAAAAAAEAAAAUAAAAAAAAAAAAAQAAAA=</HashCode>
+      <FileName>Models\FacebookSettingsModel.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Models.Team">
+    <Position X="24" Y="0.5" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAIAAAAAAAAAAAABBAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Models\Team.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageFlow.Models.UserTeam">
+    <Position X="27" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAAAAAgCAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>Models\UserTeam.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.RoleManager&lt;TRole&gt;" Collapsed="true">
+    <Position X="11.75" Y="5.75" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.IdentityUser" Collapsed="true">
+    <Position X="11.25" Y="3.25" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.UserManager&lt;TUser&gt;" Collapsed="true">
+    <Position X="11.75" Y="6.5" Width="1.75" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityDbContext&lt;TUser&gt;">
+    <Position X="10.75" Y="7.5" Width="2.75" />
+    <TypeIdentifier />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

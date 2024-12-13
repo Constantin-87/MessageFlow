@@ -1,10 +1,14 @@
-﻿<div class="new-conversations-list">
+﻿@rendermode RenderMode.InteractiveWebAssembly
+
+<div class="new-conversations-list">
     <h4>New Conversations</h4>
     <ul>
         @foreach (var conversation in Conversations)
         {
-            <li @onclick="() => SelectConversation(conversation.Id)">
+            <li>
                 @conversation.Title
+                <button @onclick="() => AssignToSelf(conversation)">Assign to Myself</button>
+                <button @onclick="() => AssignToOther(conversation)">Assign to Different User</button>
             </li>
         }
     </ul>
@@ -12,6 +16,7 @@
 
 @code {
     [Parameter] public EventCallback<string> OnConversationSelected { get; set; }
+    [Parameter] public EventCallback<Conversation> OnConversationAssigned { get; set; }
 
     private List<Conversation> Conversations = new();
 
@@ -19,16 +24,31 @@
     {
         Conversations.Add(conversation);
         StateHasChanged();
+        Console.WriteLine($"Adding conversation: {conversation.Title}");
     }
 
-    private async Task SelectConversation(string conversationId)
+    private async Task AssignToSelf(Conversation conversation)
     {
-        await OnConversationSelected.InvokeAsync(conversationId);
+        await OnConversationAssigned.InvokeAsync(conversation);
+        Conversations.Remove(conversation);
+        StateHasChanged();
+    }
+
+    private async Task AssignToOther(Conversation conversation)
+    {
+        // Placeholder for assigning to another user
+        await OnConversationSelected.InvokeAsync(conversation.Id);
     }
 
     public class Conversation
     {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Title { get; set; } = string.Empty;
+        public string SenderId { get; set; } = string.Empty;
+        public int CompanyID { get; set; } = 0;
+        public string MessageText { get; set; } = string.Empty;
+        public bool IsAssigned { get; set; } = false;
+        public string? AssignedUserId { get; set; }
     }
+
 }

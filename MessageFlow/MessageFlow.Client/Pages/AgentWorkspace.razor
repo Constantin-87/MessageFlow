@@ -1,26 +1,30 @@
 ﻿@page "/AgentWorkspace"
+@attribute [Authorize]
+@rendermode RenderMode.InteractiveWebAssembly
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
-@using Microsoft.AspNetCore.SignalR.Client
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@implements IAsyncDisposable
+
 
 <link href="css/AgentWorkspace.css" rel="stylesheet" />
 
 <h3>Agent Workspace</h3>
 
 <div class="workspace-container">
-    <!-- Team Members List (Left Column) -->
+    <!-- Team Members List -->
     <div class="team-members">
-        <TeamMembers @ref="TeamMembersRef" />
+        <TeamMembers @ref="TeamMembersRef" CurrentUserName="@UserName" />
     </div>
 
-    <!-- Chat Section (Center Column) -->
+    <!-- Chat Section -->
     <div class="chat-section">
         <ChatWindow @ref="ChatWindowRef" UserId="@UserId" OnNewMessage="SendMessageToHub" />
     </div>
 
-    <!-- New Conversations List (Right Column) -->
+    <!-- New Conversations List -->
     <div class="new-conversations-list">
-        <NewConversationsList @ref="NewConversationsListRef" OnConversationSelected="SelectConversation" />
+        <NewConversationsList @ref="NewConversationsListRef" OnConversationAssigned="AssignToSelf" />
     </div>
 </div>
 
@@ -30,12 +34,32 @@
     private NewConversationsList? NewConversationsListRef;
     private TeamMembers? TeamMembersRef;
 
-    private string? UserId = "user1"; // Replace with actual logic to fetch user ID
+    private string? UserId;
+    private string? UserCompanyId;
+    private string? UserTeams;
+    private string? UserName;
 
     protected override async Task OnInitializedAsync()
     {
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        UserId = user?.FindFirst("UserId")?.Value;
+        UserCompanyId = user?.FindFirst("CompanyId")?.Value;
+        UserName = user?.Identity?.Name;
+
+        // Extract all teams from UserTeams string
+        var userTeamsString = user?.FindFirst("UserTeams")?.Value;
+        var userTeams = ParseUserTeams(userTeamsString);
+
+        // Create a string with all team IDs and names
+        var userTeamsJson = System.Text.Json.JsonSerializer.Serialize(userTeams);
+
+        Console.WriteLine($"Parsed UserTeams: {userTeamsJson}");
+
         hubConnection = new HubConnectionBuilder()
-            .WithUrl("https://localhost:7164/chatHub")
+            .WithUrl($"https://localhost:7164/chatHub?companyId={UserCompanyId}&teams={Uri.EscapeDataString(userTeamsJson)}")
             .AddJsonProtocol()
             .Build();
 
@@ -46,51 +70,105 @@
         });
 
         // Handle new conversations added
-        hubConnection.On<NewConversationsList.Conversation>("NewConversationAdded", (conversation) =>
+        hubConnection.On<NewConversationsList.Conversation>("NewConversationAdded", async (conversation) =>
         {
-            NewConversationsListRef?.AddConversation(conversation);
+            await InvokeAsync(() => NewConversationsListRef?.AddConversation(conversation));
         });
 
-        // Handle team members update
-        hubConnection.On<List<TeamMembers.TeamMember>>("UpdateTeamMembers", (members) =>
+        hubConnection.On<string>("AssignConversation", async (conversationId) =>
         {
-            TeamMembersRef?.UpdateTeamMembers(members);
+            await InvokeAsync(() =>
+            {
+                ChatWindowRef?.AddMessage($"Conversation {conversationId} assigned to you.");
+            });
         });
 
-        await hubConnection.StartAsync();
-
-        // Add hardcoded team members for demo
-        TeamMembersRef?.UpdateTeamMembers(new List<TeamMembers.TeamMember>
+        hubConnection.On<TeamMembers.TeamMember>("AddTeamMember", (member) =>
         {
-            new() { Name = "Alice", Status = "Online" },
-            new() { Name = "Bob", Status = "Busy" },
-            new() { Name = "Charlie", Status = "Offline" },
-            new() { Name = "Diana", Status = "Online" },
-            new() { Name = "Eve", Status = "Away" }
+            Console.WriteLine($"Adding team member: {member.Name} to team: {member.Team}");
+            TeamMembersRef?.AddTeamMember(member);
         });
+
+        hubConnection.On<TeamMembers.TeamMember>("RemoveTeamMember", (member) =>
+        {
+            Console.WriteLine($"Removing team member: {member.Name} from team: {member.Team}");
+            TeamMembersRef?.RemoveTeamMember(member);
+        });
+
+        if (UserCompanyId != null)
+        {
+            Console.WriteLine("Hub connection started successfully. with: UserCompanyId= " + UserCompanyId + " UserTeam: " + UserTeams + " UserId: " + UserId);
+            await hubConnection.StartAsync();
+        }
+        else
+        {
+            Console.WriteLine("Company ID is missing. Cannot start hub connection.");
+        }
     }
+
+    public class Team
+    {
+        public int TeamId { get; set; }
+        public string TeamName { get; set; } = string.Empty;
+    }
+
+    private List<Team> ParseUserTeams(string? userTeamsString)
+    {
+        var teams = new List<Team>();
+
+        if (!string.IsNullOrEmpty(userTeamsString))
+        {
+            var teamEntries = userTeamsString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var entry in teamEntries)
+            {
+                var parts = entry.Split(':', 2);
+                if (parts.Length == 2 && int.TryParse(parts[0], out var teamId))
+                {
+                    var teamName = parts[1].Trim();
+                    teams.Add(new Team { TeamId = teamId, TeamName = teamName });
+                }
+            }
+        }
+
+        return teams;
+    }
+
+
 
     private async Task SendMessageToHub(string message)
     {
-        if (hubConnection is not null && UserId is not null)
+        if (hubConnection is not null && UserId is not null && UserCompanyId is not null && UserTeams is not null)
         {
-            await hubConnection.SendAsync("SendMessageToAgent", UserId, message);
+            var teamIds = ParseUserTeams(UserTeams).Select(t => t.TeamId).ToList();
+            await hubConnection.SendAsync("SendMessageToAgent", UserId, message, UserCompanyId, teamIds);
         }
     }
 
-    private async Task SelectConversation(string conversationId)
+
+
+    private async Task AssignToSelf(NewConversationsList.Conversation conversation)
     {
-        if (hubConnection is not null)
+        if (hubConnection is not null && UserId is not null)
         {
-            await hubConnection.SendAsync("SelectConversation", conversationId);
+            // Assign the conversation to the current user
+            conversation.IsAssigned = true;
+            conversation.AssignedUserId = UserId;
+
+            await hubConnection.SendAsync("AssignConversationToUser", conversation.Id, UserId);
+            ChatWindowRef?.AddMessage($"New chat assigned: {conversation.MessageText}");
         }
     }
+
 
     public async ValueTask DisposeAsync()
     {
         if (hubConnection is not null)
         {
+            await hubConnection.StopAsync();
             await hubConnection.DisposeAsync();
+            Console.WriteLine("SignalR connection disposed.");
         }
     }
+
 }

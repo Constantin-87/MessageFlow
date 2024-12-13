@@ -9,10 +9,10 @@ using System.Security.Claims;
 using MessageFlow.Client;
 using MessageFlow.Models;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Components.Channels.Services
 {
     // This is a server-side AuthenticationStateProvider that revalidates the security stamp for the connected user
-    // every 30 minutes an interactive circuit is connected. It also uses PersistentComponentState to flow the
+    // every 15 minutes an interactive circuit is connected. It also uses PersistentComponentState to flow the
     // authentication state to the client which is then fixed for the lifetime of the WebAssembly application.
     internal sealed class PersistingRevalidatingAuthenticationStateProvider : RevalidatingServerAuthenticationStateProvider
     {
@@ -39,7 +39,7 @@ namespace MessageFlow.Components.Accounts.Services
             subscription = state.RegisterOnPersisting(OnPersistingAsync, RenderMode.InteractiveWebAssembly);
         }
 
-        protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
+        protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(15);
 
         protected override async Task<bool> ValidateAuthenticationStateAsync(
             AuthenticationState authenticationState, CancellationToken cancellationToken)
@@ -87,14 +87,20 @@ namespace MessageFlow.Components.Accounts.Services
             if (principal.Identity?.IsAuthenticated == true)
             {
                 var userId = principal.FindFirst(options.ClaimsIdentity.UserIdClaimType)?.Value;
-                var email = principal.FindFirst(options.ClaimsIdentity.EmailClaimType)?.Value;
+                var userName = principal.FindFirst(ClaimTypes.Name)?.Value;
+                var companyId = principal.FindFirst("CompanyId")?.Value;
+                var companyName = principal.FindFirst("CompanyName")?.Value;
+                var userTeams = principal.FindFirst("UserTeams")?.Value;
 
-                if (userId != null && email != null)
+                if (userId != null && userName != null && companyId != null && companyName != null && userTeams != null)
                 {
                     state.PersistAsJson(nameof(UserInfo), new UserInfo
                     {
                         UserId = userId,
-                        Email = email,
+                        UserName = userName,
+                        CompanyId = companyId,
+                        CompanyName = companyName,
+                        UserTeams = userTeams,
                     });
                 }
             }
@@ -106,5 +112,6 @@ namespace MessageFlow.Components.Accounts.Services
             AuthenticationStateChanged -= OnAuthenticationStateChanged;
             base.Dispose(disposing);
         }
+
     }
 }

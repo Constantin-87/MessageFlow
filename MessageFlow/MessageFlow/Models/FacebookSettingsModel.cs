@@ -4,7 +4,7 @@ namespace MessageFlow.Models
 {
     public class FacebookSettingsModel
     {
-        public int Id { get; set; }  // Primary key
+        public int Id { get; set; }
 
         [Required(ErrorMessage = "Page ID is required.")]
         public string PageId { get; set; }
@@ -19,7 +19,7 @@ namespace MessageFlow.Models
         public string WebhookVerifyToken { get; set; }
 
         [Required(ErrorMessage = "Access Token is required.")]
-        public string AccessToken { get; set; }  // Make sure this property exists
+        public string AccessToken { get; set; }
 
         public int CompanyId { get; set; } // Foreign key to link the settings to the company
     }

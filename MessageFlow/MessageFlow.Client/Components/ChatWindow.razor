@@ -1,4 +1,6 @@
-﻿<div class="chat-window">
+﻿@rendermode RenderMode.InteractiveWebAssembly
+
+<div class="chat-window">
     <!-- Yellow Title Bar -->
     <div class="chat-title">
         Conversation with: @ConversationPartner
@@ -25,7 +27,7 @@
     [Parameter] public string? UserId { get; set; }
     [Parameter] public EventCallback<string> OnNewMessage { get; set; }
 
-    private string ConversationPartner = "Username"; // Replace with actual logic to fetch from Hub
+    private string ConversationPartner = "Username"; // To be replace with actual logic to fetch from Hub
     private List<string> Messages = new();
     private string MessageText = "";
 

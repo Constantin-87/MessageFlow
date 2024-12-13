@@ -1,25 +1,106 @@
-﻿<div class="team-members">
+﻿@rendermode RenderMode.InteractiveWebAssembly
+
+<div class="team-members">
     <h4>Team Members</h4>
-    <ul>
-        @foreach (var member in TeamMembersList)
+    @if (GroupedTeamMembers != null && GroupedTeamMembers.Any())
+    {
+        @foreach (var team in GroupedTeamMembers.Keys)
         {
-            <li>@member.Name (@member.Status)</li>
+            <div class="team-group">
+                <button class="btn btn-primary mb-2" @onclick="() => ToggleTeam(team)">
+                    @team (@GroupedTeamMembers[team].Count)
+                </button>
+                @if (ExpandedTeams.Contains(team))
+                {
+                    <ul>
+                        @foreach (var member in GroupedTeamMembers[team])
+                        {
+                            <li>@member.Name (@member.Status)</li>
+                        }
+                    </ul>
+                }
+            </div>
         }
-    </ul>
+    }
+    else
+    {
+        <p>No team members available.</p>
+    }
 </div>
 
 @code {
-    private List<TeamMember> TeamMembersList = new();
+    private Dictionary<string, List<TeamMember>> GroupedTeamMembers = new();
+    private HashSet<string> ExpandedTeams = new();
 
-    public void UpdateTeamMembers(List<TeamMember> members)
+    [Parameter] 
+    public string? CurrentUserName { get; set; }
+
+    public void AddTeamMember(TeamMember member)
     {
-        TeamMembersList = members;
+        if (member.Name == CurrentUserName) return; // Exclude the current user
+
+        var teamNames = member.Team.Split(", ").ToList();
+
+        foreach (var teamName in teamNames)
+        {
+            var displayTeam = string.IsNullOrEmpty(teamName) ? "Unassigned" : teamName;
+
+            if (!GroupedTeamMembers.ContainsKey(displayTeam))
+            {
+                GroupedTeamMembers[displayTeam] = new List<TeamMember>();
+            }
+
+            if (!GroupedTeamMembers[displayTeam].Any(m => m.Name == member.Name))
+            {
+                GroupedTeamMembers[displayTeam].Add(member);
+            }
+        }
+
         StateHasChanged();
+    }
+
+
+    // Remove a team member dynamically
+    public void RemoveTeamMember(TeamMember member)
+    {
+        var teamNames = member.Team.Split(", ").ToList();
+
+        foreach (var teamName in teamNames)
+        {
+            var displayTeam = string.IsNullOrEmpty(teamName) ? "Unassigned" : teamName;
+
+            if (GroupedTeamMembers.ContainsKey(displayTeam))
+            {
+                GroupedTeamMembers[displayTeam].RemoveAll(m => m.Name == member.Name);
+                if (GroupedTeamMembers[displayTeam].Count == 0)
+                {
+                    GroupedTeamMembers.Remove(displayTeam);
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+
+
+    private void ToggleTeam(string team)
+    {
+        if (ExpandedTeams.Contains(team))
+        {
+            ExpandedTeams.Remove(team);
+        }
+        else
+        {
+            ExpandedTeams.Add(team);
+        }
     }
 
     public class TeamMember
     {
         public string Name { get; set; } = string.Empty;
-        public string Status { get; set; } = "Offline"; // Example: "Online", "Busy"
+        public string Status { get; set; } = "Offline";
+        public string Team { get; set; } = string.Empty;
     }
+
 }

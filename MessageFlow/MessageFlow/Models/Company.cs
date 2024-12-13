@@ -14,8 +14,8 @@ namespace MessageFlow.Models
 
         public ICollection<Team> Teams { get; set; } = new List<Team>();
 
-        // Add a property to hold the total users count dynamically
-        [NotMapped] // This ensures the property is not persisted in the database
+        // Property to hold the total users count dynamically
+        [NotMapped] // Property is not persisted in the database
         public int TotalUsers { get; set; }
     }
 }

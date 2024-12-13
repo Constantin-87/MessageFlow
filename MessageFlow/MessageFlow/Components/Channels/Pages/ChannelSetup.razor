@@ -83,7 +83,8 @@ else if (selectedCompany != null)
         var companyIdStr = e.Value?.ToString();
         if (!string.IsNullOrWhiteSpace(companyIdStr) && int.TryParse(companyIdStr, out var companyId))
         {
-            selectedCompany = await CompanyService.GetCompanyByIdAsync(companyId);
+            await using var dbContext = CompanyService.CreateDbContext();
+            selectedCompany = await CompanyService.GetCompanyByIdAsync(dbContext, companyId);
             StateHasChanged();
         }
     }
@@ -94,7 +95,7 @@ else if (selectedCompany != null)
         {
             NavigationManager.NavigateTo($"/ChannelSetup/{selectedCompany.Id}/Facebook");
         }
-        // You can add other channels here as needed
+        // To add other channels here as needed
     }
 
     public class Channel

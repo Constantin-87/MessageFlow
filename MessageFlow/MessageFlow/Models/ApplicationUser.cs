@@ -10,6 +10,12 @@ namespace MessageFlow.Models
 
         // Navigation property for many-to-many relationship
         public ICollection<UserTeam> UserTeams { get; set; }
+
+        // Navigation property for the related Company
+        public Company Company { get; set; }
+
+        // Activity timestamp
+        public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     }
 }
 

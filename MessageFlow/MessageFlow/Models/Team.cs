@@ -7,6 +7,8 @@ namespace MessageFlow.Models
 
         public string TeamName { get; set; }  // Name of the team
 
+        public string TeamDescription { get; set; }
+
         // Foreign key for Company
         public int CompanyId { get; set; }
 

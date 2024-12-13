@@ -1,0 +1,82 @@
+﻿@page "/AgentManagerWorkspace"
+@attribute [Authorize(Roles = "Manager, Admin, SuperAdmin")]
+@inject NavigationManager NavigationManager
+
+@rendermode RenderMode.InteractiveWebAssembly
+
+<h3>Manager Workspace</h3>
+
+@* <div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Sales Overview</h5>
+            <BarChart TItem="double" @ref="salesChart" />
+        </div>
+        <div class="col-md-6">
+            <h5>User Activity</h5>
+            <LineChart TItem="int" @ref="userActivityChart" />
+        </div>
+    </div>
+</div>
+
+@code {
+    private BarChart<double> salesChart;
+    private LineChart<int> userActivityChart;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadSalesChart();
+            await LoadUserActivityChart();
+        }
+    }
+
+    private async Task LoadSalesChart()
+    {
+        var salesData = new ChartData<double>
+            {
+                Labels = new List<object> { "Jan", "Feb", "Mar", "Apr", "May", "Jun" },
+                Datasets = new List<ChartDataset<double>>
+        {
+            new BarChartDataset<double>
+            {
+                Label = "Monthly Sales",
+                BackgroundColor = "#4CAF50",
+                Data = new List<double> { 1200, 1500, 800, 1700, 1900, 2200 }
+            }
+        }
+            };
+
+        await salesChart.Update();
+    }
+
+    private async Task LoadUserActivityChart()
+    {
+        var userActivityData = new ChartData<int>
+            {
+                Labels = new List<object> { "Week 1", "Week 2", "Week 3", "Week 4" },
+                Datasets = new List<ChartDataset<int>>
+        {
+            new LineChartDataset<int>
+            {
+                Label = "Active Users",
+                BorderColor = "#42A5F5",
+                BackgroundColor = "#90CAF9",
+                Data = new List<int> { 20, 45, 30, 50 }
+            },
+            new LineChartDataset<int>
+            {
+                Label = "Idle Users",
+                BorderColor = "#FF7043",
+                BackgroundColor = "#FFAB91",
+                Data = new List<int> { 15, 10, 20, 5 }
+            }
+        }
+            };
+
+        await userActivityChart.Update();
+    }
+
+
+} *@

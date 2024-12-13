@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
 
 <div class="container-fluid">
     <div class="row">
@@ -8,25 +10,19 @@
         @if (!IsLoginPage && IsAuthenticated)
         {
             <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
-                <NavMenu />
+            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+                <NavMenu/>
             </nav>
         }
 
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            
             <article class="content">
                 @Body
             </article>
         </main>
-    </div>
-</div>
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+    </div>
 </div>
 
 @code {
@@ -35,7 +31,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await UpdateLastActivity();
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         IsAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+
+    public async Task UpdateLastActivity()
+    {
+        if (IsAuthenticated)
+        {
+            var userId = UserManager.GetUserId(HttpContextAccessor.HttpContext.User);
+            var user = await UserManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                user.LastActivity = DateTime.UtcNow;
+                await UserManager.UpdateAsync(user);
+            }
+        }
     }
 }

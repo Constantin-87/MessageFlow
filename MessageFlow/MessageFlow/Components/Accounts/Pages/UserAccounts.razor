@@ -2,11 +2,12 @@
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveServer
 
-@inject ApplicationDbContext DbContext
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject NavigationManager NavigationManager
 @inject UserManager<ApplicationUser> UserManager
 @inject IHttpContextAccessor HttpContextAccessor
 @inject UserManagementService UserManagementService
+@using System.Security.Claims;
 
 <h3>User Accounts</h3>
 
@@ -89,58 +90,63 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the logged-in user's claims
+        var userClaims = HttpContextAccessor.HttpContext.User.Claims;
+
+        // Extract the CompanyId from claims
+        var companyIdClaim = userClaims.FirstOrDefault(c => c.Type == "CompanyId");
+        var currentUserCompanyId = companyIdClaim != null ? int.Parse(companyIdClaim.Value) : 0;
+
+        // Extract roles from claims
+        var roles = userClaims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+
         List<UserInfo> userList = new List<UserInfo>();
-        // Get the logged-in user
-        var loggedInUser = await UserManager.GetUserAsync(HttpContextAccessor.HttpContext.User);
 
-        if (loggedInUser != null)
+        await using var dbContext = DbContextFactory.CreateDbContext();
+
+        // Load users with related company and teams in a single query
+        var usersToLoad = await dbContext.Users
+            .Include(u => u.Company) // Eager load company details
+            .Include(u => u.UserTeams)
+                .ThenInclude(ut => ut.Team) // Eager load team details
+            .ToListAsync();
+
+        if (!roles.Contains("SuperAdmin"))
         {
-            currentUserCompanyId = loggedInUser.CompanyId;
-
-            if (await UserManager.IsInRoleAsync(loggedInUser, "SuperAdmin"))
-            {
-                // If SuperAdmin, load all users
-                users = await DbContext.Users
-                    .Select(u => new UserInfo
-                        {
-                            Id = u.Id,
-                            UserName = u.UserName,
-                            Email = u.Email,
-                            PhoneNumber = u.PhoneNumber,
-                            CompanyName = DbContext.Companies.FirstOrDefault(c => c.Id == u.CompanyId).CompanyName
-                        }).ToListAsync();               
-            }
-            else
-            {
-                // Otherwise, load users for the logged-in user's company
-                users = await DbContext.Users
-                    .Where(u => u.CompanyId == currentUserCompanyId)
-                    .Select(u => new UserInfo
-                        {
-                            Id = u.Id,
-                            UserName = u.UserName,
-                            Email = u.Email,
-                            PhoneNumber = u.PhoneNumber,
-                            CompanyName = DbContext.Companies.FirstOrDefault(c => c.Id == u.CompanyId).CompanyName
-                        }).ToListAsync();               
-            }
-
-            // Now fetch roles and teams asynchronously for each user
-            foreach (var user in users)
-            {
-                // Fetch user roles
-                user.Role = (await UserManager.GetRolesAsync(await UserManager.FindByIdAsync(user.Id))).FirstOrDefault() ?? string.Empty;
-
-                // Fetch teams
-                user.Teams = await DbContext.UserTeams
-                    .Where(ut => ut.UserId == user.Id)
-                    .Select(ut => DbContext.Teams.FirstOrDefault(t => t.Id == ut.TeamId).TeamName ?? string.Empty)
-                    .ToListAsync();
-            }
-
-            // users = userList;
+            // Filter users by company for non-SuperAdmins
+            usersToLoad = usersToLoad.Where(u => u.CompanyId == currentUserCompanyId).ToList();
         }
+
+        // Preload user roles for all users
+        var userIds = usersToLoad.Select(u => u.Id).ToList();
+        var userRoles = new Dictionary<string, List<string>>();
+
+        foreach (var user in usersToLoad)
+        {
+            userRoles[user.Id] = (await UserManager.GetRolesAsync(user)).ToList();
+        }
+
+        // Map data to UserInfo
+        foreach (var user in usersToLoad)
+        {
+            userList.Add(new UserInfo
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    CompanyName = user.Company?.CompanyName ?? string.Empty,
+                    Role = userRoles[user.Id].FirstOrDefault() ?? string.Empty,
+                    Teams = user.UserTeams.Select(ut => ut.Team?.TeamName ?? string.Empty).ToList()
+                });
+        }
+
+        users = userList;
     }
+
+
+
+
 
     private void NavigateToCreateUser()
     {
@@ -179,15 +185,14 @@ else
         CancelDelete();
     }
 
-    // DTO to hold user information with associated company name
     private class UserInfo
     {
-        public string Id { get; set; } = string.Empty; // Ensure non-null value
+        public string Id { get; set; } = string.Empty;
         public string UserName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
         public string CompanyName { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty; // Ensure Role is non-nullable
-        public List<string> Teams { get; set; } = new(); // Initialize with an empty list
+        public string Role { get; set; } = string.Empty;
+        public List<string> Teams { get; set; } = new();
     }
 }

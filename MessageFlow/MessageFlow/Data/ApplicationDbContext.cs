@@ -13,8 +13,8 @@
         }
 
         public DbSet<Company> Companies { get; set; }
-        public DbSet<Team> Teams { get; set; } // Ensure Teams are also defined in the DbContext
-        public DbSet<UserTeam> UserTeams { get; set; } // Include the UserTeam table in the context
+        public DbSet<Team> Teams { get; set; }
+        public DbSet<UserTeam> UserTeams { get; set; }
         public DbSet<FacebookSettingsModel> FacebookSettingsModels { get; set; }
 
 

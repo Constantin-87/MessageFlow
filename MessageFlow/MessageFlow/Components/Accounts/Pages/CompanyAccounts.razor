@@ -10,7 +10,7 @@
 
 <button class="btn btn-primary mb-3" @onclick="NavigateToCreateCompany">Create New Company Account</button>
 
-@if (companies == null)
+@if (!isDataLoaded)
 {
     <p>Loading...</p>
 }
@@ -41,23 +41,83 @@ else
                     <td>
                         <button class="btn btn-secondary" @onclick="() => NavigateToEditCompany(company.Id)">Edit</button>
                     </td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(company.Id, company.CompanyName)">Delete</button>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
+<!-- Confirmation Modal -->
+@if (isDeleteConfirmationVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" @onclick="HideDeleteConfirmation"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the company <strong>@companyToDeleteName</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">Cancel</button>
+                    <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Company> companies = new();
+    private bool isDeleteConfirmationVisible = false;
+    private int companyToDeleteId;
+    private string companyToDeleteName;
+    private bool isDataLoaded = false;
 
     protected override async Task OnInitializedAsync()
     {
         companies = await CompanyManagementService.GetAllCompaniesAsync();
 
-        // Fetch total users for each company
-        foreach (var company in companies)
+        var tasks = companies.Select(async company =>
         {
             company.TotalUsers = await TeamsManagementService.GetTotalUsersForCompanyAsync(company.Id);
+        });
+
+        await Task.WhenAll(tasks);
+        isDataLoaded = true;
+    }
+
+
+    private void ShowDeleteConfirmation(int companyId, string companyName)
+    {
+        companyToDeleteId = companyId;
+        companyToDeleteName = companyName;
+        isDeleteConfirmationVisible = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        isDeleteConfirmationVisible = false;
+        companyToDeleteId = 0;
+        companyToDeleteName = string.Empty;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        isDeleteConfirmationVisible = false;
+        var (success, errorMessage) = await CompanyManagementService.DeleteCompanyAsync(companyToDeleteId);
+
+        if (success)
+        {
+            companies = companies.Where(c => c.Id != companyToDeleteId).ToList(); // Update UI after deletion
+        }
+        else
+        {
+            Console.WriteLine($"Failed to delete company: {errorMessage}");
         }
     }
 

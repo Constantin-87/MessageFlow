@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.Components;
-using MessageFlow.Components.Accounts.Services;
+using MessageFlow.Components.Channels.Services;
 using MessageFlow.Data;
 using MessageFlow.Models;
+using MessageFlow.Middleware;
+using MessageFlow.Components.Channels.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,8 +26,14 @@ builder.Services.AddScoped<CompanyManagementService>();
 builder.Services.AddScoped<TeamsManagementService>();
 builder.Services.AddScoped<FacebookService>();
 
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<UpdateLastActivityFilter>();
+});
 
-// Email sender (no-op in this case, can replace with actual implementation if needed)
+
+
+// Email sender (no-op in this case)
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 
@@ -37,6 +45,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddRoles<IdentityRole>()
     .AddApiEndpoints();
 
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Accounts/Login"; // Redirect unauthorized users to this login page
@@ -45,8 +54,23 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization();
 
+var environment = builder.Environment.EnvironmentName;
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var connectionString = environment == "Test"
+        ? builder.Configuration.GetConnectionString("TestConnection")
+        : builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(connectionString);
+});
+
+builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+{
+    var connectionString = environment == "Test"
+        ? builder.Configuration.GetConnectionString("TestConnection")
+        : builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(connectionString);
+}, ServiceLifetime.Scoped);
+
 
 builder.Services.AddAntiforgery();
 
@@ -101,7 +125,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -109,16 +132,17 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
-app.UseRouting();  // Ensure that UseRouting comes before authentication
+app.UseRouting();
 
-// Add Authentication and Authorization middlewares before endpoints
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseMiddleware<InactivityLogoutMiddleware>();
 
 // Map SignalR hub
 app.MapHub<ChatHub>("/chatHub");
 
-app.MapIdentityApi<ApplicationUser>(); // commented out to make user_logged out redirection
+app.MapIdentityApi<ApplicationUser>();
 
 app.UseAntiforgery();
 

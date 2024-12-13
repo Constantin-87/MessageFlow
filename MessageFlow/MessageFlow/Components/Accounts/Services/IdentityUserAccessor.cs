@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using MessageFlow.Models;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Components.Channels.Services
 {
     internal sealed class IdentityUserAccessor(UserManager<ApplicationUser> userManager, IdentityRedirectManager redirectManager)
     {
@@ -11,9 +11,13 @@ namespace MessageFlow.Components.Accounts.Services
 
             if (user is null)
             {
+                Console.WriteLine("[IdentityUserAccessor] User is null, redirecting to InvalidUser page.");
                 redirectManager.RedirectToWithStatus("Account/InvalidUser", $"Error: Unable to load user with ID '{userManager.GetUserId(context.User)}'.", context);
             }
-
+            else
+            {
+                Console.WriteLine($"[IdentityUserAccessor] Retrieved user: {user.UserName}, ID: {user.Id}");
+            }
             return user;
         }
     }

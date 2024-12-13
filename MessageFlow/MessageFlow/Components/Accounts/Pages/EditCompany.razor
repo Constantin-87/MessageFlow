@@ -17,7 +17,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        company = await CompanyManagementService.GetCompanyByIdAsync(companyId) ?? new Company();
+        await using var dbContext = CompanyManagementService.CreateDbContext();
+        company = await CompanyManagementService.GetCompanyByIdAsync(dbContext, companyId) ?? new Company();
     }
 
     private async Task HandleSubmit()

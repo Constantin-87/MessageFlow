@@ -63,7 +63,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        company = await CompanyService.GetCompanyByIdAsync(companyId);
+        await using var dbContext = CompanyService.CreateDbContext();
+        company = await CompanyService.GetCompanyByIdAsync(dbContext, companyId);
         if (company != null)
         {
             facebookSettings = await FacebookService.GetFacebookSettingsAsync(companyId) ?? new FacebookSettingsModel();
@@ -80,7 +81,7 @@ else
         }
         else
         {
-            // Handle error if needed
+            // Handle error
         }
     }
 

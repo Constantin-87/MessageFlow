@@ -4,6 +4,11 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject IdentityRedirectManager RedirectManager
+@inject CompanyManagementService CompanyManagementService
+@inject TeamsManagementService TeamsManagementService
+
+
+@using System.Security.Claims;
 
 <PageTitle>Log in</PageTitle>
 
@@ -54,7 +59,7 @@
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
-    
+
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
@@ -62,7 +67,7 @@
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
         {
-            // Clear the existing external cookie to ensure a clean login process
+            // Clear the existing external cookie for a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
         }
     }
@@ -75,22 +80,66 @@
             errorMessage = "Username and password cannot be empty.";
             return;
         }
-
         // Attempt to sign in the user
         var result = await SignInManager.PasswordSignInAsync(Input.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
         {
             Logger.LogInformation("User logged in.");
-            // Redirect to ReturnUrl if it's valid, otherwise fallback to /Dashboard
-            if (!string.IsNullOrEmpty(ReturnUrl) && Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative))
+
+            var user = await SignInManager.UserManager.FindByNameAsync(Input.UserName);
+            if (user != null)
             {
-                // If ReturnUrl is valid and local, redirect there
-                RedirectManager.RedirectTo(ReturnUrl);
-            }
-            else
-            {
-                // Fallback to Dashboard if ReturnUrl is not set or invalid
-                RedirectManager.RedirectTo("/Dashboard");
+                // Retrieve the roles for the user
+                var roles = await SignInManager.UserManager.GetRolesAsync(user);
+
+                var companyName = await CompanyManagementService.GetCompanyNameByIdAsync(user.CompanyId);
+                var userTeams = await TeamsManagementService.GetUserTeamsAsync(user.Id);
+                var userTeamsString = string.Join(";", userTeams.Select(t => $"{t.TeamId}:{t.TeamName}"));
+
+
+                // Create claims for roles and other user data
+                var claims = new List<Claim>
+                {
+                    new Claim("CompanyId", user.CompanyId.ToString()),
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim("UserId", user.Id),
+                    new Claim("CompanyName", companyName),
+                    new Claim("UserTeams", userTeamsString)
+                };
+
+                // Update the LastActivity timestamp immediately after login
+                user.LastActivity = DateTime.UtcNow;
+                await SignInManager.UserManager.UpdateAsync(user);
+
+                // Add each role as a claim
+                foreach (var role in roles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                // Sign in with the additional claims
+                await SignInManager.SignInWithClaimsAsync(user, Input.RememberMe, claims);
+
+                // Redirect based on user role
+                if (!string.IsNullOrEmpty(ReturnUrl) && Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative))
+                {
+                    RedirectManager.RedirectTo(ReturnUrl);
+                }
+                else if (roles.Contains("Agent"))
+                {
+                    RedirectManager.RedirectTo("/AgentWorkspace");
+                }
+                else if (roles.Contains("SuperAdmin") || roles.Contains("Admin") || roles.Contains("Manager"))
+                {
+                    RedirectManager.RedirectTo("/AgentManagerWorkspace");
+                }
+                else
+                {
+                    // Fallback redirection if no role matches
+                    RedirectManager.RedirectTo("/");
+                }
+
+                Logger.LogInformation("User '{UserName}' logged in with roles: {Roles}", user.UserName, string.Join(", ", roles));
             }
         }
         else if (result.RequiresTwoFactor)

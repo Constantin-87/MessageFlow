@@ -1,0 +1,185 @@
+﻿@using MessageFlow.Models
+@inject TeamsManagementService TeamsManagementService
+@inject CompanyManagementService CompanyManagementService
+@rendermode RenderMode.InteractiveServer
+
+<div class="border p-3 mb-3">
+    <h5>@(NewTeam ? "Create New Team" : $"Edit Team: {Team?.TeamName}")</h5>
+
+    <!-- Team Name -->
+    <div class="mb-3">
+        <label class="form-label">Team Name:</label>
+        <input @bind="teamName" class="form-control" placeholder="Enter Team Name" />
+    </div>
+
+    <!-- Team Description -->
+    <div class="mb-3">
+        <label class="form-label">Team Description:</label>
+        <textarea @bind="teamDescription" class="form-control" rows="3" placeholder="Enter Team Description"></textarea>
+    </div>
+
+    <!-- User Assignment Section -->
+    <div class="mb-3">
+        <label class="form-label">Assign Users:</label>
+        <div class="d-flex">
+            <!-- Available Users -->
+            <div class="col-4 border p-2">
+                <h6>Available Users</h6>
+                <ul class="list-group">
+                    @foreach (var user in availableUsers)
+                    {
+                        <li class="list-group-item @(selectedAvailableUsers.Contains(user) ? "active" : "")"
+                            @onclick="@(() => ToggleAvailableUserSelection(user))">
+                            @user.UserName
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <!-- Add/Remove Buttons -->
+            <div class="col-2 d-flex flex-column justify-content-center align-items-center">
+                <button class="btn btn-success mb-2" @onclick="AddUserToTeam">Add User</button>
+                <button class="btn btn-danger" @onclick="RemoveUserFromTeam">Remove User</button>
+            </div>
+
+            <!-- Assigned Users -->
+            <div class="col-4 border p-2">
+                <h6>Assigned Users</h6>
+                <ul class="list-group">
+                    @foreach (var user in assignedUsers)
+                    {
+                        <li class="list-group-item @(selectedAssignedUsers.Contains(user) ? "active" : "")"
+                            @onclick="@(() => ToggleAssignedUserSelection(user))">
+                            @user.UserName
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save and Cancel Buttons -->
+    <div class="mt-3">
+        <button class="btn btn-primary" @onclick="SaveTeam">Save Team</button>
+        <button class="btn btn-secondary ms-2" @onclick="() => OnClose.InvokeAsync()">Cancel</button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="text-danger mt-2">@errorMessage</div>
+    }
+</div>
+
+@code {
+    [Parameter] public int CompanyId { get; set; }
+    [Parameter] public bool NewTeam { get; set; }
+    [Parameter] public Team? Team { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string teamName = string.Empty;
+    private string teamDescription = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private List<ApplicationUser> availableUsers = new();
+    private List<ApplicationUser> assignedUsers = new();
+    private List<ApplicationUser> selectedAvailableUsers = new();
+    private List<ApplicationUser> selectedAssignedUsers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Team != null)
+        {
+            teamName = Team.TeamName;
+            teamDescription = Team.TeamDescription ?? string.Empty;
+            assignedUsers = await TeamsManagementService.GetUsersForTeamAsync(Team.Id);
+        }
+
+        var allCompanyUsers = await CompanyManagementService.GetUsersForCompanyAsync(CompanyId);
+        // Exclude users who are already assigned to the team using a custom comparer
+        availableUsers = allCompanyUsers
+            .Where(u => !assignedUsers.Any(au => au.Id == u.Id))
+            .ToList();
+    }
+
+    private void ToggleAvailableUserSelection(ApplicationUser user)
+    {
+        if (selectedAvailableUsers.Contains(user))
+            selectedAvailableUsers.Remove(user);
+        else
+            selectedAvailableUsers.Add(user);
+    }
+
+    private void ToggleAssignedUserSelection(ApplicationUser user)
+    {
+        if (selectedAssignedUsers.Contains(user))
+            selectedAssignedUsers.Remove(user);
+        else
+            selectedAssignedUsers.Add(user);
+    }
+
+    private void AddUserToTeam()
+    {
+        foreach (var user in selectedAvailableUsers.ToList())
+        {
+            assignedUsers.Add(user);
+            availableUsers.Remove(user);
+        }
+        selectedAvailableUsers.Clear();
+    }
+
+    private void RemoveUserFromTeam()
+    {
+        foreach (var user in selectedAssignedUsers.ToList())
+        {
+            availableUsers.Add(user);
+            assignedUsers.Remove(user);
+        }
+        selectedAssignedUsers.Clear();
+    }
+
+    private async Task SaveTeam()
+    {
+        if (string.IsNullOrWhiteSpace(teamName))
+        {
+            errorMessage = "Team name cannot be empty.";
+            return;
+        }
+
+        bool success;
+        string message;
+
+        if (NewTeam)
+        {
+            // Create a new team
+            var (addSuccess, addMessage) = await TeamsManagementService.AddTeamToCompanyAsync(
+                CompanyId, teamName, teamDescription, assignedUsers);
+            success = addSuccess;
+            message = addMessage;
+        }
+        else if (Team != null)
+        {
+            // Update existing team
+            Team.TeamName = teamName;
+            Team.TeamDescription = teamDescription;
+
+            var (updateSuccess, updateMessage) = await TeamsManagementService.UpdateTeamAsync(Team, assignedUsers);
+            success = updateSuccess;
+            message = updateMessage;
+        }
+        else
+        {
+            errorMessage = "Invalid operation.";
+            return;
+        }
+
+        if (!success)
+        {
+            errorMessage = message;
+            return;
+        }
+
+        await OnClose.InvokeAsync();
+    }
+
+
+}

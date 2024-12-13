@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using MessageFlow.Components.Accounts.Services;
+using MessageFlow.Components.Channels.Services;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
@@ -9,14 +8,14 @@ using Microsoft.AspNetCore.SignalR;
 
 [Route("api/[controller]")]
 [ApiController]
-public class WebhookController : ControllerBase
+public class FacebookWebhook : ControllerBase
 {
-    private readonly ILogger<WebhookController> _logger;
+    private readonly ILogger<FacebookWebhook> _logger;
     private readonly FacebookService _facebookService;
     private readonly CompanyManagementService _companyService;
     private readonly IHubContext<ChatHub> _chatHub;
 
-    public WebhookController(ILogger<WebhookController> logger, FacebookService facebookService, CompanyManagementService companyService, IHubContext<ChatHub> chatHub)
+    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService, CompanyManagementService companyService, IHubContext<ChatHub> chatHub)
     {
         _logger = logger;
         _facebookService = facebookService;
@@ -33,10 +32,10 @@ public class WebhookController : ControllerBase
         _logger.LogInformation("Received verification request: hub_mode={hub_mode}, hub_verify_token={hub_verify_token}, hub_challenge={hub_challenge}");
 
         // Fetch all companies' Facebook settings
-        var allFacebookSettings = await _facebookService.GetAllFacebookSettingsAsync();  // You'll need to implement this in FacebookService
+        var allFacebookSettings = await _facebookService.GetAllFacebookSettingsAsync();
 
         // Find a match for the verify token
-        var matchedSettings = allFacebookSettings.FirstOrDefault(settings => settings.AccessToken == hub_verify_token);
+        var matchedSettings = allFacebookSettings.FirstOrDefault(settings => settings.CompanyId == 6 && settings.WebhookVerifyToken == hub_verify_token);
 
         if (hub_mode == "subscribe" && matchedSettings != null)
         {
@@ -67,31 +66,8 @@ public class WebhookController : ControllerBase
                     var pageId = entry.GetProperty("id").GetString(); // Page ID associated with the Facebook settings
                     var messagingArray = entry.GetProperty("messaging").EnumerateArray();
 
-                    // Fetch the Facebook settings associated with this page ID directly
-                    var facebookSettings = await _facebookService.GetFacebookSettingsByPageIdAsync(pageId);
-
-                    if (facebookSettings != null)
-                    {
-                        foreach (var eventData in messagingArray)
-                        {
-                            var senderId = eventData.GetProperty("sender").GetProperty("id").GetString();
-                            var messageText = eventData.GetProperty("message").GetProperty("text").GetString();
-
-                            _logger.LogInformation($"Message received from {senderId} for Page ID {pageId}: {messageText}");
-
-                            // Send message to connected agents via SignalR
-                            await _chatHub.Clients.All.SendAsync("ReceiveMessage", new
-                            {
-                                senderId,
-                                pageId,
-                                messageText
-                            });
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"No Facebook settings found for Page ID {pageId}");
-                    }
+                    // Delegate the handling of messages to the service method
+                    await _facebookService.ProcessFacebookMessagesAsync(pageId, messagingArray, _chatHub, _logger);
                 }
             }
         }
@@ -105,8 +81,7 @@ public class WebhookController : ControllerBase
     }
 
 
-
-    [HttpPost("send-message")]  // This ensures it's called only on a POST request to /api/webhook/send-message
+    [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage(string recipientId, string messageText, int companyId)
     {
         var httpClient = new HttpClient();

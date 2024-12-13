@@ -1,56 +1,63 @@
 ﻿@implements IDisposable
 @inject NavigationManager NavigationManager
 @rendermode RenderMode.InteractiveServer
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
+@using System.Security.Claims
 
 <div class="top-row ps-3 navbar navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">Secured Chat</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        @if (!string.IsNullOrEmpty(companyName) && !string.IsNullOrEmpty(userName))
+        {
+            <div class="navbar-brand">
+                <div>@companyName</div>
+                <small>@userName - <span class="text-success">Available</span></small>
+            </div>
+        }
+        else
+        {
+            <a class="navbar-brand" href="/">Message Flow</a>
+        }
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable">
     <nav class="flex-column">
 
-        <AuthorizeView Roles="Agent, AgentManager, Admin, SuperAdmin">
-        <!-- Agent Workspace -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/AgentWorkspace">
-                <span class="bi bi-chat-left-text" aria-hidden="true"></span> Agent Workspace
-            </NavLink>
-        </div>
+        <AuthorizeView>
+            <!-- Agent Workspace -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/AgentWorkspace">
+                    <span class="bi bi-chat-left-text" aria-hidden="true"></span> Agent Workspace
+                </NavLink>
+            </div>
         </AuthorizeView>
 
-        <AuthorizeView Roles="AgentManager, Admin, SuperAdmin">
-        <!-- Manager Workspace -->
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/AgentManagerWorkspace">
-                <span class="bi bi-clipboard-data" aria-hidden="true"></span> Manager Workspace
-            </NavLink>
-        </div>
+        <AuthorizeView Roles="Manager, Admin, SuperAdmin">
+            <!-- Manager Workspace -->
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/AgentManagerWorkspace">
+                    <span class="bi bi-clipboard-data" aria-hidden="true"></span> Manager Workspace
+                </NavLink>
+            </div>
         </AuthorizeView>
 
         <AuthorizeView Roles="Admin, SuperAdmin">
-        <!-- Manage Dropdown -->
-        <div class="nav-item px-3 dropdown">
-            <button class="nav-link dropdown-toggle" href="#" @onclick="()=>expandSubMenu = !expandSubMenu">
-                <span class="bi bi-kanban" aria-hidden="true"></span> Manage
-            </button>
+            <!-- Manage Dropdown -->
+            <div class="nav-item px-3 dropdown">
+                <button class="nav-link dropdown-toggle" href="#" @onclick="()=>expandSubMenu = !expandSubMenu">
+                    <span class="bi bi-kanban" aria-hidden="true"></span> Manage
+                </button>
 
-            @if (expandSubMenu)
-            {
-
-                <ul class="nav flex-column">
-                    <li class="nav-item px-3 dropdown">
-                        <!-- User Accounts -->
-                        <NavLink class="dropdown-item" href="/Accounts/UserAccounts">
-                            <i class="bi bi-person-fill" aria-hidden="true"></i> User Accounts
-                        </NavLink>
-                    </li>
+                @if (expandSubMenu)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3 dropdown">
+                            <!-- User Accounts -->
+                            <NavLink class="dropdown-item" href="/Accounts/UserAccounts">
+                                <i class="bi bi-person-fill" aria-hidden="true"></i> User Accounts
+                            </NavLink>
+                        </li>
 
                         <AuthorizeView Roles="SuperAdmin" Context="CompanyAccountsContext">
                             <li class="nav-item px-3 dropdown">
@@ -61,23 +68,27 @@
                             </li>
                         </AuthorizeView>
 
-                    <li class="nav-item px-3 dropdown">
-                        <!-- App Setup -->
-                        <NavLink class="dropdown-item" href="/AppSetup">
-                            <i class="bi bi-gear" aria-hidden="true"></i> App Setup
-                        </NavLink>
-                    </li>
-
-                        <AuthorizeView Roles="Admin, SuperAdmin" Context="ChannelSetUpContext">
-                            <li class="nav-item px-3">
-                                <NavLink class="dropdown-item" href="/ChannelSetup">
-                                    <i class="bi bi-gear"></i> Channel Setup
-                                </NavLink>
+                        <AuthorizeView Roles="Admin" Context="authAdminEditCompanyContext">
+                            <li class="nav-item px-3 dropdown">
+                                <!-- Company Details -->
+                                <NavLink class="dropdown-item" href="@companyDetailsUrl"></NavLink>
                             </li>
                         </AuthorizeView>
 
-                </ul>
-            }
+                        <li class="nav-item px-3 dropdown">
+                            <!-- Manage Teams -->
+                            <NavLink class="dropdown-item" href="/Accounts/ManageTeams">
+                                <i class="bi bi-people" aria-hidden="true"></i> Manage Teams
+                            </NavLink>
+                        </li>
+
+                        <li class="nav-item px-3">
+                            <NavLink class="dropdown-item" href="/ChannelSetup">
+                                <i class="bi bi-gear"></i> Channel Setup
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
             </div>
         </AuthorizeView>
 
@@ -95,12 +106,27 @@
 @code {
     private string? currentUrl;
     private bool expandSubMenu;
+    private string companyDetailsUrl = string.Empty;
+    private string companyName = string.Empty;
+    private string userName = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
+
+        var companyIdClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "CompanyId");
+        var userNameClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
+        var companyNameClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "CompanyName");
+
+        if (companyIdClaim != null && userNameClaim != null && companyNameClaim != null)
+        {
+            userName = userNameClaim.Value;
+            companyName = companyNameClaim.Value;
+            companyDetailsUrl = $"/edit-company/{companyIdClaim.Value}";
+        }
     }
+
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
