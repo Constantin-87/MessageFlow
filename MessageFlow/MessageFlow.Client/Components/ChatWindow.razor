@@ -1,49 +1,208 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
+@inject IJSRuntime JSRuntime
 
-<div class="chat-window">
-    <!-- Yellow Title Bar -->
-    <div class="chat-title">
-        Conversation with: @ConversationPartner
+<div class="chat-window-container">
+    <!-- Tabs Navigation -->
+    <div class="chat-tabs">
+        @foreach (var tab in ActiveChats)
+        {
+            <div class="chat-tab @(tab.IsActive ? "active" : "")">
+                <span @onclick="() => SwitchTab(tab)">@tab.CustomerId</span>
+                <button class="close-btn" @onclick="() => ConfirmCloseTab(tab)">X</button>
+            </div>
+        }
     </div>
 
-    <!-- Green Chat History Area -->
-    <div class="chat-history">
-        <ul>
-            @foreach (var message in Messages)
-            {
-                <li>@message</li>
-            }
-        </ul>
-    </div>
-
-    <!-- Blue Input Field and Pink Send Button -->
-    <div class="chat-input-area">
-        <input @bind="MessageText" placeholder="Type a message..." />
-        <button @onclick="SendMessage">Send</button>
-    </div>
+    <!-- Chat Window -->
+    @if (ActiveChats.Any(c => c.IsActive))
+    {
+        var activeChat = ActiveChats.First(c => c.IsActive);
+        <div class="chat-window">
+            <h5>Conversation with: @activeChat.CustomerId</h5>
+            <div class="chat-history">
+                @foreach (var message in activeChat.Messages)
+                {
+                    <div>@message</div>
+                }
+            </div>
+            <input @bind="MessageText" placeholder="Type a message..." />
+            <button @onclick="() => SendMessage(activeChat)">Send</button>
+        </div>
+    }
 </div>
 
 @code {
     [Parameter] public string? UserId { get; set; }
-    [Parameter] public EventCallback<string> OnNewMessage { get; set; }
+    [Parameter] public HubConnection HubConnection { get; set; }
+    private List<ChatTab> ActiveChats = new();
+    private string MessageText = string.Empty;
 
-    private string ConversationPartner = "Username"; // To be replace with actual logic to fetch from Hub
-    private List<string> Messages = new();
-    private string MessageText = "";
-
-    public void AddMessage(string message)
+    public void RegisterHandlers()
     {
-        Messages.Add(message);
+        if (HubConnection != null)
+        {
+            // Confirm connection state
+            Console.WriteLine($"HubConnection State: {HubConnection.State}");
+
+            HubConnection.On<string, string>("AssignConversation", (customerId, messageText) =>
+            {
+                AddNewChat(customerId, messageText);
+            });
+
+            HubConnection.On<string, string>("SendMessageToAssignedUser", (messageContent, senderId) =>
+            {
+                Console.WriteLine($"Received message from {senderId}: {messageContent}");
+                AddMessageToChat(senderId, messageContent);
+            });
+
+            HubConnection.On<string, string, string>("MessageDelivered", (recipientId, messageContent, messageId) =>
+            {
+                Console.WriteLine($"Message delivered to {recipientId}: {messageContent}");
+                MarkMessageAsDelivered(recipientId, messageId);
+            });
+
+        }
+    }
+
+    private async Task ConfirmCloseTab(ChatTab tab)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmClose", $"Are you sure you want to close the chat with {tab.CustomerId}?");
+        if (confirmed)
+        {
+            await CloseTabAsync(tab);
+        }
+    }
+
+    private async Task CloseTabAsync(ChatTab tab)
+    {
+        ActiveChats.Remove(tab);
+        if (ActiveChats.Any())
+        {
+            SwitchTab(ActiveChats.First());
+        }
+
+        StateHasChanged();
+
+        // Send a request to the server to close and anonymize the chat
+        await HubConnection.SendAsync("CloseAndAnonymizeChat", tab.CustomerId);
+    }
+
+    private void MarkMessageAsDelivered(string recipientId, string messageId)
+    {
+        var chat = ActiveChats.FirstOrDefault(c => c.CustomerId == recipientId);
+        if (chat != null)
+        {
+            // Find the message text associated with the messageId
+            var messageText = chat.MessageIds.FirstOrDefault(pair => pair.Value == messageId).Key;
+
+            if (!string.IsNullOrEmpty(messageText))
+            {
+                // Find the index of the message text in the chat messages
+                var messageIndex = chat.Messages.FindIndex(msg => msg == $"You: {messageText}");
+                if (messageIndex != -1)
+                {
+                    // Append "(Delivered)" to the message
+                    chat.Messages[messageIndex] += " (Delivered)";
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Message with ID {messageId} not found in chat with {recipientId}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"No active chat found for recipient: {recipientId}");
+        }
+    }
+
+
+
+    private void AddMessageToChat(string senderId, string messageContent)
+    {
+        var chat = ActiveChats.FirstOrDefault(c => c.CustomerId == senderId);
+        if (chat != null)
+        {
+            chat.Messages.Add($"Customer: {messageContent}");
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine($"No active chat found for sender: {senderId}");
+        }
+    }
+
+    public void AddNewChat(string customerId, string initialMessage)
+    {
+        // Check if the tab already exists
+        if (!ActiveChats.Any(c => c.CustomerId == customerId))
+        {
+            ActiveChats.Add(new ChatTab { CustomerId = customerId, IsActive = true, Messages = new List<string> { initialMessage } });
+        }
+
+        // Set the new tab as active
+        SwitchTab(ActiveChats.First(c => c.CustomerId == customerId));
         StateHasChanged();
     }
 
-    private async Task SendMessage()
+    private void SwitchTab(ChatTab tab)
+    {
+        foreach (var chat in ActiveChats)
+        {
+            chat.IsActive = false;
+        }
+        tab.IsActive = true;
+        StateHasChanged();
+    }
+
+    private void CloseTab(ChatTab tab)
+    {
+        ActiveChats.Remove(tab);
+        if (ActiveChats.Any())
+        {
+            SwitchTab(ActiveChats.First()); // Switch to the first tab
+        }
+        StateHasChanged();
+    }
+
+    private async Task SendMessage(ChatTab chat)
     {
         if (!string.IsNullOrWhiteSpace(MessageText))
         {
-            await OnNewMessage.InvokeAsync(MessageText);
-            Messages.Add($"You: {MessageText}");
+            // Generate a unique local message ID
+            var localMessageId = Guid.NewGuid().ToString();
+
+            // Store the message without displaying the ID
+            chat.Messages.Add($"You: {MessageText}");
+
+            // Track the message with a mapping between content and ID
+            chat.MessageIds ??= new Dictionary<string, string>();
+            chat.MessageIds[MessageText] = localMessageId;
+
+            StateHasChanged();
+
+            Console.WriteLine($"Sending message to customer {chat.CustomerId}: {MessageText}");
+
+            await HubConnection.SendAsync("SendMessageToCustomer", chat.CustomerId, MessageText, localMessageId);
             MessageText = string.Empty;
         }
+        else
+        {
+            Console.WriteLine("Message text is empty.");
+        }
+    }
+
+    public class ChatTab
+    {
+        public string CustomerId { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = false;
+        public List<string> Messages { get; set; } = new();
+        public Dictionary<string, string> MessageIds { get; set; } = new();
     }
 }
+<script>
+    function confirmClose(message) {
+        return confirm(message);
+    }
+</script>

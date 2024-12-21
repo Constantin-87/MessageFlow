@@ -1,11 +1,21 @@
 ﻿using MessageFlow.Client.Components;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
+using MessageFlow.Data;
+using MessageFlow.Components.Channels.Services;
 
 public class ChatHub : Hub
 {
     // Track online users with company and team info
     private static ConcurrentDictionary<string, UserConnectionInfo> OnlineUsers = new();
+
+    private readonly ApplicationDbContext _context;
+
+    public ChatHub(ApplicationDbContext context)
+    {
+        _context = context;
+    }
 
     public override async Task OnConnectedAsync()
     {
@@ -46,7 +56,7 @@ public class ChatHub : Hub
             }
 
         }
-
+        Console.WriteLine($"Connection established. ConnectionId: {Context.ConnectionId}");
         await base.OnConnectedAsync();
     }
 
@@ -97,31 +107,152 @@ public class ChatHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task SendMessageToAgent(string userId, string message, string companyId, List<int> teamIds)
+    public async Task AssignConversationToUser(string conversationId)
     {
-        foreach (var teamId in teamIds)
+        var conversation = await _context.Conversations
+            .Include(c => c.Messages) // Include the related messages
+            .FirstOrDefaultAsync(c => c.Id == conversationId);
+
+        if (conversation != null)
         {
-            var teamGroupName = $"Company_{companyId}_Team_{teamId}";
-            await Clients.Group(teamGroupName).SendAsync("ReceiveMessage", message);
+            var userId = Context.UserIdentifier;
+            conversation.AssignedUserId = userId;
+            conversation.IsAssigned = true;
+            await _context.SaveChangesAsync();
+
+            // Get the latest message from the conversation
+            var latestMessage = conversation.Messages
+                .OrderByDescending(m => m.SentAt)
+                .FirstOrDefault();
+
+            var latestMessageContent = latestMessage?.Content ?? "No messages in this conversation.";
+
+            // Notify the assigned user to open the chat with the latest message
+            await Clients.User(userId).SendAsync("AssignConversation", conversation.SenderId, latestMessageContent);
+            Console.WriteLine($"Assigned conversation {conversationId} to user {userId} with message: {latestMessageContent}");
+
+            // Notify all users in the company to remove the conversation from their lists
+            await Clients.Group($"Company_{conversation.CompanyId}").SendAsync("RemoveNewConversation", conversation);
+            Console.WriteLine($"Removed new conversation for CompanyId: {conversation.CompanyId}");
+        }
+    }
+
+    public async Task SendMessageToAssignedUser(string assignedUserId, string messageContent, string senderId)
+    {
+        if (!string.IsNullOrEmpty(assignedUserId))
+        {
+            Console.WriteLine($"Attempting to send message to assigned user: {assignedUserId}");
+
+            var isUserOnline = OnlineUsers.Values.Any(u => u.UserId == assignedUserId);
+
+            if (isUserOnline)
+            {
+                Console.WriteLine($"User {assignedUserId} is online. Sending message...");
+
+                await Clients.User(assignedUserId).SendAsync("ReceiveMessage", messageContent, senderId);
+
+                Console.WriteLine("Message sent to assigned user.");
+            }
+            else
+            {
+                Console.WriteLine($"User {assignedUserId} is not online. Mock log: Message queued for delivery.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("AssignedUserId is null or empty.");
+        }
+    }
+
+    public async Task SendMessageToCustomer(string customerId, string messageText, string localMessageId)
+    {
+        var userId = Context.UserIdentifier;
+        Console.WriteLine($"Attempting to send message from user {userId} to customer {customerId}: {messageText}");
+
+        var companyId = OnlineUsers.Values.FirstOrDefault(u => u.UserId == userId)?.CompanyId;
+
+        if (!string.IsNullOrEmpty(companyId))
+        {
+            Console.WriteLine($"Company ID found: {companyId}");
+
+            // Fetch the conversation to determine the source (Facebook or WhatsApp)
+            var conversation = await _context.Conversations
+                .FirstOrDefaultAsync(c => c.SenderId == customerId && c.CompanyId == companyId);
+
+            if (conversation != null)
+            {
+                if (conversation.Source == "Facebook")
+                {
+                    var facebookService = Context.GetHttpContext()?.RequestServices.GetService<FacebookService>();
+                    if (facebookService != null)
+                    {
+                        await facebookService.SendMessageToFacebookAsync(customerId, messageText, companyId, localMessageId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("FacebookService not found in the context.");
+                        await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Facebook service unavailable.");
+                    }
+                }
+                else if (conversation.Source == "WhatsApp")
+                {
+                    var whatsAppService = Context.GetHttpContext()?.RequestServices.GetService<WhatsAppService>();
+                    if (whatsAppService != null)
+                    {
+                        await whatsAppService.SendMessageToWhatsAppAsync(customerId, messageText, companyId, localMessageId);
+                    }
+                    else
+                    {
+                        Console.WriteLine("WhatsAppService not found in the context.");
+                        await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. WhatsApp service unavailable.");
+                    }
+                }
+                else if (conversation.Source == "GatewayApi")
+                { 
+                    // TO DO GatewayApi connection
+                }
+                else
+                {
+                    Console.WriteLine("Unknown conversation source.");
+                    await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Unknown conversation source.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"No conversation found for customer {customerId}.");
+                await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Conversation not found.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Company ID not found for user.");
+            await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Company ID not found.");
         }
     }
 
 
-    public async Task AddNewConversation(string title)
+    public async Task NotifyMessageDelivered(string assignedUserId, string messageContent, string senderId)
     {
-        var conversation = new { Id = Guid.NewGuid().ToString(), Title = title };
-        await Clients.All.SendAsync("NewConversationAdded", conversation);
-    }
+        if (!string.IsNullOrEmpty(assignedUserId))
+        {
+            Console.WriteLine($"Notifying user {assignedUserId} that message was delivered.");
 
-    public async Task UpdateTeamMembers(List<string> memberNames)
-    {
-        var members = memberNames.Select(name => new { Name = name, Status = "Online" });
-        await Clients.All.SendAsync("UpdateTeamMembers", members);
+            await Clients.User(assignedUserId).SendAsync("MessageDelivered", senderId, messageContent);
+        }
     }
-
-    public async Task AssignConversationToUser(string conversationId, string userId)
+    public async Task CloseAndAnonymizeChat(string customerId)
     {
-        await Clients.Group(userId).SendAsync("AssignConversation", conversationId);
+        var archivingService = Context.GetHttpContext()?.RequestServices.GetService<ChatArchivingService>();
+
+        if (archivingService != null)
+        {
+            await archivingService.ArchiveConversationAsync(customerId);
+            Console.WriteLine($"Chat with customer {customerId} has been archived and closed.");
+        }
+        else
+        {
+            Console.WriteLine("Archiving service not found.");
+        }
     }
 
     public class Team

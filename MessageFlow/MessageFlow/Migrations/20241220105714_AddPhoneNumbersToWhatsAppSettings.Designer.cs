@@ -4,6 +4,7 @@ using MessageFlow.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageFlow.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241220105714_AddPhoneNumbersToWhatsAppSettings")]
+    partial class AddPhoneNumbersToWhatsAppSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -290,7 +293,7 @@ namespace MessageFlow.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("WhatsAppSettingsModelId")
+                    b.Property<int?>("WhatsAppSettingsModelId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -539,9 +542,7 @@ namespace MessageFlow.Migrations
                 {
                     b.HasOne("MessageFlow.Models.WhatsAppSettingsModel", null)
                         .WithMany("PhoneNumbers")
-                        .HasForeignKey("WhatsAppSettingsModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("WhatsAppSettingsModelId");
                 });
 
             modelBuilder.Entity("MessageFlow.Models.Team", b =>

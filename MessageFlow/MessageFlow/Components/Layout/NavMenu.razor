@@ -110,7 +110,7 @@
     private string companyName = string.Empty;
     private string userName = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
@@ -131,7 +131,10 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
+        if (currentUrl != "AgentWorkspace")
+        {
+            StateHasChanged();
+        }
     }
 
     public void Dispose()

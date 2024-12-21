@@ -95,6 +95,10 @@ else if (selectedCompany != null)
         {
             NavigationManager.NavigateTo($"/ChannelSetup/{selectedCompany.Id}/Facebook");
         }
+        else if (selectedCompany != null && channel.Name == "WhatsApp")
+        {
+            NavigationManager.NavigateTo($"/ChannelSetup/{selectedCompany.Id}/WhatsApp");
+        }
         // To add other channels here as needed
     }
 

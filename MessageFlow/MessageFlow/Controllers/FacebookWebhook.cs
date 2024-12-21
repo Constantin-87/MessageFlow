@@ -3,8 +3,6 @@ using Newtonsoft.Json;
 using MessageFlow.Components.Channels.Services;
 using System.Text;
 using System.Text.Json;
-using Microsoft.AspNetCore.SignalR;
-
 
 [Route("api/[controller]")]
 [ApiController]
@@ -12,15 +10,11 @@ public class FacebookWebhook : ControllerBase
 {
     private readonly ILogger<FacebookWebhook> _logger;
     private readonly FacebookService _facebookService;
-    private readonly CompanyManagementService _companyService;
-    private readonly IHubContext<ChatHub> _chatHub;
 
-    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService, CompanyManagementService companyService, IHubContext<ChatHub> chatHub)
+    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService)
     {
         _logger = logger;
         _facebookService = facebookService;
-        _companyService = companyService;
-        _chatHub = chatHub;
     }
 
     [HttpGet]
@@ -67,7 +61,7 @@ public class FacebookWebhook : ControllerBase
                     var messagingArray = entry.GetProperty("messaging").EnumerateArray();
 
                     // Delegate the handling of messages to the service method
-                    await _facebookService.ProcessFacebookMessagesAsync(pageId, messagingArray, _chatHub, _logger);
+                    await _facebookService.ProcessFacebookMessagesAsync(pageId, messagingArray, _logger);
                 }
             }
         }

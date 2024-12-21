@@ -16,6 +16,12 @@
         public DbSet<Team> Teams { get; set; }
         public DbSet<UserTeam> UserTeams { get; set; }
         public DbSet<FacebookSettingsModel> FacebookSettingsModels { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        public DbSet<ArchivedConversation> ArchivedConversations { get; set; }
+        public DbSet<ArchivedMessage> ArchivedMessages { get; set; }
+        public DbSet<WhatsAppSettingsModel> WhatsAppSettingsModels { get; set; }
+        public DbSet<PhoneNumberInfo> PhoneNumberInfo { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -37,6 +43,18 @@
                 .HasOne(ut => ut.Team)
                 .WithMany(t => t.UserTeams)
                 .HasForeignKey(ut => ut.TeamId);
+
+            modelBuilder.Entity<Message>()
+                .HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WhatsAppSettingsModel>()
+                .HasMany(ws => ws.PhoneNumbers)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 

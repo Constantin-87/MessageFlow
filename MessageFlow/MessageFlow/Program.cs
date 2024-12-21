@@ -25,6 +25,9 @@ builder.Services.AddScoped<UserManagementService>();
 builder.Services.AddScoped<CompanyManagementService>();
 builder.Services.AddScoped<TeamsManagementService>();
 builder.Services.AddScoped<FacebookService>();
+builder.Services.AddScoped<WhatsAppService>();
+builder.Services.AddScoped<ChatArchivingService>();
+
 
 builder.Services.AddControllersWithViews(options =>
 {
@@ -102,7 +105,10 @@ builder.WebHost.UseUrls("http://*:5002", "https://*:7164");
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
-}).AddJsonProtocol();
+}).AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+});
 
 // Register HttpClient for server-side components
 builder.Services.AddScoped<HttpClient>(sp =>

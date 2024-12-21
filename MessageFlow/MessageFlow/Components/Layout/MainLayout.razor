@@ -7,7 +7,7 @@
 <div class="container-fluid">
     <div class="row">
 
-        @if (!IsLoginPage && IsAuthenticated)
+        @if (!IsPublicPage && IsAuthenticated)
         {
             <!-- Sidebar -->
             <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
@@ -26,7 +26,7 @@
 </div>
 
 @code {
-    private bool IsLoginPage => NavigationManager.Uri.Contains("Login");
+    private bool IsPublicPage => NavigationManager.Uri == NavigationManager.BaseUri || NavigationManager.Uri.Contains("Login");
     private bool IsAuthenticated;
 
     protected override async Task OnInitializedAsync()

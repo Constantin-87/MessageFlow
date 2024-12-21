@@ -32,8 +32,32 @@
     private Dictionary<string, List<TeamMember>> GroupedTeamMembers = new();
     private HashSet<string> ExpandedTeams = new();
 
-    [Parameter] 
+    [Parameter] public HubConnection HubConnection { get; set; }
+
+    [Parameter]
     public string? CurrentUserName { get; set; }
+
+    public void RegisterHandlers()
+    {
+        if (HubConnection != null)
+        {
+            // Confirm connection state
+            Console.WriteLine($"HubConnection State: {HubConnection.State}");
+
+            HubConnection.On<TeamMembers.TeamMember>("AddTeamMember", (member) =>
+            {
+                Console.WriteLine($"Adding team member: {member.Name} to team: {member.Team}");
+                AddTeamMember(member);
+            });
+
+            HubConnection.On<TeamMembers.TeamMember>("RemoveTeamMember", (member) =>
+            {
+                Console.WriteLine($"Removing team member: {member.Name} from team: {member.Team}");
+                RemoveTeamMember(member);
+            });
+        }
+    }
+
 
     public void AddTeamMember(TeamMember member)
     {

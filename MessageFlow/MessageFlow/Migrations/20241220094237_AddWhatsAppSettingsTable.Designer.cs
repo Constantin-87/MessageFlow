@@ -4,6 +4,7 @@ using MessageFlow.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageFlow.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241220094237_AddWhatsAppSettingsTable")]
+    partial class AddWhatsAppSettingsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,36 +273,6 @@ namespace MessageFlow.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.PhoneNumberInfo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumberDesc")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumberId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("WhatsAppSettingsModelId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WhatsAppSettingsModelId");
-
-                    b.ToTable("PhoneNumberInfo");
-                });
-
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -353,12 +326,12 @@ namespace MessageFlow.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("BusinessAccountId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("CompanyId")
                         .HasColumnType("int");
+
+                    b.Property<string>("PhoneNumberId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("WebhookVerifyToken")
                         .IsRequired()
@@ -535,15 +508,6 @@ namespace MessageFlow.Migrations
                     b.Navigation("Conversation");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.PhoneNumberInfo", b =>
-                {
-                    b.HasOne("MessageFlow.Models.WhatsAppSettingsModel", null)
-                        .WithMany("PhoneNumbers")
-                        .HasForeignKey("WhatsAppSettingsModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
                 {
                     b.HasOne("MessageFlow.Models.Company", "Company")
@@ -648,11 +612,6 @@ namespace MessageFlow.Migrations
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
                 {
                     b.Navigation("UserTeams");
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.WhatsAppSettingsModel", b =>
-                {
-                    b.Navigation("PhoneNumbers");
                 });
 #pragma warning restore 612, 618
         }

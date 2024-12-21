@@ -4,6 +4,7 @@ using MessageFlow.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageFlow.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241217191605_AddIsActiveAndMessages")]
+    partial class AddIsActiveAndMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,58 +96,6 @@ namespace MessageFlow.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.ArchivedConversation", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("AssignedUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CompanyId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ArchivedConversations");
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.ArchivedMessage", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ArchivedConversationId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ArchivedConversationId");
-
-                    b.ToTable("ArchivedMessages");
                 });
 
             modelBuilder.Entity("MessageFlow.Models.Company", b =>
@@ -270,36 +221,6 @@ namespace MessageFlow.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.PhoneNumberInfo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumberDesc")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumberId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("WhatsAppSettingsModelId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WhatsAppSettingsModelId");
-
-                    b.ToTable("PhoneNumberInfo");
-                });
-
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -339,34 +260,6 @@ namespace MessageFlow.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("UserTeams");
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.WhatsAppSettingsModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccessToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessAccountId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CompanyId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("WebhookVerifyToken")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("WhatsAppSettingsModels");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -513,17 +406,6 @@ namespace MessageFlow.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.ArchivedMessage", b =>
-                {
-                    b.HasOne("MessageFlow.Models.ArchivedConversation", "ArchivedConversation")
-                        .WithMany("Messages")
-                        .HasForeignKey("ArchivedConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ArchivedConversation");
-                });
-
             modelBuilder.Entity("MessageFlow.Models.Message", b =>
                 {
                     b.HasOne("MessageFlow.Models.Conversation", "Conversation")
@@ -533,15 +415,6 @@ namespace MessageFlow.Migrations
                         .IsRequired();
 
                     b.Navigation("Conversation");
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.PhoneNumberInfo", b =>
-                {
-                    b.HasOne("MessageFlow.Models.WhatsAppSettingsModel", null)
-                        .WithMany("PhoneNumbers")
-                        .HasForeignKey("WhatsAppSettingsModelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
@@ -630,11 +503,6 @@ namespace MessageFlow.Migrations
                     b.Navigation("UserTeams");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.ArchivedConversation", b =>
-                {
-                    b.Navigation("Messages");
-                });
-
             modelBuilder.Entity("MessageFlow.Models.Company", b =>
                 {
                     b.Navigation("Teams");
@@ -648,11 +516,6 @@ namespace MessageFlow.Migrations
             modelBuilder.Entity("MessageFlow.Models.Team", b =>
                 {
                     b.Navigation("UserTeams");
-                });
-
-            modelBuilder.Entity("MessageFlow.Models.WhatsAppSettingsModel", b =>
-                {
-                    b.Navigation("PhoneNumbers");
                 });
 #pragma warning restore 612, 618
         }
