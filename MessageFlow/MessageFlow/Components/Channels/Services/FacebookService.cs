@@ -10,13 +10,15 @@ namespace MessageFlow.Components.Channels.Services
 {
     public class FacebookService
     {
+        private readonly ILogger<FacebookService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHubContext<ChatHub> _chatHub;
 
-        public FacebookService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub)
+        public FacebookService(ILogger<FacebookService> logger, ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub)
         {
             _dbContext = dbContext;
             _chatHub = chatHub;
+            _logger = logger;
         }
 
         // Retrieve Facebook settings for a company
@@ -66,23 +68,7 @@ namespace MessageFlow.Components.Channels.Services
 
             if (facebookSettings != null)
             {
-                var conversation = await _dbContext.Conversations.FirstOrDefaultAsync(c => c.SenderId == recipientId && c.CompanyId == companyId);
-
-                if (conversation != null && !string.IsNullOrEmpty(conversation.AssignedUserId))
-                {
-                    // Store the message in the database with the localMessageId
-                    var message = new MessageFlow.Models.Message
-                    {
-                        Id = localMessageId,
-                        ConversationId = await GetConversationIdAsync(recipientId, companyId),
-                        UserId = conversation.AssignedUserId,
-                        Content = messageText,
-                        SentAt = DateTime.UtcNow
-                    };
-
-                    _dbContext.Messages.Add(message);
-                    await _dbContext.SaveChangesAsync();
-
+                
                     var httpClient = new HttpClient();
                     var jsonMessage = new
                     {
@@ -111,11 +97,7 @@ namespace MessageFlow.Components.Channels.Services
                     {
                         Console.WriteLine($"Failed to send message to recipient {recipientId}: {await response.Content.ReadAsStringAsync()}");
                     }
-                }
-                else
-                {
-                    Console.WriteLine($"No active conversation found for recipient {recipientId} or AssignedUserId is empty.");
-                }
+               
             }
             else
             {
@@ -123,32 +105,8 @@ namespace MessageFlow.Components.Channels.Services
             }
         }
 
-        // Helper method to get or create a conversation
-        private async Task<string> GetConversationIdAsync(string recipientId, string companyId)
-        {
-            var conversation = await _dbContext.Conversations
-                .FirstOrDefaultAsync(c => c.SenderId == recipientId && c.CompanyId == companyId);
-
-            if (conversation == null)
-            {
-                conversation = new Conversation
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    SenderId = recipientId,
-                    CompanyId = companyId,
-                    Title = $"Chat with {recipientId}",
-                    IsActive = true,
-                    Source = "Facebook"
-                };
-
-                _dbContext.Conversations.Add(conversation);
-                await _dbContext.SaveChangesAsync();
-            }
-
-            return conversation.Id;
-        }
-
-        public async Task ProcessFacebookMessagesAsync(string pageId, IEnumerable<JsonElement> messagingArray, ILogger logger)
+       
+        public async Task ProcessFacebookMessagesAsync(string pageId, IEnumerable<JsonElement> messagingArray)
         {
             // Fetch the Facebook settings associated with this page ID directly
             var facebookSettings = await GetFacebookSettingsByPageIdAsync(pageId);
@@ -170,7 +128,7 @@ namespace MessageFlow.Components.Channels.Services
                             var recipientId = eventData.GetProperty("recipient").GetProperty("id").GetString();
                             var metadata = messageProperty.TryGetProperty("metadata", out var meta) ? meta.GetString() : null;
 
-                            logger.LogInformation($"Echo message received for recipient {recipientId} with metadata {metadata}: {echoMessageText}");
+                            _logger.LogInformation($"Echo message received for recipient {recipientId} with metadata {metadata}: {echoMessageText}");
 
                             if (!string.IsNullOrEmpty(metadata))
                             {
@@ -187,17 +145,17 @@ namespace MessageFlow.Components.Channels.Services
                                         await _chatHub.Clients.User(conversation.AssignedUserId)
                                             .SendAsync("MessageDelivered", recipientId, echoMessageText, metadata);
 
-                                        logger.LogInformation($"Delivery confirmation sent to user {conversation.AssignedUserId} for message ID {metadata}");
+                                        _logger.LogInformation($"Delivery confirmation sent to user {conversation.AssignedUserId} for message ID {metadata}");
                                     }
                                 }
                                 else
                                 {
-                                    logger.LogWarning($"No matching message found for metadata {metadata}");
+                                    _logger.LogWarning($"No matching message found for metadata {metadata}");
                                 }
                             }
                             else
                             {
-                                logger.LogWarning($"No metadata found in echo for recipient {recipientId} and message ID {metadata}");
+                                _logger.LogWarning($"No metadata found in echo for recipient {recipientId} and message ID {metadata}");
                             }
 
                             continue;
@@ -211,7 +169,7 @@ namespace MessageFlow.Components.Channels.Services
                         var messageText = messageProperty.GetProperty("text").GetString();
                         var conversationTitle = $"Chat with {senderId}, from: Facebook";
 
-                        logger.LogInformation($"New message received from {senderId} for Page ID {pageId}: {messageText}");
+                        _logger.LogInformation($"New message received from {senderId} for Page ID {pageId}: {messageText}");
 
                         // Check if a conversation already exists for this senderId
                         var existingConversation = await _dbContext.Conversations
@@ -219,14 +177,15 @@ namespace MessageFlow.Components.Channels.Services
 
                         if (existingConversation != null && existingConversation.IsActive)
                         {
-                            logger.LogInformation($"Active conversation already exists for senderId: {senderId}. Adding new message.");
+                            _logger.LogInformation($"Active conversation already exists for senderId: {senderId}. Adding new message.");
 
                             // Create a new message associated with the existing active conversation
-                            var message = new MessageFlow.Models.Message
+                            var message = new Message
                             {
                                 Id = Guid.NewGuid().ToString(),
                                 ConversationId = existingConversation.Id,
                                 UserId = senderId,
+                                Username = "Customer",
                                 Content = messageText,
                                 SentAt = DateTime.UtcNow
                             };
@@ -239,7 +198,7 @@ namespace MessageFlow.Components.Channels.Services
                             {
                                 Console.WriteLine($"Delegating message sending to ChatHub for user: {existingConversation.AssignedUserId}");
 
-                                await _chatHub.Clients.User(existingConversation.AssignedUserId).SendAsync("SendMessageToAssignedUser", message.Content, senderId);
+                                await _chatHub.Clients.User(existingConversation.AssignedUserId).SendAsync("SendMessageToAssignedUser", existingConversation, message);
 
                             }
                             else
@@ -252,27 +211,27 @@ namespace MessageFlow.Components.Channels.Services
                         else
                         {
                             // If the conversation doesn't exist or is inactive, create a new conversation
-                            logger.LogInformation($"No active conversation for senderId: {senderId}. Creating a new conversation.");
-                            await CreateAndSendNewConversation(companyId, senderId, conversationTitle, messageText, logger);
+                            _logger.LogInformation($"No active conversation for senderId: {senderId}. Creating a new conversation.");
+                            await CreateAndSendNewConversation(companyId, senderId, conversationTitle, messageText);
                         }
                     }
                     else
                     {
-                        logger.LogWarning($"Unhandled event type for sender ID {senderId} and Page ID {pageId}");
+                        _logger.LogWarning($"Unhandled event type for sender ID {senderId} and Page ID {pageId}");
                     }
                 }
             }
             else
             {
-                logger.LogWarning($"No Facebook settings found for Page ID {pageId}");
+                _logger.LogWarning($"No Facebook settings found for Page ID {pageId}");
             }
         }
 
 
         // Helper method to create and send a new conversation
-        private async Task CreateAndSendNewConversation(int companyId, string senderId, string conversationTitle, string messageText, ILogger logger)
+        private async Task CreateAndSendNewConversation(int companyId, string senderId, string conversationTitle, string messageText)
         {
-            var conversation = new MessageFlow.Models.Conversation
+            var conversation = new Conversation
             {
                 Title = conversationTitle,
                 SenderId = senderId,
@@ -291,6 +250,7 @@ namespace MessageFlow.Components.Channels.Services
                 Id = Guid.NewGuid().ToString(),
                 ConversationId = conversation.Id,
                 UserId = senderId,
+                Username = "Customer",
                 Content = messageText,
                 SentAt = DateTime.UtcNow
             };
@@ -302,7 +262,7 @@ namespace MessageFlow.Components.Channels.Services
             // Send new conversation to the specific company group
             await _chatHub.Clients.Group($"Company_{companyId}").SendAsync("NewConversationAdded", conversation);
 
-            logger.LogInformation($"New conversation created and sent to group: Company_{companyId}");
+            _logger.LogInformation($"New conversation created and sent to group: Company_{companyId}");
         }
 
         // Mock method for GPT model integration

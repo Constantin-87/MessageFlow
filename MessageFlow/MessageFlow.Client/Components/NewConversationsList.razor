@@ -38,8 +38,25 @@
                 Console.WriteLine($"RemoveNewConversation event received: {conversation?.Title}");
                 RemoveConversation(conversation);
             });
+
+            HubConnection.On<List<Conversation>>("LoadNewConversations", (newConversations) =>
+           {
+               Console.WriteLine("New conversations loaded.");
+               LoadNewConversations(newConversations);
+           });
         }
     }
+
+    public void LoadNewConversations(List<Conversation> newConversations)
+    {
+        Conversations.Clear();
+
+        foreach (var conversation in newConversations)
+        {
+            AddConversation(conversation);
+        }
+    }
+
 
     public void AddConversation(Conversation conversation)
     {
@@ -62,21 +79,14 @@
 
     private async Task AssignToSelf(Conversation conversation)
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        var userId = user?.FindFirst("UserId")?.Value;
-
-        Console.WriteLine($"HubConnection: {HubConnection}");
-
         if (HubConnection is not null)
         {
             conversation.IsAssigned = true;
-            conversation.AssignedUserId = userId;
+            conversation.AssignedUserId = UserId;
 
             await HubConnection.SendAsync("AssignConversationToUser", conversation.Id);
             Conversations.Remove(conversation);
-            Console.WriteLine($"Assigned conversation {conversation.Id} to user {userId}");
+            Console.WriteLine($"Assigned conversation {conversation.Id} to user {UserId}");
 
         }
         else

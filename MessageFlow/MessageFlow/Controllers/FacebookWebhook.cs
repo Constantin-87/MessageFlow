@@ -61,7 +61,7 @@ public class FacebookWebhook : ControllerBase
                     var messagingArray = entry.GetProperty("messaging").EnumerateArray();
 
                     // Delegate the handling of messages to the service method
-                    await _facebookService.ProcessFacebookMessagesAsync(pageId, messagingArray, _logger);
+                    await _facebookService.ProcessFacebookMessagesAsync(pageId, messagingArray);
                 }
             }
         }

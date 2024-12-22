@@ -102,7 +102,7 @@
                 {
                     new Claim("CompanyId", user.CompanyId.ToString()),
                     new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim("UserId", user.Id),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim("CompanyName", companyName),
                     new Claim("UserTeams", userTeamsString)
                 };

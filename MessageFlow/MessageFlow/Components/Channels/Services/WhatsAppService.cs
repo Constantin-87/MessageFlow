@@ -11,11 +11,13 @@ namespace MessageFlow.Components.Channels.Services
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IHubContext<ChatHub> _chatHub;
+        private readonly ILogger<WhatsAppService> _logger;
 
-        public WhatsAppService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub)
+        public WhatsAppService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, ILogger<WhatsAppService> logger)
         {
             _dbContext = dbContext;
             _chatHub = chatHub;
+            _logger = logger;
         }
         public async Task<bool> SaveWhatsAppSettingsAsync(int companyId, WhatsAppSettingsModel whatsAppSettings)
         {
@@ -83,6 +85,7 @@ namespace MessageFlow.Components.Channels.Services
                 Id = Guid.NewGuid().ToString(),
                 ConversationId = conversation.Id,
                 UserId = conversation.AssignedUserId,
+                Username = "Customer",
                 Content = messageText,
                 SentAt = DateTime.UtcNow
             };
@@ -92,8 +95,7 @@ namespace MessageFlow.Components.Channels.Services
 
             if (!string.IsNullOrEmpty(conversation.AssignedUserId))
             {
-                await _chatHub.Clients.User(conversation.AssignedUserId)
-                    .SendAsync("ReceiveMessage", messageText, senderPhoneNumber);
+                await _chatHub.Clients.User(conversation.AssignedUserId).SendAsync("SendMessageToAssignedUser", conversation, message);
             }
         }
 
@@ -117,6 +119,7 @@ namespace MessageFlow.Components.Channels.Services
                 Id = Guid.NewGuid().ToString(),
                 ConversationId = conversation.Id,
                 UserId = senderPhoneNumber,
+                Username = "Customer",
                 Content = messageText,
                 SentAt = DateTime.UtcNow
             };
@@ -162,7 +165,8 @@ namespace MessageFlow.Components.Channels.Services
                     }
                     else
                     {
-                        Console.WriteLine($"Failed to send message to {recipientPhoneNumber}: {await response.Content.ReadAsStringAsync()}");
+                        var responseBody = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"Failed to send WhatsApp message. Status: {response.StatusCode}, Response: {responseBody}");
                     }
                 }
                 else

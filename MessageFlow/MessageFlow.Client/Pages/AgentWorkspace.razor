@@ -18,7 +18,7 @@
 
     <!-- Chat Section -->
     <div class="chat-section">
-        <ChatWindow @ref="ChatWindowRef" UserId="@UserId" HubConnection="@hubConnection"/>
+        <ChatWindow @ref="ChatWindowRef" UserId="@UserId" CurrentUserName="@UserName" HubConnection="@hubConnection" />
     </div>
 
     <!-- New Conversations List -->
@@ -45,7 +45,7 @@
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
-            UserId = user?.FindFirst("UserId")?.Value;
+            UserId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             UserCompanyId = user?.FindFirst("CompanyId")?.Value;
             UserName = user?.Identity?.Name;
 
@@ -122,15 +122,6 @@
 
         return teams;
     }
-
-    // private async Task SendMessageToHub(string message)
-    // {
-    //     if (hubConnection is not null && UserId is not null && UserCompanyId is not null && UserTeams is not null)
-    //     {
-    //         var teamIds = ParseUserTeams(UserTeams).Select(t => t.TeamId).ToList();
-    //         await hubConnection.SendAsync("SendMessageToAgent", UserId, message, UserCompanyId, teamIds);
-    //     }
-    // }
 
     public async ValueTask DisposeAsync()
     {

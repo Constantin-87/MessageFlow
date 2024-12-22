@@ -52,6 +52,24 @@ public class ChatHub : Hub
                     CompanyId = companyId
                 };
 
+                var companyIdValue = companyId.ToString();
+
+                // Fetch and send assigned conversations to the user
+                var assignedConversations = await _context.Conversations
+                    .Include(c => c.Messages)
+                    .Where(c => c.AssignedUserId == userId && c.CompanyId == companyIdValue)
+                    .ToListAsync();
+
+                await Clients.Caller.SendAsync("LoadAssignedConversations", assignedConversations);
+
+                // Fetch and send new (unassigned) conversations for the company
+                var newConversations = await _context.Conversations
+                    .Where(c => c.CompanyId == companyIdValue && c.IsAssigned == false)
+                    .ToListAsync();
+
+                await Clients.Caller.SendAsync("LoadNewConversations", newConversations);
+
+
                 await BroadcastTeamMembers(companyId);
             }
 
@@ -120,16 +138,9 @@ public class ChatHub : Hub
             conversation.IsAssigned = true;
             await _context.SaveChangesAsync();
 
-            // Get the latest message from the conversation
-            var latestMessage = conversation.Messages
-                .OrderByDescending(m => m.SentAt)
-                .FirstOrDefault();
-
-            var latestMessageContent = latestMessage?.Content ?? "No messages in this conversation.";
-
             // Notify the assigned user to open the chat with the latest message
-            await Clients.User(userId).SendAsync("AssignConversation", conversation.SenderId, latestMessageContent);
-            Console.WriteLine($"Assigned conversation {conversationId} to user {userId} with message: {latestMessageContent}");
+            await Clients.User(userId).SendAsync("AssignConversation", conversation);
+            Console.WriteLine($"Assigned conversation {conversationId} to user {userId} with {conversation.Messages.Count} messages.");
 
             // Notify all users in the company to remove the conversation from their lists
             await Clients.Group($"Company_{conversation.CompanyId}").SendAsync("RemoveNewConversation", conversation);
@@ -137,56 +148,27 @@ public class ChatHub : Hub
         }
     }
 
-    public async Task SendMessageToAssignedUser(string assignedUserId, string messageContent, string senderId)
+    public async Task SendMessageToCustomer(MessageFlow.Models.Message message)
     {
-        if (!string.IsNullOrEmpty(assignedUserId))
+        var conversation = await _context.Conversations.FirstOrDefaultAsync(c => c.Id == message.ConversationId);
+
+        if (conversation != null)
         {
-            Console.WriteLine($"Attempting to send message to assigned user: {assignedUserId}");
+            // Save the message to the database
+            _context.Messages.Add(message);
+            await _context.SaveChangesAsync();
 
-            var isUserOnline = OnlineUsers.Values.Any(u => u.UserId == assignedUserId);
+            var customerId = conversation.SenderId;
+                var userId = conversation.AssignedUserId;
+                var companyId = conversation.CompanyId;
 
-            if (isUserOnline)
-            {
-                Console.WriteLine($"User {assignedUserId} is online. Sending message...");
-
-                await Clients.User(assignedUserId).SendAsync("ReceiveMessage", messageContent, senderId);
-
-                Console.WriteLine("Message sent to assigned user.");
-            }
-            else
-            {
-                Console.WriteLine($"User {assignedUserId} is not online. Mock log: Message queued for delivery.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("AssignedUserId is null or empty.");
-        }
-    }
-
-    public async Task SendMessageToCustomer(string customerId, string messageText, string localMessageId)
-    {
-        var userId = Context.UserIdentifier;
-        Console.WriteLine($"Attempting to send message from user {userId} to customer {customerId}: {messageText}");
-
-        var companyId = OnlineUsers.Values.FirstOrDefault(u => u.UserId == userId)?.CompanyId;
-
-        if (!string.IsNullOrEmpty(companyId))
-        {
-            Console.WriteLine($"Company ID found: {companyId}");
-
-            // Fetch the conversation to determine the source (Facebook or WhatsApp)
-            var conversation = await _context.Conversations
-                .FirstOrDefaultAsync(c => c.SenderId == customerId && c.CompanyId == companyId);
-
-            if (conversation != null)
-            {
+                Console.WriteLine($"Attempting to send message from user {userId} to customer {customerId}: {message.Content}");
                 if (conversation.Source == "Facebook")
                 {
                     var facebookService = Context.GetHttpContext()?.RequestServices.GetService<FacebookService>();
                     if (facebookService != null)
                     {
-                        await facebookService.SendMessageToFacebookAsync(customerId, messageText, companyId, localMessageId);
+                        await facebookService.SendMessageToFacebookAsync(customerId, message.Content, companyId, message.Id);
                     }
                     else
                     {
@@ -199,7 +181,7 @@ public class ChatHub : Hub
                     var whatsAppService = Context.GetHttpContext()?.RequestServices.GetService<WhatsAppService>();
                     if (whatsAppService != null)
                     {
-                        await whatsAppService.SendMessageToWhatsAppAsync(customerId, messageText, companyId, localMessageId);
+                        await whatsAppService.SendMessageToWhatsAppAsync(customerId, message.Content, companyId, message.Id);
                     }
                     else
                     {
@@ -219,15 +201,9 @@ public class ChatHub : Hub
             }
             else
             {
-                Console.WriteLine($"No conversation found for customer {customerId}.");
-                await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Conversation not found.");
+                Console.WriteLine($"No conversation with ID: {message.ConversationId} was found.");
             }
-        }
-        else
-        {
-            Console.WriteLine("Company ID not found for user.");
-            await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Company ID not found.");
-        }
+       
     }
 
 

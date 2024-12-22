@@ -1,5 +1,6 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="chat-window-container">
     <!-- Tabs Navigation -->
@@ -7,7 +8,7 @@
         @foreach (var tab in ActiveChats)
         {
             <div class="chat-tab @(tab.IsActive ? "active" : "")">
-                <span @onclick="() => SwitchTab(tab)">@tab.CustomerId</span>
+                <span @onclick="() => SwitchTab(tab)">@tab.SenderId</span>
                 <button class="close-btn" @onclick="() => ConfirmCloseTab(tab)">X</button>
             </div>
         }
@@ -18,11 +19,11 @@
     {
         var activeChat = ActiveChats.First(c => c.IsActive);
         <div class="chat-window">
-            <h5>Conversation with: @activeChat.CustomerId</h5>
+            <h5>Conversation with: @activeChat.SenderId</h5>
             <div class="chat-history">
                 @foreach (var message in activeChat.Messages)
                 {
-                    <div>@message</div>
+                    <div>@message.Username: @message.Content</div>
                 }
             </div>
             <input @bind="MessageText" placeholder="Type a message..." />
@@ -32,9 +33,11 @@
 </div>
 
 @code {
-    [Parameter] public string? UserId { get; set; }
+
+    [Parameter] public string UserId { get; set; }
+    [Parameter] public string CurrentUserName { get; set; }
     [Parameter] public HubConnection HubConnection { get; set; }
-    private List<ChatTab> ActiveChats = new();
+    private List<Conversation> ActiveChats = new();
     private string MessageText = string.Empty;
 
     public void RegisterHandlers()
@@ -44,15 +47,15 @@
             // Confirm connection state
             Console.WriteLine($"HubConnection State: {HubConnection.State}");
 
-            HubConnection.On<string, string>("AssignConversation", (customerId, messageText) =>
+            HubConnection.On<Conversation>("AssignConversation", (conversation) =>
             {
-                AddNewChat(customerId, messageText);
+                AddNewChat(conversation);
             });
 
-            HubConnection.On<string, string>("SendMessageToAssignedUser", (messageContent, senderId) =>
+            HubConnection.On<Conversation, Message>("SendMessageToAssignedUser", (conversation, message) =>
             {
-                Console.WriteLine($"Received message from {senderId}: {messageContent}");
-                AddMessageToChat(senderId, messageContent);
+                Console.WriteLine($"Received message from {conversation.SenderId}: {message.Content}");
+                AddMessageToChat(conversation, message);
             });
 
             HubConnection.On<string, string, string>("MessageDelivered", (recipientId, messageContent, messageId) =>
@@ -61,19 +64,43 @@
                 MarkMessageAsDelivered(recipientId, messageId);
             });
 
+            HubConnection.On<List<Conversation>>("LoadAssignedConversations", (assignedConversations) =>
+           {
+               Console.WriteLine("Assigned conversations loaded.");
+               LoadAssignedConversations(assignedConversations);
+           });
+
         }
     }
 
-    private async Task ConfirmCloseTab(ChatTab tab)
+    public void LoadAssignedConversations(List<Conversation> assignedConversations)
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmClose", $"Are you sure you want to close the chat with {tab.CustomerId}?");
+        ActiveChats.Clear();
+        foreach (var conversation in assignedConversations)
+        {
+            // Ensure messages are sorted by SentAt for each conversation
+            conversation.Messages = conversation.Messages.OrderBy(m => m.SentAt).ToList();
+            ActiveChats.Add(conversation);
+        }
+
+        // Set the first tab as active, if available
+        if (ActiveChats.Any())
+        {
+            SwitchTab(ActiveChats.First());
+        }
+    }
+
+
+    private async Task ConfirmCloseTab(Conversation tab)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmClose", $"Are you sure you want to close the chat with {tab.SenderId}?");
         if (confirmed)
         {
             await CloseTabAsync(tab);
         }
     }
 
-    private async Task CloseTabAsync(ChatTab tab)
+    private async Task CloseTabAsync(Conversation tab)
     {
         ActiveChats.Remove(tab);
         if (ActiveChats.Any())
@@ -84,25 +111,23 @@
         StateHasChanged();
 
         // Send a request to the server to close and anonymize the chat
-        await HubConnection.SendAsync("CloseAndAnonymizeChat", tab.CustomerId);
+        await HubConnection.SendAsync("CloseAndAnonymizeChat", tab.SenderId);
     }
 
     private void MarkMessageAsDelivered(string recipientId, string messageId)
     {
-        var chat = ActiveChats.FirstOrDefault(c => c.CustomerId == recipientId);
+        var chat = ActiveChats.FirstOrDefault(c => c.SenderId == recipientId);
         if (chat != null)
         {
-            // Find the message text associated with the messageId
-            var messageText = chat.MessageIds.FirstOrDefault(pair => pair.Value == messageId).Key;
+            // Find the specific message in the chat using its ID
+            var message = chat.Messages.FirstOrDefault(m => m.Id == messageId);
 
-            if (!string.IsNullOrEmpty(messageText))
+            if (message != null)
             {
-                // Find the index of the message text in the chat messages
-                var messageIndex = chat.Messages.FindIndex(msg => msg == $"You: {messageText}");
-                if (messageIndex != -1)
+                // Append "(Delivered)" to the message content if it doesn't already have it
+                if (!message.Content.EndsWith("(Delivered)"))
                 {
-                    // Append "(Delivered)" to the message
-                    chat.Messages[messageIndex] += " (Delivered)";
+                    message.Content += " (Delivered)";
                     StateHasChanged();
                 }
             }
@@ -119,34 +144,31 @@
 
 
 
-    private void AddMessageToChat(string senderId, string messageContent)
+    private void AddMessageToChat(Conversation conversation, Message message)
     {
-        var chat = ActiveChats.FirstOrDefault(c => c.CustomerId == senderId);
-        if (chat != null)
+        if (conversation != null && message != null)
         {
-            chat.Messages.Add($"Customer: {messageContent}");
+            // Add the message to the conversation's Messages collection
+            conversation.Messages.Add(message);
             StateHasChanged();
         }
         else
         {
-            Console.WriteLine($"No active chat found for sender: {senderId}");
+            Console.WriteLine($"Conversation not found for message with ID: {message.Id}");
         }
     }
 
-    public void AddNewChat(string customerId, string initialMessage)
+    public void AddNewChat(Conversation conversation)
     {
-        // Check if the tab already exists
-        if (!ActiveChats.Any(c => c.CustomerId == customerId))
+        if (!ActiveChats.Any(c => c.Id == conversation.Id))
         {
-            ActiveChats.Add(new ChatTab { CustomerId = customerId, IsActive = true, Messages = new List<string> { initialMessage } });
+            ActiveChats.Add(conversation);
         }
 
-        // Set the new tab as active
-        SwitchTab(ActiveChats.First(c => c.CustomerId == customerId));
-        StateHasChanged();
+        SwitchTab(conversation);
     }
 
-    private void SwitchTab(ChatTab tab)
+    private void SwitchTab(Conversation tab)
     {
         foreach (var chat in ActiveChats)
         {
@@ -156,7 +178,7 @@
         StateHasChanged();
     }
 
-    private void CloseTab(ChatTab tab)
+    private void CloseTab(Conversation tab)
     {
         ActiveChats.Remove(tab);
         if (ActiveChats.Any())
@@ -166,39 +188,41 @@
         StateHasChanged();
     }
 
-    private async Task SendMessage(ChatTab chat)
+    private async Task SendMessage(Conversation chat)
     {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = user?.Identity?.Name;
+
+        Console.WriteLine($"UserId: {userId}");
         if (!string.IsNullOrWhiteSpace(MessageText))
         {
             // Generate a unique local message ID
             var localMessageId = Guid.NewGuid().ToString();
 
-            // Store the message without displaying the ID
-            chat.Messages.Add($"You: {MessageText}");
+            var newMessage = new Message
+                {
+                    Id = localMessageId,
+                    ConversationId = chat.Id,
+                    UserId = UserId,
+                    Username = CurrentUserName,
+                    Content = MessageText,
+                    SentAt = DateTime.UtcNow
+                };
 
-            // Track the message with a mapping between content and ID
-            chat.MessageIds ??= new Dictionary<string, string>();
-            chat.MessageIds[MessageText] = localMessageId;
-
+            chat.Messages.Add(newMessage);
             StateHasChanged();
 
-            Console.WriteLine($"Sending message to customer {chat.CustomerId}: {MessageText}");
-
-            await HubConnection.SendAsync("SendMessageToCustomer", chat.CustomerId, MessageText, localMessageId);
+            await HubConnection.SendAsync("SendMessageToCustomer", newMessage);
             MessageText = string.Empty;
+
+            Console.WriteLine($"Sending message to customer {chat.SenderId}: {MessageText}");
         }
         else
         {
             Console.WriteLine("Message text is empty.");
         }
-    }
-
-    public class ChatTab
-    {
-        public string CustomerId { get; set; } = string.Empty;
-        public bool IsActive { get; set; } = false;
-        public List<string> Messages { get; set; } = new();
-        public Dictionary<string, string> MessageIds { get; set; } = new();
     }
 }
 <script>
