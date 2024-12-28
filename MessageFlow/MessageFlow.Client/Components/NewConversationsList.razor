@@ -8,7 +8,7 @@
         @foreach (var conversation in Conversations)
         {
             <li>
-                @conversation.Title
+                Chat with @conversation.SenderUsername from: @conversation.SourceLabel
                 <button @onclick="async () => await AssignToSelf(conversation)">Assign to Myself</button>
                 <button @onclick="() => AssignToOther(conversation)">Assign to Different User</button>
             </li>
@@ -29,13 +29,11 @@
         {
             HubConnection.On<Conversation>("NewConversationAdded", (conversation) =>
             {
-                Console.WriteLine($"NewConversationAdded event received: {conversation?.Title}");
                 AddConversation(conversation);
             });
 
             HubConnection.On<Conversation>("RemoveNewConversation", (conversation) =>
             {
-                Console.WriteLine($"RemoveNewConversation event received: {conversation?.Title}");
                 RemoveConversation(conversation);
             });
 
@@ -57,23 +55,18 @@
         }
     }
 
-
     public void AddConversation(Conversation conversation)
     {
-        Console.WriteLine($"Adding conversation: {conversation?.Title}, ID: {conversation?.Id}");
         Conversations.Add(conversation);
         StateHasChanged();
     }
-
 
     public void RemoveConversation(Conversation conversation)
     {
         if (conversation != null)
         {
-            Console.WriteLine($"Attempting to remove conversation: {conversation?.Title}, ID: {conversation?.Id}");
             Conversations.RemoveAll(c => c.Id == conversation.Id);
             StateHasChanged();
-            Console.WriteLine($"Removed conversation: {conversation.Id}");
         }
     }
 

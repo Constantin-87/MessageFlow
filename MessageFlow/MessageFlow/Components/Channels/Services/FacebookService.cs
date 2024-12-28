@@ -1,9 +1,8 @@
-﻿using MessageFlow.Data;
+﻿using MessageFlow.Components.Channels.Helpers;
+using MessageFlow.Data;
 using MessageFlow.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System.Text;
 using System.Text.Json;
 
 namespace MessageFlow.Components.Channels.Services
@@ -68,36 +67,38 @@ namespace MessageFlow.Components.Channels.Services
 
             if (facebookSettings != null)
             {
-                
-                    var httpClient = new HttpClient();
-                    var jsonMessage = new
+
+                var url = $"https://graph.facebook.com/v11.0/me/messages";
+                var payload = new
+                {
+                    recipient = new { id = recipientId },
+                    messaging_type = "RESPONSE",
+                    message = new { text = messageText }
+                };
+
+                var response = await MessageSenderHelper.SendMessageAsync(url, payload, facebookSettings.AccessToken, _logger);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    var responseJson = JsonDocument.Parse(responseBody);
+
+                    var facebookMessageId = responseJson.RootElement.GetProperty("message_id").GetString();
+
+                    // Update local database with FacebookMessageId
+                    var message = await _dbContext.Messages.FirstOrDefaultAsync(m => m.Id == localMessageId);
+                    if (message != null)
                     {
-                        recipient = new { id = recipientId },
-                        message = new
-                        {
-                            text = messageText,
-                            metadata = localMessageId // Attach the unique identifier as metadata
-                        }
-                    };
-
-                    var jsonContent = new StringContent(JsonConvert.SerializeObject(jsonMessage), Encoding.UTF8, "application/json");
-
-                    Console.WriteLine($"Sending HTTP POST to Facebook: {jsonContent}");
-
-                    var response = await httpClient.PostAsync(
-                        $"https://graph.facebook.com/v11.0/me/messages?access_token={facebookSettings.AccessToken}",
-                        jsonContent
-                    );
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"Message sent successfully to recipient {recipientId} with metadata {localMessageId}.");
+                        message.ProviderMessageId = facebookMessageId;
+                        await _dbContext.SaveChangesAsync();
                     }
-                    else
-                    {
-                        Console.WriteLine($"Failed to send message to recipient {recipientId}: {await response.Content.ReadAsStringAsync()}");
-                    }
-               
+
+                    _logger.LogInformation($"Message sent to Facebook. Message ID: {facebookMessageId}");
+                }
+                else
+                {
+                    _logger.LogError($"Failed to send Facebook message to {recipientId}");
+                }
             }
             else
             {
@@ -105,176 +106,154 @@ namespace MessageFlow.Components.Channels.Services
             }
         }
 
-       
+        public async Task ProcessFacebookWebhookEventAsync(JsonElement entry)
+        {
+            if (!entry.TryGetProperty("messaging", out var messagingEvents))
+                return;
+
+            foreach (var messagingEvent in messagingEvents.EnumerateArray())
+            {
+                if (messagingEvent.TryGetProperty("delivery", out var delivery))
+                {
+                    await HandleDeliveryEvent(delivery);
+                }
+                else if (messagingEvent.TryGetProperty("read", out var read))
+                {
+                    var senderId = messagingEvent.GetProperty("sender").GetProperty("id").GetString();
+                    var recipientId = messagingEvent.GetProperty("recipient").GetProperty("id").GetString();
+                    await HandleReadEvent(read, senderId, recipientId);
+                }
+                else if (messagingEvent.TryGetProperty("message", out var messageElement))
+                {
+                    if (messageElement.TryGetProperty("is_echo", out var isEcho) && isEcho.GetBoolean())
+                    {
+                        // Log and skip processing for echo messages
+                        _logger.LogInformation($"Ignoring echo message with ID: {messageElement.GetProperty("mid").GetString()}");
+                        continue;
+                    }
+
+                    // Process regular messages
+                    var pageId = entry.GetProperty("id").GetString();
+                    await ProcessFacebookMessagesAsync(pageId, new[] { messagingEvent });
+                }
+            }
+        }
+
+        private async Task HandleDeliveryEvent(JsonElement delivery)
+        {
+            if (!delivery.TryGetProperty("mids", out var mids))
+                return;
+
+            foreach (var mid in mids.EnumerateArray())
+            {
+                var statusElement = JsonDocument.Parse($"{{\"id\":\"{mid.GetString()}\",\"status\":\"delivered\"}}").RootElement;
+                await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, statusElement, "Facebook");
+            }
+        }
+
+        private async Task HandleReadEvent(JsonElement read, string senderId, string recipientId)
+        {
+            if (!read.TryGetProperty("watermark", out var watermarkProperty))
+            {
+                _logger.LogWarning("No 'watermark' property found in the 'read' event.");
+                return;
+            }
+
+            long watermarkUnix;
+            try
+            {
+                // Extract the watermark and validate it's within a reasonable range
+                watermarkUnix = watermarkProperty.GetInt64();
+                if (watermarkUnix > DateTimeOffset.MaxValue.ToUnixTimeMilliseconds() || watermarkUnix < DateTimeOffset.MinValue.ToUnixTimeMilliseconds())
+                {
+                    _logger.LogWarning($"Invalid watermark timestamp: {watermarkUnix}. Skipping processing.");
+                    return;
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError($"Failed to parse watermark: {ex.Message}");
+                return;
+            }
+
+            var watermarkTimestamp = DateTimeOffset.FromUnixTimeMilliseconds(watermarkUnix).UtcDateTime;
+
+            // Retrieve the CompanyId using the recipientId (PageId) from FacebookSettingsModel
+            var facebookSettings = await _dbContext.FacebookSettingsModels
+                .FirstOrDefaultAsync(fs => fs.PageId == recipientId);
+
+            if (facebookSettings == null)
+            {
+                _logger.LogWarning($"No Facebook settings found for Page ID {recipientId}.");
+                return;
+            }
+
+            // Use the CompanyId and SenderId to find the conversation
+            var conversation = await _dbContext.Conversations
+                .FirstOrDefaultAsync(c => c.CompanyId == facebookSettings.CompanyId.ToString() && c.SenderId == senderId);
+
+            if (conversation == null)
+            {
+                _logger.LogWarning($"No conversation found for sender {senderId} in company {facebookSettings.CompanyId}.");
+                return;
+            }
+
+            // Find messages in this conversation sent before the watermark and not yet marked as read
+            var messagesToUpdate = await _dbContext.Messages
+                .Where(m => m.ConversationId == conversation.Id && m.Status != "read" && m.SentAt <= watermarkTimestamp)
+                .ToListAsync();
+
+            foreach (var message in messagesToUpdate)
+            {
+                try
+                {
+                    // Format the JSON with the timestamp
+                    var statusElementJson = $"{{\"id\":\"{message.ProviderMessageId}\",\"status\":\"read\",\"timestamp\":\"{watermarkUnix / 1000}\"}}";
+                    var statusElement = JsonDocument.Parse(statusElementJson).RootElement;
+
+                    await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, statusElement, "Facebook");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Error updating message ID {message.Id} to 'read': {ex.Message}");
+                }
+            }
+
+            _logger.LogInformation($"Marked {messagesToUpdate.Count} messages as read in conversation {conversation.Id} up to watermark timestamp {watermarkTimestamp}.");
+        }
+
         public async Task ProcessFacebookMessagesAsync(string pageId, IEnumerable<JsonElement> messagingArray)
         {
-            // Fetch the Facebook settings associated with this page ID directly
             var facebookSettings = await GetFacebookSettingsByPageIdAsync(pageId);
             var companyId = facebookSettings?.CompanyId ?? 0;
 
-            if (companyId != 0)
-            {
-                foreach (var eventData in messagingArray)
-                {
-                    var senderId = eventData.GetProperty("sender").GetProperty("id").GetString();
-
-                    // Check if the event contains a "message" property
-                    if (eventData.TryGetProperty("message", out var messageProperty))
-                    {
-                        // Handle echo messages
-                        if (messageProperty.TryGetProperty("is_echo", out var isEcho) && isEcho.GetBoolean())
-                        {
-                            var echoMessageText = messageProperty.GetProperty("text").GetString();
-                            var recipientId = eventData.GetProperty("recipient").GetProperty("id").GetString();
-                            var metadata = messageProperty.TryGetProperty("metadata", out var meta) ? meta.GetString() : null;
-
-                            _logger.LogInformation($"Echo message received for recipient {recipientId} with metadata {metadata}: {echoMessageText}");
-
-                            if (!string.IsNullOrEmpty(metadata))
-                            {
-                                // Find the message in the database by the metadata (localMessageId)
-                                var storedMessage = await _dbContext.Messages
-                                    .FirstOrDefaultAsync(m => m.Id == metadata);
-
-                                if (storedMessage != null)
-                                {
-                                    // Notify the assigned user of the delivery confirmation
-                                    var conversation = await _dbContext.Conversations.FindAsync(storedMessage.ConversationId);
-                                    if (conversation != null && !string.IsNullOrEmpty(conversation.AssignedUserId))
-                                    {
-                                        await _chatHub.Clients.User(conversation.AssignedUserId)
-                                            .SendAsync("MessageDelivered", recipientId, echoMessageText, metadata);
-
-                                        _logger.LogInformation($"Delivery confirmation sent to user {conversation.AssignedUserId} for message ID {metadata}");
-                                    }
-                                }
-                                else
-                                {
-                                    _logger.LogWarning($"No matching message found for metadata {metadata}");
-                                }
-                            }
-                            else
-                            {
-                                _logger.LogWarning($"No metadata found in echo for recipient {recipientId} and message ID {metadata}");
-                            }
-
-                            continue;
-                        }
-
-
-
-
-
-                        // Process regular messages
-                        var messageText = messageProperty.GetProperty("text").GetString();
-                        var conversationTitle = $"Chat with {senderId}, from: Facebook";
-
-                        _logger.LogInformation($"New message received from {senderId} for Page ID {pageId}: {messageText}");
-
-                        // Check if a conversation already exists for this senderId
-                        var existingConversation = await _dbContext.Conversations
-                            .FirstOrDefaultAsync(c => c.SenderId == senderId && c.CompanyId == companyId.ToString());
-
-                        if (existingConversation != null && existingConversation.IsActive)
-                        {
-                            _logger.LogInformation($"Active conversation already exists for senderId: {senderId}. Adding new message.");
-
-                            // Create a new message associated with the existing active conversation
-                            var message = new Message
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                ConversationId = existingConversation.Id,
-                                UserId = senderId,
-                                Username = "Customer",
-                                Content = messageText,
-                                SentAt = DateTime.UtcNow
-                            };
-
-                            _dbContext.Messages.Add(message);
-                            await _dbContext.SaveChangesAsync();
-
-                            // If the conversation is assigned, send the message to the assigned user's chat window
-                            if (!string.IsNullOrEmpty(existingConversation.AssignedUserId))
-                            {
-                                Console.WriteLine($"Delegating message sending to ChatHub for user: {existingConversation.AssignedUserId}");
-
-                                await _chatHub.Clients.User(existingConversation.AssignedUserId).SendAsync("SendMessageToAssignedUser", existingConversation, message);
-
-                            }
-                            else
-                            {
-                                Console.WriteLine("AssignedUserId is null or empty.");
-                            }
-
-
-                        }
-                        else
-                        {
-                            // If the conversation doesn't exist or is inactive, create a new conversation
-                            _logger.LogInformation($"No active conversation for senderId: {senderId}. Creating a new conversation.");
-                            await CreateAndSendNewConversation(companyId, senderId, conversationTitle, messageText);
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"Unhandled event type for sender ID {senderId} and Page ID {pageId}");
-                    }
-                }
-            }
-            else
+            if (companyId == 0)
             {
                 _logger.LogWarning($"No Facebook settings found for Page ID {pageId}");
+                return;
             }
-        }
 
-
-        // Helper method to create and send a new conversation
-        private async Task CreateAndSendNewConversation(int companyId, string senderId, string conversationTitle, string messageText)
-        {
-            var conversation = new Conversation
+            foreach (var eventData in messagingArray)
             {
-                Title = conversationTitle,
-                SenderId = senderId,
-                CompanyId = companyId.ToString(),
-                IsActive = true, // Set the new conversation as active
-                Source = "Facebook"
-            };
+                if (eventData.TryGetProperty("sender", out var senderElement) &&
+                    eventData.TryGetProperty("message", out var messageElement) &&
+                    messageElement.TryGetProperty("mid", out var midElement))
+                {
 
-            // Add the conversation to the database
-            _dbContext.Conversations.Add(conversation);
-            await _dbContext.SaveChangesAsync();
+                    var senderId = senderElement.GetProperty("id").GetString();
+                    var messageText = messageElement.GetProperty("text").GetString();
+                    var providerMessageId = midElement.GetString();
 
-            // Create a new message associated with the conversation
-            var message = new MessageFlow.Models.Message
-            {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversation.Id,
-                UserId = senderId,
-                Username = "Customer",
-                Content = messageText,
-                SentAt = DateTime.UtcNow
-            };
+                    var senderUserName = senderId; // Placeholder; adjust to fetch the actual username if needed
 
-            // Add the message to the database
-            _dbContext.Messages.Add(message);
-            await _dbContext.SaveChangesAsync();
+                    await MessageProcessingHelper.ProcessMessageAsync(_dbContext, _chatHub, _logger, companyId, senderId, senderUserName, messageText, providerMessageId, "Facebook");
+                }
+                else
+                {
+                    _logger.LogWarning($"Unhandled event type in Facebook webhook payload: {eventData}");
+                }
+            }
 
-            // Send new conversation to the specific company group
-            await _chatHub.Clients.Group($"Company_{companyId}").SendAsync("NewConversationAdded", conversation);
-
-            _logger.LogInformation($"New conversation created and sent to group: Company_{companyId}");
         }
-
-        // Mock method for GPT model integration
-        private async Task<string> ProcessMessageWithGPTAsync(string message)
-        {
-            // Simulate GPT processing
-            await Task.Delay(500); // Simulate processing delay
-
-            // For demo purposes, let's assume GPT handles simple messages
-            return message.Contains("simple") ? "HANDLED" : "NOT_HANDLED";
-        }
-
-
     }
 }

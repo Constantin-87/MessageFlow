@@ -78,7 +78,6 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
-
     private async Task BroadcastTeamMembers(string companyId)
     {
         var companyUsers = OnlineUsers.Values.Where(user => user.CompanyId == companyId);
@@ -95,7 +94,6 @@ public class ChatHub : Hub
             await Clients.Group($"Company_{companyId}").SendAsync("AddTeamMember", teamMember);
         }
     }
-
 
     private async Task BroadcastUserDisconnected(string companyId)
     {
@@ -159,63 +157,52 @@ public class ChatHub : Hub
             await _context.SaveChangesAsync();
 
             var customerId = conversation.SenderId;
-                var userId = conversation.AssignedUserId;
-                var companyId = conversation.CompanyId;
-
-                Console.WriteLine($"Attempting to send message from user {userId} to customer {customerId}: {message.Content}");
-                if (conversation.Source == "Facebook")
+            var userId = conversation.AssignedUserId;
+            var companyId = conversation.CompanyId;
+            
+            Console.WriteLine($"Attempting to send message from user {userId} to customer {customerId}: {message.Content}");
+            if (conversation.Source == "Facebook")
+            {
+                var facebookService = Context.GetHttpContext()?.RequestServices.GetService<FacebookService>();
+                if (facebookService != null)
                 {
-                    var facebookService = Context.GetHttpContext()?.RequestServices.GetService<FacebookService>();
-                    if (facebookService != null)
-                    {
-                        await facebookService.SendMessageToFacebookAsync(customerId, message.Content, companyId, message.Id);
-                    }
-                    else
-                    {
-                        Console.WriteLine("FacebookService not found in the context.");
-                        await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Facebook service unavailable.");
-                    }
-                }
-                else if (conversation.Source == "WhatsApp")
-                {
-                    var whatsAppService = Context.GetHttpContext()?.RequestServices.GetService<WhatsAppService>();
-                    if (whatsAppService != null)
-                    {
-                        await whatsAppService.SendMessageToWhatsAppAsync(customerId, message.Content, companyId, message.Id);
-                    }
-                    else
-                    {
-                        Console.WriteLine("WhatsAppService not found in the context.");
-                        await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. WhatsApp service unavailable.");
-                    }
-                }
-                else if (conversation.Source == "GatewayApi")
-                { 
-                    // TO DO GatewayApi connection
+                    await facebookService.SendMessageToFacebookAsync(customerId, message.Content, companyId, message.Id);
                 }
                 else
                 {
-                    Console.WriteLine("Unknown conversation source.");
-                    await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Unknown conversation source.");
+                    Console.WriteLine("FacebookService not found in the context.");
+                    await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Facebook service unavailable.");
                 }
+            }
+            else if (conversation.Source == "WhatsApp")
+            {
+                var whatsAppService = Context.GetHttpContext()?.RequestServices.GetService<WhatsAppService>();
+                if (whatsAppService != null)
+                {
+                    await whatsAppService.SendMessageToWhatsAppAsync(customerId, message.Content, companyId, message.Id);
+                }
+                else
+                {
+                    Console.WriteLine("WhatsAppService not found in the context.");
+                    await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. WhatsApp service unavailable.");
+                }
+            }
+            else if (conversation.Source == "GatewayApi")
+            {
+                // TO DO GatewayApi connection
             }
             else
             {
-                Console.WriteLine($"No conversation with ID: {message.ConversationId} was found.");
+                Console.WriteLine("Unknown conversation source.");
+                await Clients.User(userId).SendAsync("MessageFailed", "Failed to send message. Unknown conversation source.");
             }
-       
-    }
-
-
-    public async Task NotifyMessageDelivered(string assignedUserId, string messageContent, string senderId)
-    {
-        if (!string.IsNullOrEmpty(assignedUserId))
-        {
-            Console.WriteLine($"Notifying user {assignedUserId} that message was delivered.");
-
-            await Clients.User(assignedUserId).SendAsync("MessageDelivered", senderId, messageContent);
         }
+        else
+        {
+            Console.WriteLine($"No conversation with ID: {message.ConversationId} was found.");
+        }       
     }
+
     public async Task CloseAndAnonymizeChat(string customerId)
     {
         var archivingService = Context.GetHttpContext()?.RequestServices.GetService<ChatArchivingService>();
@@ -230,6 +217,46 @@ public class ChatHub : Hub
             Console.WriteLine("Archiving service not found.");
         }
     }
+
+    //TO DO !!!!!
+    //public async Task MarkMessagesAsRead(string conversationId)
+    //{
+    //    var conversation = await _context.Conversations
+    //        .Include(c => c.Messages)
+    //        .FirstOrDefaultAsync(c => c.Id == conversationId);
+
+    //    if (conversation != null)
+    //    {
+    //        var unreadMessages = conversation.Messages
+    //            .Where(m => m.Status != "Read")
+    //            .ToList();
+
+    //        if (unreadMessages.Any())
+    //        {
+    //            var whatsappMessageIds = unreadMessages.Select(m => m.ProviderMessageId).ToList();
+
+    //            // Call WhatsApp API to mark messages as read
+    //            var whatsAppService = Context.GetHttpContext()?.RequestServices.GetService<WhatsAppService>();
+    //            if (whatsAppService != null)
+    //            {
+    //                await whatsAppService.MarkMessagesAsReadAsync(conversation.ProviderConversationId, whatsappMessageIds);
+
+    //                // Update database
+    //                foreach (var message in unreadMessages)
+    //                {
+    //                    message.Status = "Read";
+    //                    message.ChangedAt = DateTime.UtcNow;
+    //                }
+
+    //                await _context.SaveChangesAsync();
+    //            }
+    //            else
+    //            {
+    //                Console.WriteLine("WhatsAppService not found in the context.");
+    //            }
+    //        }
+    //    }
+    //}
 
     public class Team
     {

@@ -1,9 +1,9 @@
-﻿using MessageFlow.Data;
+﻿using MessageFlow.Components.Channels.Helpers;
+using MessageFlow.Data;
 using MessageFlow.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using System.Text;
+using System.Text.Json;
 
 namespace MessageFlow.Components.Channels.Services
 {
@@ -53,7 +53,6 @@ namespace MessageFlow.Components.Channels.Services
                 .FirstOrDefaultAsync(ws => ws.BusinessAccountId == businessAccountId);
         }
 
-
         // Retrieve WhatsApp settings for a company
         public async Task<WhatsAppSettingsModel?> GetWhatsAppSettingsAsync(int companyId)
         {
@@ -62,73 +61,98 @@ namespace MessageFlow.Components.Channels.Services
                 .FirstOrDefaultAsync(ws => ws.CompanyId == companyId);
         }
 
-
-        public async Task ProcessIncomingMessageAsync(string senderPhoneNumber, string messageText, int companyId)
+        public async Task ProcessIncomingMessageAsync(string businessAccountId, JsonElement changes)
         {
-            var conversation = await _dbContext.Conversations
-                .FirstOrDefaultAsync(c => c.SenderId == senderPhoneNumber && c.CompanyId == companyId.ToString());
+            var whatsAppSettings = await GetWhatsAppSettingsByBusinessAccountIdAsync(businessAccountId);
+            var companyId = whatsAppSettings?.CompanyId ?? 0;
 
-            if (conversation != null && conversation.IsActive)
+            if (companyId == 0)
             {
-                await AddMessageToConversation(conversation, senderPhoneNumber, messageText);
+                _logger.LogWarning($"No WhatsApp settings found for BusinessAccountId {businessAccountId}");
+                return;
             }
-            else
+
+            foreach (var change in changes.EnumerateArray())
             {
-                await CreateAndBroadcastNewConversation(companyId, senderPhoneNumber, messageText);
+                if (!change.TryGetProperty("value", out var value))
+                {
+                    _logger.LogWarning($"No value found in change entry for BusinessAccountId {businessAccountId}");
+                    continue;
+                }
+
+                // Handle delivery statuses
+                if (value.TryGetProperty("statuses", out var statuses))
+                {
+                    var sortedStatuses = statuses.EnumerateArray()
+                                                 .OrderBy(s => s.GetProperty("timestamp").GetString())
+                                                 .ToList();
+
+                    foreach (var status in sortedStatuses)
+                    {
+                        await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, status, "WhatsApp");
+                    }
+                }
+
+                if (value.TryGetProperty("contacts", out var contacts))
+                {
+                    foreach (var contact in contacts.EnumerateArray())
+                    {
+                        var senderId = contact.GetProperty("wa_id").GetString();
+                        var username = contact.GetProperty("profile").GetProperty("name").GetString();
+
+                        if (value.TryGetProperty("messages", out var messages))
+                        {
+                            foreach (var message in messages.EnumerateArray())
+                            {
+                                var messageText = message.GetProperty("text").GetProperty("body").GetString();
+                                var providerMessageId = message.GetProperty("id").GetString();
+                                //var providerConversationId = businessAccountId;
+
+                                // Pass username to the helper
+                                await MessageProcessingHelper.ProcessMessageAsync(
+                                    _dbContext,
+                                    _chatHub,
+                                    _logger,
+                                    companyId,
+                                    senderId,
+                                    username,
+                                    messageText,
+                                    providerMessageId,
+                                    //providerConversationId,
+                                    "WhatsApp"
+                                );
+                            }
+                        }
+                    }
+                }
+
+
+                // Handle regular messages
+                //if (value.TryGetProperty("messages", out var messages))
+                //{
+                //    foreach (var message in messages.EnumerateArray())
+                //    {
+                //        var senderId = message.GetProperty("from").GetString();
+                //        var messageText = message.GetProperty("text").GetProperty("body").GetString();
+                //        var username = message.GetProperty("profile").GetProperty("name").GetString();
+                //        var providerMessageId = message.GetProperty("id").GetString();
+                //        var providerConversationId = businessAccountId;
+
+                //        await MessageProcessingHelper.ProcessMessageAsync(
+                //            _dbContext,
+                //            _chatHub,
+                //            _logger,
+                //            companyId,
+                //            senderId,
+                //            username,
+                //            messageText,
+                //            providerMessageId,
+                //            providerConversationId,
+                //            "WhatsApp"
+                //        );
+                //    }
+                //}
             }
-        }
-
-        private async Task AddMessageToConversation(Conversation conversation, string senderPhoneNumber, string messageText)
-        {
-            var message = new Message
-            {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversation.Id,
-                UserId = conversation.AssignedUserId,
-                Username = "Customer",
-                Content = messageText,
-                SentAt = DateTime.UtcNow
-            };
-
-            _dbContext.Messages.Add(message);
-            await _dbContext.SaveChangesAsync();
-
-            if (!string.IsNullOrEmpty(conversation.AssignedUserId))
-            {
-                await _chatHub.Clients.User(conversation.AssignedUserId).SendAsync("SendMessageToAssignedUser", conversation, message);
-            }
-        }
-
-        private async Task CreateAndBroadcastNewConversation(int companyId, string senderPhoneNumber, string messageText)
-        {
-            var conversation = new Conversation
-            {
-                Id = Guid.NewGuid().ToString(),
-                SenderId = senderPhoneNumber,
-                CompanyId = companyId.ToString(),
-                Title = $"Chat with {senderPhoneNumber}",
-                IsActive = true,
-                Source = "WhatsApp"
-            };
-
-            _dbContext.Conversations.Add(conversation);
-            await _dbContext.SaveChangesAsync();
-
-            var message = new Message
-            {
-                Id = Guid.NewGuid().ToString(),
-                ConversationId = conversation.Id,
-                UserId = senderPhoneNumber,
-                Username = "Customer",
-                Content = messageText,
-                SentAt = DateTime.UtcNow
-            };
-
-            _dbContext.Messages.Add(message);
-            await _dbContext.SaveChangesAsync();
-
-            await _chatHub.Clients.Group($"Company_{companyId}")
-                .SendAsync("NewConversationAdded", conversation);
         }
 
         // Send a message via WhatsApp Cloud API
@@ -141,8 +165,8 @@ namespace MessageFlow.Components.Channels.Services
                 var phoneNumberInfo = whatsAppSettings.PhoneNumbers.FirstOrDefault();
                 if (phoneNumberInfo != null)
                 {
-                    var httpClient = new HttpClient();
-                    var jsonMessage = new
+                    var url = $"https://graph.facebook.com/v17.0/{phoneNumberInfo.PhoneNumberId}/messages";
+                    var payload = new
                     {
                         messaging_product = "whatsapp",
                         to = recipientPhoneNumber,
@@ -150,23 +174,33 @@ namespace MessageFlow.Components.Channels.Services
                         text = new { body = messageText }
                     };
 
-                    var jsonContent = new StringContent(JsonConvert.SerializeObject(jsonMessage), Encoding.UTF8, "application/json");
-
-                    Console.WriteLine($"Sending HTTP POST to WhatsApp: {jsonContent}");
-
-                    var response = await httpClient.PostAsync(
-                        $"https://graph.facebook.com/v17.0/{phoneNumberInfo.PhoneNumberId}/messages?access_token={whatsAppSettings.AccessToken}",
-                        jsonContent
-                    );
+                    var response = await MessageSenderHelper.SendMessageAsync(url, payload, whatsAppSettings.AccessToken, _logger);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        Console.WriteLine($"Message sent successfully to {recipientPhoneNumber}.");
+                        var responseBody = await response.Content.ReadAsStringAsync();
+                        var responseJson = JsonDocument.Parse(responseBody);
+
+                        var whatsappMessageId = responseJson.RootElement
+                            .GetProperty("messages")[0]
+                            .GetProperty("id")
+                            .GetString();
+
+                        // Update local database with WhatsAppMessageId
+                        var message = await _dbContext.Messages.FirstOrDefaultAsync(m => m.Id == localMessageId);
+                        if (message != null)
+                        {
+                            message.ProviderMessageId = whatsappMessageId;
+                            await _dbContext.SaveChangesAsync();
+                        }
+
+                        // Notify app user of the message status
+                        await _chatHub.Clients.User(companyId)
+                            .SendAsync("MessageStatusUpdated", localMessageId, "Sent");
                     }
                     else
                     {
-                        var responseBody = await response.Content.ReadAsStringAsync();
-                        _logger.LogError($"Failed to send WhatsApp message. Status: {response.StatusCode}, Response: {responseBody}");
+                        _logger.LogError($"Failed to send WhatsApp message to {recipientPhoneNumber}");
                     }
                 }
                 else
@@ -180,5 +214,28 @@ namespace MessageFlow.Components.Channels.Services
             }
         }
 
+        public async Task MarkMessagesAsReadAsync(string whatsappConversationId, List<string> messageIds)
+        {
+
+            // Retrieve WhatsApp settings for the given conversation ID
+            var whatsAppSettings = await _dbContext.WhatsAppSettingsModels
+                .FirstOrDefaultAsync(ws => ws.BusinessAccountId == whatsappConversationId);
+
+            if (whatsAppSettings == null)
+            {
+                _logger.LogWarning($"No WhatsApp settings found for BusinessAccountId {whatsappConversationId}");
+                return;
+            }
+
+            var url = $"https://graph.facebook.com/v17.0/{whatsappConversationId}/messages";
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                status = "read",
+                ids = messageIds
+            };
+
+            await MessageSenderHelper.SendMessageAsync(url, payload, whatsAppSettings.AccessToken, _logger);
+        }
     }
 }
