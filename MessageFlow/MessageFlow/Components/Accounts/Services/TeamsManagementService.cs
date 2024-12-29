@@ -2,7 +2,7 @@
 using MessageFlow.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Accounts.Services
 {
     public class TeamsManagementService
     {

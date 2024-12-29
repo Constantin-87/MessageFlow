@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Chat.Services
 {
     public class MessageProcessingService
     {

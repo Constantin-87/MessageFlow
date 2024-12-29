@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
 using MessageFlow.Data;
-using MessageFlow.Components.Channels.Services;
+using MessageFlow.Components.Chat.Services;
 
 public class ChatHub : Hub
 {

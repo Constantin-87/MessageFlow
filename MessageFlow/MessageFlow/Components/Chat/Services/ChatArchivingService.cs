@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Chat.Services
 {
     public class ChatArchivingService
     {

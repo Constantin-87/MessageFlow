@@ -1,11 +1,11 @@
-﻿using MessageFlow.Components.Channels.Helpers;
+﻿using MessageFlow.Components.Chat.Helpers;
 using MessageFlow.Data;
 using MessageFlow.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Chat.Services
 {
     public class FacebookService
     {

@@ -8,7 +8,7 @@ using MessageFlow.Data;
 using MessageFlow.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using MessageFlow.Components.Channels.Services;
+using MessageFlow.Components.Accounts.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace MessageFlow.Tests.Helpers

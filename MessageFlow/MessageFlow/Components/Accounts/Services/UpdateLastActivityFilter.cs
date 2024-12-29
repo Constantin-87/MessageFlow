@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Accounts.Services
 {
     public class UpdateLastActivityFilter : IActionFilter
     {

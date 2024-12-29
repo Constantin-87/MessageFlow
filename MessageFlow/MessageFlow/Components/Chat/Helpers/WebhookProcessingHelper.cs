@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MessageFlow.Controllers
+namespace MessageFlow.Components.Chat.Helpers
 {
     public static class WebhookProcessingHelper
     {

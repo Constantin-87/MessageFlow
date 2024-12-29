@@ -1,6 +1,6 @@
 ﻿using MessageFlow.Data;
 using MessageFlow.Models;
-using MessageFlow.Components.Channels.Services;
+using MessageFlow.Components.Accounts.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

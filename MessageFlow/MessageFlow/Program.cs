@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.Components;
-using MessageFlow.Components.Channels.Services;
+using MessageFlow.Components.Accounts.Services;
 using MessageFlow.Data;
 using MessageFlow.Models;
 using MessageFlow.Middleware;
-using MessageFlow.Components.Channels.Services;
+using MessageFlow.Components.Chat.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

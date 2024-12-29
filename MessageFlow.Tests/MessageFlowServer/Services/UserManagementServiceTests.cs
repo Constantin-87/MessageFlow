@@ -1,18 +1,8 @@
-﻿using Xunit;
-using MessageFlow.Data;
+﻿using MessageFlow.Data;
 using MessageFlow.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using MessageFlow.Components.Channels.Services;
 using MessageFlow.Tests.Helpers;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MessageFlow.Tests.MessageFlowServer.Services
 {

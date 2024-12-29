@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
 
-namespace MessageFlow.Components.Channels.Helpers
+namespace MessageFlow.Components.Chat.Helpers
 {
     public static class MessageSenderHelper
     {

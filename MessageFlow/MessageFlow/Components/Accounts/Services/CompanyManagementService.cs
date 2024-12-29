@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Security.Claims;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Accounts.Services
 {
     public class CompanyManagementService
     {

@@ -1,19 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MessageFlow.Components.Channels.Services;
 using System.Text.Json;
-using MessageFlow.Controllers;
+using MessageFlow.Components.Chat.Helpers;
+using MessageFlow.Components.Chat.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-public class WhatsAppWebhook : ControllerBase
+public class FacebookWebhook : ControllerBase
 {
-    private readonly ILogger<WhatsAppWebhook> _logger;
-    private readonly WhatsAppService _whatsAppService;
+    private readonly ILogger<FacebookWebhook> _logger;
+    private readonly FacebookService _facebookService;
 
-    public WhatsAppWebhook(ILogger<WhatsAppWebhook> logger, WhatsAppService whatsAppService)
+    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService)
     {
         _logger = logger;
-        _whatsAppService = whatsAppService;
+        _facebookService = facebookService;
     }
 
     [HttpGet]
@@ -22,7 +22,7 @@ public class WhatsAppWebhook : ControllerBase
                                         [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {
         var isValid = await WebhookProcessingHelper.VerifyTokenAsync(
-            _whatsAppService.GetAllWhatsAppSettingsAsync,
+            _facebookService.GetAllFacebookSettingsAsync,
             settings => settings.WebhookVerifyToken,
             hub_mode,
             hub_verify_token,
@@ -39,31 +39,28 @@ public class WhatsAppWebhook : ControllerBase
 
     [HttpPost]
     public async Task<IActionResult> Receive([FromBody] JsonElement body)
-     {
-        _logger.LogInformation($"Received WhatsApp webhook event: {body}");
+    {
+        _logger.LogInformation($"Received Facebook webhook event: {body}");
 
         try
         {
             await WebhookProcessingHelper.ProcessWebhookEntriesAsync(
                 body,
-                "whatsapp_business_account",
+                "page",
                 _logger,
                 async entry =>
                 {
-                    var businessAccountId = entry.GetProperty("id").GetString();
-                    _logger.LogInformation($"Processing entry for BusinessAccountId: {businessAccountId}");
+                    var messagingArray = entry.GetProperty("messaging").EnumerateArray();
 
-                    var changes = entry.GetProperty("changes");
-
-                    // Delegate message processing to the WhatsApp service
-                    await _whatsAppService.ProcessIncomingMessageAsync(businessAccountId, changes);
+                    // Delegate message processing to the Facebook service
+                    await _facebookService.ProcessFacebookWebhookEventAsync(entry);
                 });
 
             return Ok();
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error processing WhatsApp webhook: {ex.Message}");
+            _logger.LogError($"Error processing Facebook webhook: {ex.Message}");
             return BadRequest();
         }
     }

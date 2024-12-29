@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using MessageFlow.Models;
 
-namespace MessageFlow.Components.Channels.Services
+namespace MessageFlow.Components.Accounts.Services
 {
     internal sealed class IdentityUserAccessor(UserManager<ApplicationUser> userManager, IdentityRedirectManager redirectManager)
     {
