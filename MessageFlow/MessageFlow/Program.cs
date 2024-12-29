@@ -27,6 +27,7 @@ builder.Services.AddScoped<TeamsManagementService>();
 builder.Services.AddScoped<FacebookService>();
 builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddScoped<ChatArchivingService>();
+builder.Services.AddScoped<MessageProcessingService>();
 
 
 builder.Services.AddControllersWithViews(options =>

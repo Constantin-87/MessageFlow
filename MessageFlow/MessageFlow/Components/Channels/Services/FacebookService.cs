@@ -12,12 +12,14 @@ namespace MessageFlow.Components.Channels.Services
         private readonly ILogger<FacebookService> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly IHubContext<ChatHub> _chatHub;
+        private readonly MessageProcessingService _messageProcessingService;
 
-        public FacebookService(ILogger<FacebookService> logger, ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub)
+        public FacebookService(ILogger<FacebookService> logger, ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, MessageProcessingService messageProcessingService)
         {
             _dbContext = dbContext;
             _chatHub = chatHub;
             _logger = logger;
+            _messageProcessingService = messageProcessingService;
         }
 
         // Retrieve Facebook settings for a company
@@ -97,7 +99,13 @@ namespace MessageFlow.Components.Channels.Services
                 }
                 else
                 {
-                    _logger.LogError($"Failed to send Facebook message to {recipientId}");
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Failed to send Facebook message: {responseBody}");
+
+                    var errorDetails = JsonDocument.Parse(responseBody).RootElement;
+                    var errorMessage = errorDetails.GetProperty("error").GetProperty("message").GetString();
+                    var statusElement = JsonDocument.Parse($"{{\"id\":\"{localMessageId}\",\"status\":\"error\",\"errors\":[{{\"message\":\"{errorMessage}\"}}]}}").RootElement;
+                    await _messageProcessingService.ProcessMessageStatusUpdateAsync(statusElement, "Facebook");
                 }
             }
             else
@@ -147,7 +155,7 @@ namespace MessageFlow.Components.Channels.Services
             foreach (var mid in mids.EnumerateArray())
             {
                 var statusElement = JsonDocument.Parse($"{{\"id\":\"{mid.GetString()}\",\"status\":\"delivered\"}}").RootElement;
-                await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, statusElement, "Facebook");
+                await _messageProcessingService.ProcessMessageStatusUpdateAsync(statusElement, "Facebook");
             }
         }
 
@@ -211,7 +219,7 @@ namespace MessageFlow.Components.Channels.Services
                     var statusElementJson = $"{{\"id\":\"{message.ProviderMessageId}\",\"status\":\"read\",\"timestamp\":\"{watermarkUnix / 1000}\"}}";
                     var statusElement = JsonDocument.Parse(statusElementJson).RootElement;
 
-                    await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, statusElement, "Facebook");
+                    await _messageProcessingService.ProcessMessageStatusUpdateAsync(statusElement, "Facebook");
                 }
                 catch (Exception ex)
                 {
@@ -244,9 +252,9 @@ namespace MessageFlow.Components.Channels.Services
                     var messageText = messageElement.GetProperty("text").GetString();
                     var providerMessageId = midElement.GetString();
 
-                    var senderUserName = senderId; // Placeholder; adjust to fetch the actual username if needed
+                    var senderUserName = senderId; // Placeholder; To be adjusted to fetch the actual username
 
-                    await MessageProcessingHelper.ProcessMessageAsync(_dbContext, _chatHub, _logger, companyId, senderId, senderUserName, messageText, providerMessageId, "Facebook");
+                    await _messageProcessingService.ProcessMessageAsync(companyId, senderId, senderUserName, messageText, providerMessageId, "Facebook");
                 }
                 else
                 {

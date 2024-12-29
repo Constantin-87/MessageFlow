@@ -96,15 +96,15 @@
                 LoadAssignedConversations(assignedConversations);
             });
 
-            HubConnection.On<string, string, string?>("MessageStatusUpdated", (messageId, status, errorMessage) =>
+            HubConnection.On<string, string>("MessageStatusUpdated", (messageId, status) =>
             {
-                UpdateMessageStatus(messageId, status, errorMessage);
+                UpdateMessageStatus(messageId, status);
             });
 
         }
     }
 
-    private void UpdateMessageStatus(string messageId, string status, string? errorMessage = null)
+    private void UpdateMessageStatus(string messageId, string status)
     {
         foreach (var chat in ActiveChats)
         {
@@ -112,10 +112,6 @@
             if (message != null)
             {
                 message.Status = status;
-                if (status == "error")
-                {
-                    message.ErrorMessage = errorMessage;
-                }
                 StateHasChanged();
                 Console.WriteLine($"Message {messageId} status updated to '{status}'.");
                 return;
@@ -173,8 +169,10 @@
         {
             SwitchTab(ActiveChats.First());
         }
-
-        StateHasChanged();
+        else
+        {
+            StateHasChanged();
+        }
 
         // Send a request to the server to close and anonymize the chat
         await HubConnection.SendAsync("CloseAndAnonymizeChat", tab.SenderId);

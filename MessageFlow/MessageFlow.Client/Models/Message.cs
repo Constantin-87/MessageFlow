@@ -10,8 +10,6 @@
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
-        // Property to hold error message (set when there’s an error)
-        public string? ErrorMessage { get; set; }
 
         // Navigation property
         public Conversation Conversation { get; set; }
@@ -42,11 +40,10 @@
                     "sent" => "Message has been sent to user.",
                     "delivered" => "Message has been delivered.",
                     "read" => "Message has been read.",
-                    "error" => ErrorMessage ?? "An error occurred.", // Show the error message if available
+                    "error" => "An error occurred.", 
                     _ => "Unknown status.", // Default tooltip
                 };
             }
         }
-
     }
 }

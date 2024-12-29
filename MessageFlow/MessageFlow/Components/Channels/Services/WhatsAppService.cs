@@ -12,12 +12,14 @@ namespace MessageFlow.Components.Channels.Services
         private readonly ApplicationDbContext _dbContext;
         private readonly IHubContext<ChatHub> _chatHub;
         private readonly ILogger<WhatsAppService> _logger;
+        private readonly MessageProcessingService _messageProcessingService;
 
-        public WhatsAppService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, ILogger<WhatsAppService> logger)
+        public WhatsAppService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, ILogger<WhatsAppService> logger, MessageProcessingService messageProcessingService)
         {
             _dbContext = dbContext;
             _chatHub = chatHub;
             _logger = logger;
+            _messageProcessingService = messageProcessingService;
         }
         public async Task<bool> SaveWhatsAppSettingsAsync(int companyId, WhatsAppSettingsModel whatsAppSettings)
         {
@@ -89,7 +91,7 @@ namespace MessageFlow.Components.Channels.Services
 
                     foreach (var status in sortedStatuses)
                     {
-                        await MessageProcessingHelper.HandleStatusUpdateAsync(_dbContext, _chatHub, _logger, status, "WhatsApp");
+                        await _messageProcessingService.ProcessMessageStatusUpdateAsync(status, "WhatsApp");
                     }
                 }
 
@@ -106,52 +108,12 @@ namespace MessageFlow.Components.Channels.Services
                             {
                                 var messageText = message.GetProperty("text").GetProperty("body").GetString();
                                 var providerMessageId = message.GetProperty("id").GetString();
-                                //var providerConversationId = businessAccountId;
 
-                                // Pass username to the helper
-                                await MessageProcessingHelper.ProcessMessageAsync(
-                                    _dbContext,
-                                    _chatHub,
-                                    _logger,
-                                    companyId,
-                                    senderId,
-                                    username,
-                                    messageText,
-                                    providerMessageId,
-                                    //providerConversationId,
-                                    "WhatsApp"
-                                );
+                                await _messageProcessingService.ProcessMessageAsync(companyId, senderId, username, messageText, providerMessageId, "WhatsApp");
                             }
                         }
                     }
                 }
-
-
-                // Handle regular messages
-                //if (value.TryGetProperty("messages", out var messages))
-                //{
-                //    foreach (var message in messages.EnumerateArray())
-                //    {
-                //        var senderId = message.GetProperty("from").GetString();
-                //        var messageText = message.GetProperty("text").GetProperty("body").GetString();
-                //        var username = message.GetProperty("profile").GetProperty("name").GetString();
-                //        var providerMessageId = message.GetProperty("id").GetString();
-                //        var providerConversationId = businessAccountId;
-
-                //        await MessageProcessingHelper.ProcessMessageAsync(
-                //            _dbContext,
-                //            _chatHub,
-                //            _logger,
-                //            companyId,
-                //            senderId,
-                //            username,
-                //            messageText,
-                //            providerMessageId,
-                //            providerConversationId,
-                //            "WhatsApp"
-                //        );
-                //    }
-                //}
             }
         }
 
@@ -200,6 +162,15 @@ namespace MessageFlow.Components.Channels.Services
                     }
                     else
                     {
+                        var responseBody = await response.Content.ReadAsStringAsync();
+                        _logger.LogError($"Failed to send WhatsApp message: {responseBody}");
+
+                        var errorDetails = JsonDocument.Parse(responseBody).RootElement;
+                        var errorMessage = errorDetails.GetProperty("error").GetProperty("message").GetString();
+                        var jsonElement = JsonDocument.Parse($"{{\"id\":\"{localMessageId}\",\"status\":\"error\",\"errors\":[{{\"message\":\"{errorMessage}\"}}]}}").RootElement;
+
+                        await _messageProcessingService.ProcessMessageStatusUpdateAsync(jsonElement, "WhatsApp");
+
                         _logger.LogError($"Failed to send WhatsApp message to {recipientPhoneNumber}");
                     }
                 }
@@ -214,28 +185,30 @@ namespace MessageFlow.Components.Channels.Services
             }
         }
 
-        public async Task MarkMessagesAsReadAsync(string whatsappConversationId, List<string> messageIds)
-        {
+        // TO DO: Mark messages as read when clicking into the chat window 
 
-            // Retrieve WhatsApp settings for the given conversation ID
-            var whatsAppSettings = await _dbContext.WhatsAppSettingsModels
-                .FirstOrDefaultAsync(ws => ws.BusinessAccountId == whatsappConversationId);
+        //public async Task MarkMessagesAsReadAsync(string whatsappConversationId, List<string> messageIds)
+        //{
 
-            if (whatsAppSettings == null)
-            {
-                _logger.LogWarning($"No WhatsApp settings found for BusinessAccountId {whatsappConversationId}");
-                return;
-            }
+        //    // Retrieve WhatsApp settings for the given conversation ID
+        //    var whatsAppSettings = await _dbContext.WhatsAppSettingsModels
+        //        .FirstOrDefaultAsync(ws => ws.BusinessAccountId == whatsappConversationId);
 
-            var url = $"https://graph.facebook.com/v17.0/{whatsappConversationId}/messages";
-            var payload = new
-            {
-                messaging_product = "whatsapp",
-                status = "read",
-                ids = messageIds
-            };
+        //    if (whatsAppSettings == null)
+        //    {
+        //        _logger.LogWarning($"No WhatsApp settings found for BusinessAccountId {whatsappConversationId}");
+        //        return;
+        //    }
 
-            await MessageSenderHelper.SendMessageAsync(url, payload, whatsAppSettings.AccessToken, _logger);
-        }
+        //    var url = $"https://graph.facebook.com/v17.0/{whatsappConversationId}/messages";
+        //    var payload = new
+        //    {
+        //        messaging_product = "whatsapp",
+        //        status = "read",
+        //        ids = messageIds
+        //    };
+
+        //    await MessageSenderHelper.SendMessageAsync(url, payload, whatsAppSettings.AccessToken, _logger);
+        //}
     }
 }

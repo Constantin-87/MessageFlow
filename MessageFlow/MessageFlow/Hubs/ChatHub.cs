@@ -131,6 +131,9 @@ public class ChatHub : Hub
 
         if (conversation != null)
         {
+            // Sort messages by SentAt before sending to the client
+            conversation.Messages = conversation.Messages.OrderBy(m => m.SentAt).ToList();
+
             var userId = Context.UserIdentifier;
             conversation.AssignedUserId = userId;
             conversation.IsAssigned = true;
