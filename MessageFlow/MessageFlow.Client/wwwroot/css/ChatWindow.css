@@ -8,10 +8,13 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    border: 1px solid #ccc;
+    border: 1px solid #333; /* Dark border */
+    background-color: #2c3e50; /* Dark background for chat window */
+    color: #e0e0e0; /* Light text color */
     border-radius: 5px;
     padding: 10px;
     overflow: hidden;
+    height: 100%;
 }
 
 .chat-history {
@@ -26,30 +29,33 @@
     display: flex;
     gap: 10px;
     padding: 10px;
-    background-color: #f8f8f8;
-    border-top: 1px solid #ccc;
+    background-color: #2c3e50; /* Darker background for input area */
+    border-top: 1px solid #444; /* Dark border for separation */
 }
 
     .chat-input-area input {
         flex-grow: 1;
         padding: 10px;
-        border: 1px solid #ccc;
+        border: 1px solid #444; /* Dark border */
         border-radius: 5px;
         font-size: 1rem;
+        background-color: #454545; /* Dark input background */
+        color: #e0e0e0; /* Light text color */
     }
 
     .chat-input-area button {
         padding: 10px 20px;
         border: none;
-        background-color: #4CAF50;
+        background-color: #0066cc; /* Blue button */
         color: white;
         font-size: 1rem;
         border-radius: 5px;
         cursor: pointer;
+        font-weight: bold;
     }
 
         .chat-input-area button:hover {
-            background-color: #45a049;
+            background-color: #005bb5; /* Darker blue on hover */
         }
 
 
@@ -62,17 +68,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    color: #e0e0e0; /* Light text color */
 }
 
 .customer-message {
-    background-color: #f1f0f0;  
-    align-self: flex-start; 
+    background-color: #3c3c3c; /* Dark gray for customer messages */
+    align-self: flex-start;
     text-align: left;
 }
 
 .app-message {
-    background-color: #dcf8c6;  
-    align-self: flex-end;  
+    background-color: #4CAF50; /* Green for app messages */
+    align-self: flex-end;
     text-align: right;
 }
 
@@ -96,8 +103,8 @@
     display: flex;
     gap: 5px;
     padding: 5px;
-    background-color: #f4f4f4; /* Light background for tabs container */
-    border-bottom: 2px solid #ccc; /* Bottom border to separate tabs from content */
+    background-color: #2c3e50; /* Dark background for tabs container */
+    border-bottom: 2px solid #333; /* Darker bottom border */
     overflow-x: auto;
 }
 
@@ -105,17 +112,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #e0e0e0; /* Default background for tabs */
-    color: #333;
+    background-color: #2c3e50; /* Dark background for tabs */
+    color: #e0e0e0; /* Light text */
     padding: 10px 15px; /* Add padding to make the clickable area larger */
-    border: 1px solid #ccc; /* Border for each tab */
+    border: 1px solid #444; /* Dark border for each tab */
     border-radius: 5px 5px 0 0; /* Rounded top corners for tab */
     cursor: pointer;
     flex-shrink: 0; /* Prevent tabs from shrinking */
 }
 
     .chat-tab.active-tab {
-        background-color: #4CAF50; /* Highlight active tab with green background */
+        background-color: #0066cc; /* Highlight active tab with blue */
         color: white; /* White text for active tab */
         font-weight: bold;
         border-bottom: none; /* Remove bottom border for active tab */
@@ -130,7 +137,7 @@
 .close-btn {
     background: none;
     border: none;
-    color: #666;
+    color: #999; /* Light gray */
     font-size: 1rem;
     cursor: pointer;
     padding: 0 5px;
@@ -141,6 +148,6 @@
     }
 
 .chat-tab:hover {
-    background-color: #d4d4d4; /* Slightly darker background on hover */
+    background-color: #555; /* Slightly lighter background on hover */
 }
 

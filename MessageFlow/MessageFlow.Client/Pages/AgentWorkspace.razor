@@ -33,59 +33,33 @@
     private TeamMembers? TeamMembersRef;
 
     private string? UserId;
-    private string? UserCompanyId;
-    private string? UserTeams;
     private string? UserName;
 
     protected override async Task OnInitializedAsync()
     {
         if (hubConnection == null || hubConnection.State != HubConnectionState.Connected)
         {
-            
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
             UserId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            UserCompanyId = user?.FindFirst("CompanyId")?.Value;
             UserName = user?.Identity?.Name;
 
-            Console.WriteLine($"UserId: {UserId}");
-            Console.WriteLine($"UserCompanyId: {UserCompanyId}");
-            Console.WriteLine($"UserName: {UserName}");
-
-            // Extract all teams from UserTeams string
-            var userTeamsString = user?.FindFirst("UserTeams")?.Value;
-            var userTeams = ParseUserTeams(userTeamsString);
-
-            // Create a string with all team IDs and names
-            var userTeamsJson = System.Text.Json.JsonSerializer.Serialize(userTeams);
-
-            Console.WriteLine($"Parsed UserTeams: {userTeamsJson}");
-
             hubConnection = new HubConnectionBuilder()
-                .WithUrl($"https://localhost:7164/chatHub?companyId={UserCompanyId}&teams={Uri.EscapeDataString(userTeamsJson)}")
-                .WithAutomaticReconnect() // Enables automatic reconnection
+                .WithUrl($"https://localhost:7164/chatHub")
+                .WithAutomaticReconnect()
                 .AddNewtonsoftJsonProtocol()
                 .Build();
 
-            if (UserCompanyId != null)
-            {
-                await hubConnection.StartAsync();
+            await hubConnection.StartAsync();
 
-                // Connection is established before calling OnHubConnected
-                if (hubConnection.State == HubConnectionState.Connected)
-                {                    
-                    OnHubConnected();
-                }
-                StateHasChanged();
-            }
-            else
+            // Connection is established before calling OnHubConnected
+            if (hubConnection.State == HubConnectionState.Connected)
             {
-                Console.WriteLine("Company ID is missing. Cannot start hub connection.");
+                OnHubConnected();
             }
+            StateHasChanged();
         }
-
-        
     }
 
     private void OnHubConnected()
@@ -93,34 +67,6 @@
         NewConversationsListRef?.RegisterHandlers();
         ChatWindowRef?.RegisterHandlers();
         TeamMembersRef?.RegisterHandlers();
-    }
-
-    public class Team
-    {
-        public int TeamId { get; set; }
-        public string TeamName { get; set; } = string.Empty;
-    }
-
-    private List<Team> ParseUserTeams(string? userTeamsString)
-    {
-        var teams = new List<Team>();
-
-        if (!string.IsNullOrEmpty(userTeamsString))
-        {
-            var teamEntries = userTeamsString.Split(';', StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var entry in teamEntries)
-            {
-                var parts = entry.Split(':', 2);
-                if (parts.Length == 2 && int.TryParse(parts[0], out var teamId))
-                {
-                    var teamName = parts[1].Trim();
-                    teams.Add(new Team { TeamId = teamId, TeamName = teamName });
-                }
-            }
-        }
-
-        return teams;
     }
 
     public async ValueTask DisposeAsync()

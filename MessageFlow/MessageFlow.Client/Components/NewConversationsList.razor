@@ -1,6 +1,7 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @rendermode RenderMode.InteractiveWebAssembly
 @inject AuthenticationStateProvider AuthenticationStateProvider
+<link href="css/NewConversationsList.css" rel="stylesheet" />
 
 <div class="new-conversations-list">
     <h4>New Conversations</h4>
@@ -8,9 +9,8 @@
         @foreach (var conversation in Conversations)
         {
             <li>
-                Chat with @conversation.SenderUsername from: @conversation.SourceLabel
+                <span>Chat with @conversation.SenderUsername from: @conversation.SourceLabel</span>
                 <button @onclick="async () => await AssignToSelf(conversation)">Assign to Myself</button>
-                <button @onclick="() => AssignToOther(conversation)">Assign to Different User</button>
             </li>
         }
     </ul>
@@ -39,7 +39,6 @@
 
             HubConnection.On<List<Conversation>>("LoadNewConversations", (newConversations) =>
            {
-               Console.WriteLine("New conversations loaded.");
                LoadNewConversations(newConversations);
            });
         }
@@ -79,21 +78,11 @@
 
             await HubConnection.SendAsync("AssignConversationToUser", conversation.Id);
             Conversations.Remove(conversation);
-            Console.WriteLine($"Assigned conversation {conversation.Id} to user {UserId}");
-
         }
         else
         {
             Console.WriteLine("hubConnection or UserId is null. Cannot assign conversation.");
         }
     }
-
-
-    private void AssignToOther(Conversation conversation)
-    {
-        // Placeholder for assigning to another user
-        Console.WriteLine("To Do: AssignToOther to other member");
-    }
-
 
 }

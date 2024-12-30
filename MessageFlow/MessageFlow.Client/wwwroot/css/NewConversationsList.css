@@ -1,0 +1,56 @@
+﻿/* NewConversationsList.css */
+.new-conversations-list {
+    background-color: #2b2b3b; /* Dark gray/blue background */
+    color: #ffffff; /* White text for readability */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    flex: 0 0 20%;
+    border: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+    .new-conversations-list h4 {
+        font-size: 1.2em;
+        color: #d1d1e0; /* Light gray text */
+        border-bottom: 1px solid #444455;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
+    }
+
+    .new-conversations-list ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .new-conversations-list li {
+        background-color: #3a3a4d; /* Slightly lighter background for items */
+        border: 1px solid #444455;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.3s ease;
+    }
+
+        .new-conversations-list li:hover {
+            background-color: #505068; /* Highlighted background on hover */
+        }
+
+    .new-conversations-list button {
+        background-color: #1e90ff; /* Blue button */
+        color: #ffffff;
+        border: none;
+        border-radius: 5px;
+        padding: 8px 12px;
+        font-size: 0.9em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        .new-conversations-list button:hover {
+            background-color: #4682b4; /* Darker blue on hover */
+        }
