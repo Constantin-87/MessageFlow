@@ -31,8 +31,8 @@ jobs:
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish" ^
-        -dest:auto,computerName="https://${{ secrets.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+         -source:contentPath="${{ github.workspace }}/publish" ^
+        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ secrets.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
