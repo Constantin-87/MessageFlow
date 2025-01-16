@@ -28,4 +28,4 @@ jobs:
 
     - name: Deploy to IIS via Web Deploy
       run: |
-        msdeploy.exe -verb:sync -source:contentPath="./publish" -dest:auto,computerName="${{ secrets.WEB_DEPLOY_SERVER }}",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" -allowUntrusted
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" -verb:sync -source:contentPath="./publish" -dest:auto,computerName="${{ secrets.WEB_DEPLOY_SERVER }}",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" -allowUntrusted
