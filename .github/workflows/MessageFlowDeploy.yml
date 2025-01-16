@@ -29,4 +29,4 @@ jobs:
     - name: Deploy to IIS via Web Deploy
       shell: cmd
       run: |
-        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" -verb:sync -source:contentPath="./publish" -dest:contentPath="C:\inetpub\MessageFlow",computerName="${{ secrets.WEB_DEPLOY_SERVER }}",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" -allowUntrusted
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" -verb:sync -source:contentPath="./publish" -dest:auto,computerName="https://${{ secrets.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" -allowUntrusted
