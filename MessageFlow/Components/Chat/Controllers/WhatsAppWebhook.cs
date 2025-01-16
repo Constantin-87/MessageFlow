@@ -37,7 +37,6 @@ public class WhatsAppWebhook : ControllerBase
         return Unauthorized();
     }
 
-
     [HttpPost]
     public async Task<IActionResult> Receive([FromBody] JsonElement body)
      {
