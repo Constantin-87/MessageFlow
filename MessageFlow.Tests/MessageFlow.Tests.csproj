@@ -24,8 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MessageFlow\MessageFlow.Client\MessageFlow.Client.csproj" />
-    <ProjectReference Include="..\MessageFlow\MessageFlow\MessageFlow.csproj" />
+    <ProjectReference Include="..\MessageFlow\MessageFlow.csproj" />
   </ItemGroup>
 
   <ItemGroup>
