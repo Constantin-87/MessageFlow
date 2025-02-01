@@ -55,7 +55,8 @@ jobs:
       shell: pwsh
       run: |
         dotnet tool install --global dotnet-ef
-        dotnet ef database update --connection "${{ env.DB_CONNECTION_STRING }}"
+        dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
+
 
     - name: Deploy to IIS via Web Deploy
       env:
