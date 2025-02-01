@@ -2,7 +2,9 @@ name: Deploy to IIS
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - preprod
 
 jobs:
   build-and-deploy:
@@ -26,13 +28,35 @@ jobs:
     - name: Publish Project
       run: dotnet publish -c Release -o ${{ github.workspace }}/publish
 
+    - name: Set Deployment Environment
+      id: set-env
+      run: |
+        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+          echo "DEPLOY_ENV=Production" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" >> $GITHUB_ENV
+        elif [ "${{ github.ref }}" == "refs/heads/preprod" ]; then
+          echo "DEPLOY_ENV=Preprod" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" >> $GITHUB_ENV
+          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" >> $GITHUB_ENV
+        fi
+
     - name: Deploy to IIS via Web Deploy
+      env:
+        ASPNETCORE_ENVIRONMENT: ${{ env.DEPLOY_ENV }}
+        DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+        WEB_DEPLOY_SERVER: ${{ env.WEB_DEPLOY_SERVER }}
+        WEB_DEPLOY_USER: ${{ env.WEB_DEPLOY_USER }}
+        WEB_DEPLOY_PASSWORD: ${{ env.WEB_DEPLOY_PASSWORD }}
+
       shell: cmd
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
          -source:contentPath="${{ github.workspace }}/publish" ^
-        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ secrets.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ secrets.WEB_DEPLOY_USER }}",password="${{ secrets.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
