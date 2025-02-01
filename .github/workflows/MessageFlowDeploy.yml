@@ -58,6 +58,10 @@ jobs:
         dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
 
 
+    - name: Temporarily Take App Offline
+      shell: cmd
+      run: echo "Application offline for deployment" > "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm"
+
     - name: Deploy to IIS via Web Deploy
       env:
         ASPNETCORE_ENVIRONMENT: ${{ env.DEPLOY_ENV }}
@@ -77,3 +81,7 @@ jobs:
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
+
+    - name: Bring App Back Online
+      shell: cmd
+      run: del "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm"
