@@ -61,7 +61,11 @@ jobs:
     - name: Temporarily Take App Offline
       shell: pwsh
       run: |
+        if (!(Test-Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm")) {
+            New-Item -Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm" -ItemType File -Force
+        }
         Set-Content -Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm" -Value "Application offline for deployment"
+
 
 
     - name: Deploy to IIS via Web Deploy
