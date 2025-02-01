@@ -39,6 +39,7 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -47,12 +48,19 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
+
+    - name: Apply Entity Framework Migrations
+      shell: pwsh
+      run: |
+        dotnet tool install --global dotnet-ef
+        dotnet ef database update --connection "${{ env.DB_CONNECTION_STRING }}"
 
     - name: Deploy to IIS via Web Deploy
       env:
         ASPNETCORE_ENVIRONMENT: ${{ env.DEPLOY_ENV }}
-        DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
+        DB_CONNECTION_STRING: ${{ env.DB_CONNECTION_STRING }}
         WEB_DEPLOY_SERVER: ${{ env.WEB_DEPLOY_SERVER }}
         WEB_DEPLOY_USER: ${{ env.WEB_DEPLOY_USER }}
         WEB_DEPLOY_PASSWORD: ${{ env.WEB_DEPLOY_PASSWORD }}
