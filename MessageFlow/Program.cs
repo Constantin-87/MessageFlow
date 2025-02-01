@@ -8,7 +8,18 @@ using MessageFlow.Models;
 using MessageFlow.Middleware;
 using MessageFlow.Components.Chat.Services;
 
+//var builder = WebApplication.CreateBuilder(args);
+
 var builder = WebApplication.CreateBuilder(args);
+var environment = builder.Environment.EnvironmentName;
+
+
+
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -58,14 +69,38 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization();
 
-var environment = builder.Environment.EnvironmentName;
+//var environment = builder.Environment.EnvironmentName;
+
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//{
+//    var connectionString = environment == "Test"
+//        ? builder.Configuration.GetConnectionString("TestConnection")
+//        : builder.Configuration.GetConnectionString("DefaultConnection");
+//    options.UseSqlServer(connectionString);
+//});
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = environment == "Test"
-        ? builder.Configuration.GetConnectionString("TestConnection")
-        : builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+        if (builder.Environment.IsDevelopment())
+        {
+            connectionString = builder.Configuration.GetConnectionString("DevelopmentConnection");
+        }
+        else if (builder.Environment.IsEnvironment("Test"))
+        {
+            connectionString = builder.Configuration.GetConnectionString("TestConnection");
+        }
+    }
+
     options.UseSqlServer(connectionString);
 });
+
+
 
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
