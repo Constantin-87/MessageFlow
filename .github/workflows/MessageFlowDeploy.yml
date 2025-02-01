@@ -30,18 +30,21 @@ jobs:
 
     - name: Set Deployment Environment
       id: set-env
+      shell: pwsh
       run: |
-        if [ "${{ github.ref }}" == "refs/heads/master" ]; then
-          echo "DEPLOY_ENV=Production" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" >> $GITHUB_ENV
-        elif [ "${{ github.ref }}" == "refs/heads/preprod" ]; then
-          echo "DEPLOY_ENV=Preprod" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" >> $GITHUB_ENV
-          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" >> $GITHUB_ENV
-        fi
+        if ("${{ github.ref }}" -eq "refs/heads/master") {
+          echo "DEPLOY_ENV=Production" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        }
+        elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
+          echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+        }
+
 
     - name: Deploy to IIS via Web Deploy
       env:
