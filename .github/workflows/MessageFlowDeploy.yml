@@ -37,14 +37,17 @@ jobs:
           echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_SITE=${{ secrets.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_PATH=${{ secrets.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_SITE=${{ secrets.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "WEB_DEPLOY_PATH=${{ secrets.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
-
 
     - name: Deploy to IIS via Web Deploy
       env:
@@ -53,13 +56,15 @@ jobs:
         WEB_DEPLOY_SERVER: ${{ env.WEB_DEPLOY_SERVER }}
         WEB_DEPLOY_USER: ${{ env.WEB_DEPLOY_USER }}
         WEB_DEPLOY_PASSWORD: ${{ env.WEB_DEPLOY_PASSWORD }}
+        WEB_DEPLOY_SITE: ${{ env.WEB_DEPLOY_SITE }}
+        WEB_DEPLOY_PATH: ${{ env.WEB_DEPLOY_PATH }}
 
       shell: cmd
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-         -source:contentPath="${{ github.workspace }}/publish" ^
-        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -source:contentPath="${{ github.workspace }}/publish" ^
+        -dest:contentPath="${{ env.WEB_DEPLOY_PATH }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
