@@ -59,8 +59,10 @@ jobs:
 
 
     - name: Temporarily Take App Offline
-      shell: cmd
-      run: echo "Application offline for deployment" > "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm"
+      shell: pwsh
+      run: |
+        Set-Content -Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm" -Value "Application offline for deployment"
+
 
     - name: Deploy to IIS via Web Deploy
       env:
