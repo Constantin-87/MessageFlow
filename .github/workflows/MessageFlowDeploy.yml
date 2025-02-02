@@ -58,7 +58,9 @@ jobs:
 
 
     - name: Create Environment-Specific AppSettings
+      shell: pwsh
       run: |
+        $appSettingsPath = "${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
@@ -69,8 +71,9 @@ jobs:
               "Microsoft.AspNetCore": "Warning"
             }
           },
-          "ServerBaseAddress": "${{ env.SERVER_BASE_ADDRESS }}"
-        }' > ${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}
+          "ServerBaseAddress": "${{ env.SERVER_BASE_ADDRESS }}",
+          "WebHostUrls": [ "http://*:80", "https://*:443" ]
+        }' | Out-File -FilePath $appSettingsPath -Encoding utf8 -Force
 
 
     - name: Apply Entity Framework Migrations
@@ -85,6 +88,14 @@ jobs:
       run: |
         Write-Host "Stopping IIS to release locked files..."
         iisreset /stop
+
+    - name: Update Web.config with Deployment Environment
+      shell: pwsh
+      run: |
+        $webConfigPath = "${{ github.workspace }}/publish/Web.config"
+        if (Test-Path $webConfigPath) {
+          (Get-Content $webConfigPath) -replace '<environmentVariable name="ASPNETCORE_ENVIRONMENT" value=".*?" />', '<environmentVariable name="ASPNETCORE_ENVIRONMENT" value="${{ env.DEPLOY_ENV }}" />' | Set-Content $webConfigPath
+        }
 
 
     - name: Deploy to IIS via Web Deploy

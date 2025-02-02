@@ -71,8 +71,7 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-        ?? builder.Configuration.GetConnectionString("DBConnectionString");
+    var connectionString = builder.Configuration.GetConnectionString("DBConnectionString");
 
     if (string.IsNullOrEmpty(connectionString))
     {
@@ -115,7 +114,13 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.RequireUniqueEmail = true;
 });
 
-builder.WebHost.UseUrls("http://*:5002", "https://*:7164");
+// Get the configured URLs from appsettings.json
+var urls = builder.Configuration.GetSection("WebHostUrls").Get<string[]>();
+
+if (urls != null && urls.Length > 0)
+{
+    builder.WebHost.UseUrls(urls);
+}
 
 builder.Services.AddSignalR(options =>
 {
