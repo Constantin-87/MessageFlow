@@ -57,16 +57,11 @@ jobs:
         dotnet tool install --global dotnet-ef
         dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
 
-
-    - name: Temporarily Take App Offline
+    - name: Stop IIS before Deployment
       shell: pwsh
       run: |
-        if (!(Test-Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm")) {
-            New-Item -Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm" -ItemType File -Force
-        }
-        Set-Content -Path "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm" -Value "Application offline for deployment"
-
-
+        Write-Host "Stopping IIS to release locked files..."
+        iisreset /stop
 
     - name: Deploy to IIS via Web Deploy
       env:
@@ -86,9 +81,11 @@ jobs:
         -dest:contentPath="${{ env.WEB_DEPLOY_PATH }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
-        -skip:Directory="logs" ^
         -retryInterval:5000
 
-    - name: Bring App Back Online
-      shell: cmd
-      run: del "${{ env.WEB_DEPLOY_PATH }}\app_offline.htm"
+    - name: Start IIS after Deployment
+      shell: pwsh
+      run: |
+        Write-Host "Starting IIS after deployment..."
+        iisreset /start
+        
