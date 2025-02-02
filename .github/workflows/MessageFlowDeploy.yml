@@ -86,6 +86,7 @@ jobs:
         -dest:contentPath="${{ env.WEB_DEPLOY_PATH }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
+        -skip:Directory="logs" ^
         -retryInterval:5000
 
     - name: Bring App Back Online
