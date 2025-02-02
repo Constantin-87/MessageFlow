@@ -54,6 +54,7 @@ jobs:
     - name: Apply Entity Framework Migrations
       shell: pwsh
       run: |
+        $env:DB_CONNECTION_STRING = "${{ env.DB_CONNECTION_STRING }}"
         dotnet tool install --global dotnet-ef
         dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
 

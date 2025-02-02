@@ -69,44 +69,23 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddAuthorization();
 
-//var environment = builder.Environment.EnvironmentName;
-
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//{
-//    var connectionString = environment == "Test"
-//        ? builder.Configuration.GetConnectionString("TestConnection")
-//        : builder.Configuration.GetConnectionString("DefaultConnection");
-//    options.UseSqlServer(connectionString);
-//});
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+        ?? builder.Configuration.GetConnectionString("DBConnectionString");
 
     if (string.IsNullOrEmpty(connectionString))
     {
-        connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-        if (builder.Environment.IsDevelopment())
-        {
-            connectionString = builder.Configuration.GetConnectionString("DevelopmentConnection");
-        }
-        else if (builder.Environment.IsEnvironment("Test"))
-        {
-            connectionString = builder.Configuration.GetConnectionString("TestConnection");
-        }
+        Console.WriteLine("Error: No valid connection string found.");
+        throw new InvalidOperationException("No valid connection string found.");
     }
 
     options.UseSqlServer(connectionString);
 });
 
-
-
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 {
-    var connectionString = environment == "Test"
-        ? builder.Configuration.GetConnectionString("TestConnection")
-        : builder.Configuration.GetConnectionString("DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DBConnectionString");
     options.UseSqlServer(connectionString);
 }, ServiceLifetime.Scoped);
 
