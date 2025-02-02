@@ -46,7 +46,7 @@
             UserName = user?.Identity?.Name;
 
             hubConnection = new HubConnectionBuilder()
-                .WithUrl($"https://localhost:7164/chatHub")
+                .WithUrl($"{NavigationManager.BaseUri}chatHub")
                 .WithAutomaticReconnect()
                 .AddNewtonsoftJsonProtocol()
                 .Build();

@@ -42,7 +42,6 @@ jobs:
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.production.json" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "SERVER_BASE_ADDRESS=${{ vars.WEB_SERVER_BASE_ADDRESS_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -53,7 +52,6 @@ jobs:
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.preprod.json" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "SERVER_BASE_ADDRESS=${{ vars.WEB_SERVER_BASE_ADDRESS_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
 
 
@@ -71,7 +69,7 @@ jobs:
               "Microsoft.AspNetCore": "Warning"
             }
           },
-          "ServerBaseAddress": "${{ env.SERVER_BASE_ADDRESS }}",
+          "ServerBaseAddress": "https://${{ env.WEB_DEPLOY_SERVER }}",
           "WebHostUrls": [ "http://*:80", "https://*:443" ]
         }' | Out-File -FilePath $appSettingsPath -Encoding utf8 -Force
 
