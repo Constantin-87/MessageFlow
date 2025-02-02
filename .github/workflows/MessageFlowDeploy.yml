@@ -28,6 +28,7 @@ jobs:
     - name: Publish Project
       run: dotnet publish -c Release -o ${{ github.workspace }}/publish
 
+
     - name: Set Deployment Environment
       id: set-env
       shell: pwsh
@@ -40,6 +41,7 @@ jobs:
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "APPSETTINGS_FILE=appsettings.production.json" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -49,16 +51,30 @@ jobs:
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "APPSETTINGS_FILE=appsettings.preprod.json" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
+
+
+    - name: Create Environment-Specific AppSettings
+      run: |
+        echo '{
+          "ConnectionStrings": {
+            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
+          },
+          "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft.AspNetCore": "Warning"
+            }
+          }
+        }' > ${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}
+
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
       run: |
-        echo "Setting DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }}"
-        [System.Environment]::SetEnvironmentVariable("DB_CONNECTION_STRING", "${{ env.DB_CONNECTION_STRING }}", [System.EnvironmentVariableTarget]::Machine)
         dotnet tool install --global dotnet-ef
         dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
-
 
 
     - name: Stop IIS before Deployment
@@ -66,6 +82,7 @@ jobs:
       run: |
         Write-Host "Stopping IIS to release locked files..."
         iisreset /stop
+
 
     - name: Deploy to IIS via Web Deploy
       env:
@@ -86,6 +103,7 @@ jobs:
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
+
 
     - name: Start IIS after Deployment
       shell: pwsh
