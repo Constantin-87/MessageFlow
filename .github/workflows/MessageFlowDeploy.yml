@@ -54,9 +54,12 @@ jobs:
     - name: Apply Entity Framework Migrations
       shell: pwsh
       run: |
-        $env:DB_CONNECTION_STRING = "${{ env.DB_CONNECTION_STRING }}"
+        echo "Setting DB_CONNECTION_STRING=${{ env.DB_CONNECTION_STRING }}"
+        [System.Environment]::SetEnvironmentVariable("DB_CONNECTION_STRING", "${{ env.DB_CONNECTION_STRING }}", [System.EnvironmentVariableTarget]::Machine)
         dotnet tool install --global dotnet-ef
         dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
+
+
 
     - name: Stop IIS before Deployment
       shell: pwsh
