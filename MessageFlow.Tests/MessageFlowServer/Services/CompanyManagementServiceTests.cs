@@ -129,7 +129,7 @@ namespace MessageFlow.Tests.MessageFlowServer.Services
             adminCompany.CompanyName = "Updated Company A";
 
             // Act
-            var result = await _companyManagementServiceAdmin.UpdateCompanyAsync(adminCompany);
+            var result = await _companyManagementServiceAdmin.UpdateCompanyDetailsAsync(adminCompany);
 
             // Assert
             Assert.True(result.success);
@@ -152,7 +152,7 @@ namespace MessageFlow.Tests.MessageFlowServer.Services
             otherCompany.CompanyName = "Updated Company B";
 
             // Act
-            var result = await _companyManagementServiceAdmin.UpdateCompanyAsync(otherCompany);
+            var result = await _companyManagementServiceAdmin.UpdateCompanyDetailsAsync(otherCompany);
 
             // Assert
             Assert.False(result.success);
@@ -171,7 +171,7 @@ namespace MessageFlow.Tests.MessageFlowServer.Services
             superAdminCompany.CompanyName = "Updated HeadCompany";
 
             // Act
-            var result = await _companyManagementServiceSuperAdmin.UpdateCompanyAsync(superAdminCompany);
+            var result = await _companyManagementServiceSuperAdmin.UpdateCompanyDetailsAsync(superAdminCompany);
 
             // Assert
             Assert.True(result.success);
@@ -190,7 +190,7 @@ namespace MessageFlow.Tests.MessageFlowServer.Services
             otherCompany.CompanyName = "Updated Company B";
 
             // Act
-            var result = await _companyManagementServiceSuperAdmin.UpdateCompanyAsync(otherCompany);
+            var result = await _companyManagementServiceSuperAdmin.UpdateCompanyDetailsAsync(otherCompany);
 
             // Assert
             Assert.True(result.success);

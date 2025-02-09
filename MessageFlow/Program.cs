@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.Components;
@@ -7,8 +7,11 @@ using MessageFlow.Data;
 using MessageFlow.Models;
 using MessageFlow.Middleware;
 using MessageFlow.Components.Chat.Services;
+using MessageFlow.Configuration;
+using Azure.Identity;
+using Azure.Core;
+using MessageFlow.Components.AzureServices;
 
-//var builder = WebApplication.CreateBuilder(args);
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
@@ -20,6 +23,50 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
+
+
+var keyVaultUrl = builder.Configuration["AzureKeyVaultURL"];
+
+if (!string.IsNullOrEmpty(keyVaultUrl))
+{
+    // Choose credential based on environment
+    TokenCredential credential = builder.Environment.IsDevelopment()
+        ? new InteractiveBrowserCredential() // For local development
+        : new DefaultAzureCredential(); // For production
+
+    builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
+}
+
+// ✅ Load secrets securely from Azure Key Vault
+var globalSettings = new GlobalChannelSettings
+{
+    AppId = builder.Configuration["meta-app-id"],
+    AppSecret = builder.Configuration["meta-app-secret"],
+    FacebookWebhookVerifyToken = builder.Configuration["facebook-webhook-verify-token"],
+    WhatsAppWebhookVerifyToken = builder.Configuration["whatsapp-webhook-verify-token"]
+};
+
+// ✅ Validate Secrets Before Starting
+void ValidateConfig(GlobalChannelSettings settings)
+{
+    if (string.IsNullOrEmpty(settings.AppId) ||
+        string.IsNullOrEmpty(settings.AppSecret) ||
+        string.IsNullOrEmpty(settings.FacebookWebhookVerifyToken) ||
+        string.IsNullOrEmpty(settings.WhatsAppWebhookVerifyToken))
+    {
+        throw new InvalidOperationException("Critical configuration values are missing. Application startup aborted.");
+    }
+}
+
+ValidateConfig(globalSettings);
+
+builder.Services.Configure<GlobalChannelSettings>(options =>
+{
+    options.AppId = globalSettings.AppId;
+    options.AppSecret = globalSettings.AppSecret;
+    options.FacebookWebhookVerifyToken = globalSettings.FacebookWebhookVerifyToken;
+    options.WhatsAppWebhookVerifyToken = globalSettings.WhatsAppWebhookVerifyToken;
+});
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -33,20 +80,33 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<UserManagementService>();
+builder.Services.AddScoped<AzureBlobStorageService>();
 builder.Services.AddScoped<CompanyManagementService>();
 builder.Services.AddScoped<TeamsManagementService>();
 builder.Services.AddScoped<FacebookService>();
 builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddScoped<ChatArchivingService>();
 builder.Services.AddScoped<MessageProcessingService>();
+builder.Services.AddScoped<DocumentProcessingService>();
+
+
+var searchServiceEndpoint = builder.Configuration["azure-ai-search-url"];
+var searchServiceApiKey = builder.Configuration["azure-ai-search-key"];
+
+if (string.IsNullOrEmpty(searchServiceEndpoint) || string.IsNullOrEmpty(searchServiceApiKey))
+{
+    throw new InvalidOperationException("Azure Search configuration is missing.");
+}
+
+builder.Services.AddScoped<AzureSearchService>(provider =>
+    new AzureSearchService(searchServiceEndpoint, searchServiceApiKey));
+
 
 
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<UpdateLastActivityFilter>();
 });
-
-
 
 // Email sender (no-op in this case)
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();

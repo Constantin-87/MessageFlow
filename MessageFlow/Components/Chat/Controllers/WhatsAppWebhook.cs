@@ -2,6 +2,8 @@
 using System.Text.Json;
 using MessageFlow.Components.Chat.Helpers;
 using MessageFlow.Components.Chat.Services;
+using MessageFlow.Configuration;
+using Microsoft.Extensions.Options;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -9,11 +11,13 @@ public class WhatsAppWebhook : ControllerBase
 {
     private readonly ILogger<WhatsAppWebhook> _logger;
     private readonly WhatsAppService _whatsAppService;
+    private readonly GlobalChannelSettings _globalChannelSettings;
 
-    public WhatsAppWebhook(ILogger<WhatsAppWebhook> logger, WhatsAppService whatsAppService)
+    public WhatsAppWebhook(ILogger<WhatsAppWebhook> logger, WhatsAppService whatsAppService, IOptions<GlobalChannelSettings> globalChannelSettings)
     {
         _logger = logger;
         _whatsAppService = whatsAppService;
+        _globalChannelSettings = globalChannelSettings.Value;
     }
 
     [HttpGet]
@@ -21,19 +25,20 @@ public class WhatsAppWebhook : ControllerBase
                                         [FromQuery(Name = "hub.challenge")] string hub_challenge,
                                         [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {
-        var isValid = await WebhookProcessingHelper.VerifyTokenAsync(
-            _whatsAppService.GetAllWhatsAppSettingsAsync,
-            settings => settings.WebhookVerifyToken,
-            hub_mode,
-            hub_verify_token,
-            _logger
-        );
+        _logger.LogInformation($"Verifying WhatsApp Webhook: mode={hub_mode}, token={hub_verify_token}");
 
-        if (isValid)
+        if (hub_mode != "subscribe")
+        {
+            _logger.LogWarning("Invalid hub mode.");
+            return Unauthorized();
+        }
+
+        if (_globalChannelSettings.WhatsAppWebhookVerifyToken == hub_verify_token)
         {
             return Ok(hub_challenge);
         }
 
+        _logger.LogWarning("Webhook verification failed.");
         return Unauthorized();
     }
 

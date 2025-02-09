@@ -2,6 +2,8 @@
 using System.Text.Json;
 using MessageFlow.Components.Chat.Helpers;
 using MessageFlow.Components.Chat.Services;
+using MessageFlow.Configuration;
+using Microsoft.Extensions.Options;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -9,31 +11,35 @@ public class FacebookWebhook : ControllerBase
 {
     private readonly ILogger<FacebookWebhook> _logger;
     private readonly FacebookService _facebookService;
+    private readonly GlobalChannelSettings _globalChannelSettings;
 
-    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService)
+    public FacebookWebhook(ILogger<FacebookWebhook> logger, FacebookService facebookService, IOptions<GlobalChannelSettings> globalChannelSettings)
     {
         _logger = logger;
         _facebookService = facebookService;
+        _globalChannelSettings = globalChannelSettings.Value;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Verify([FromQuery(Name = "hub.mode")] string hub_mode,
-                                        [FromQuery(Name = "hub.challenge")] string hub_challenge,
-                                        [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
+    public IActionResult Verify([FromQuery(Name = "hub.mode")] string hub_mode,
+                                [FromQuery(Name = "hub.challenge")] string hub_challenge,
+                                [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {
-        var isValid = await WebhookProcessingHelper.VerifyTokenAsync(
-            _facebookService.GetAllFacebookSettingsAsync,
-            settings => settings.WebhookVerifyToken,
-            hub_mode,
-            hub_verify_token,
-            _logger
-        );
+        _logger.LogInformation($"Verifying Facebook Webhook: mode={hub_mode}, token={hub_verify_token}");
 
-        if (isValid)
+        if (hub_mode != "subscribe")
+        {
+            _logger.LogWarning("Invalid hub mode.");
+            return Unauthorized();
+        }
+
+        // Compare with verify token from appsettings.json
+        if (_globalChannelSettings.FacebookWebhookVerifyToken == hub_verify_token)
         {
             return Ok(hub_challenge);
         }
 
+        _logger.LogWarning("Webhook verification failed.");
         return Unauthorized();
     }
 

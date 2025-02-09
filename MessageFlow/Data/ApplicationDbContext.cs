@@ -22,6 +22,10 @@
         public DbSet<ArchivedMessage> ArchivedMessages { get; set; }
         public DbSet<WhatsAppSettingsModel> WhatsAppSettingsModels { get; set; }
         public DbSet<PhoneNumberInfo> PhoneNumberInfo { get; set; }
+        public DbSet<PretrainDataFile> PretrainDataFiles { get; set; }
+        public DbSet<CompanyEmail> CompanyEmails { get; set; }
+        public DbSet<CompanyPhoneNumber> CompanyPhoneNumbers { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -54,6 +58,25 @@
                 .HasMany(ws => ws.PhoneNumbers)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PretrainDataFile>()
+                .HasOne(pf => pf.Company)
+                .WithMany(c => c.PretrainDataFiles)
+                .HasForeignKey(pf => pf.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CompanyEmail>()
+                .HasOne(ce => ce.Company)
+                .WithMany(c => c.CompanyEmails)
+                .HasForeignKey(ce => ce.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CompanyPhoneNumber>()
+                .HasOne(cp => cp.Company)
+                .WithMany(c => c.CompanyPhoneNumbers)
+                .HasForeignKey(cp => cp.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
 
         }
     }

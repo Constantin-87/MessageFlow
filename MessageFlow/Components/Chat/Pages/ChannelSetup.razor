@@ -30,16 +30,31 @@ else if (selectedCompany != null)
 
 @if (selectedCompany != null)
 {
-    <div class="row">
+    <div class="container">
         @foreach (var channel in channels)
         {
-            <div class="col-md-3">
-                <div class="card channel-card" @onclick="() => NavigateToChannel(channel)">
+            <div class="mb-3">
+                <div class="card channel-card" @onclick="() => ToggleChannel(channel.Name)">
                     <div class="card-body">
                         <h5>@channel.Name</h5>
                     </div>
                 </div>
+
+                @if (channel.Name == "Facebook" && showFacebook)
+                {
+                    <div class="settings-form">
+                        <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
+                    </div>
+                }
+
+                @if (channel.Name == "WhatsApp" && showWhatsApp)
+                {
+                    <div class="settings-form">
+                        <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
+                    </div>
+                }
             </div>
+
         }
     </div>
 }
@@ -53,6 +68,9 @@ else if (selectedCompany != null)
         new Channel { Name = "Facebook", Icon = "facebook.png" },
         new Channel { Name = "WhatsApp", Icon = "whatsapp.png" }
     };
+
+    private bool showFacebook = false;
+    private bool showWhatsApp = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -85,21 +103,24 @@ else if (selectedCompany != null)
         {
             await using var dbContext = CompanyService.CreateDbContext();
             selectedCompany = await CompanyService.GetCompanyByIdAsync(dbContext, companyId);
+            showFacebook = false;
+            showWhatsApp = false;
             StateHasChanged();
         }
     }
 
-    private void NavigateToChannel(Channel channel)
+    private void ToggleChannel(string channelName)
     {
-        if (selectedCompany != null && channel.Name == "Facebook")
+        if (channelName == "Facebook")
         {
-            NavigationManager.NavigateTo($"/ChannelSetup/{selectedCompany.Id}/Facebook");
+            showFacebook = !showFacebook;
+            showWhatsApp = false;
         }
-        else if (selectedCompany != null && channel.Name == "WhatsApp")
+        else if (channelName == "WhatsApp")
         {
-            NavigationManager.NavigateTo($"/ChannelSetup/{selectedCompany.Id}/WhatsApp");
+            showWhatsApp = !showWhatsApp;
+            showFacebook = false;
         }
-        // To add other channels here as needed
     }
 
     public class Channel

@@ -59,19 +59,11 @@
                             </NavLink>
                         </li>
 
-                        <AuthorizeView Roles="SuperAdmin" Context="CompanyAccountsContext">
+                        <AuthorizeView Roles="SuperAdmin, Admin" Context="CompanyAccountsContext">
                             <li class="nav-item px-3 dropdown">
-                                <!-- Company Accounts -->
-                                <NavLink class="dropdown-item" href="/Accounts/CompanyAccounts">
-                                    <i class="bi bi-building" aria-hidden="true"></i> Company Accounts
+                                <NavLink class="dropdown-item" href="@GetCompanyLink()">
+                                    <i class="bi bi-building"></i> @GetCompanyLabel()
                                 </NavLink>
-                            </li>
-                        </AuthorizeView>
-
-                        <AuthorizeView Roles="Admin" Context="authAdminEditCompanyContext">
-                            <li class="nav-item px-3 dropdown">
-                                <!-- Company Details -->
-                                <NavLink class="dropdown-item" href="@companyDetailsUrl"></NavLink>
                             </li>
                         </AuthorizeView>
 
@@ -109,6 +101,7 @@
     private string companyDetailsUrl = string.Empty;
     private string companyName = string.Empty;
     private string userName = string.Empty;
+    private bool IsSuperAdmin;
 
     protected override void OnInitialized()
     {
@@ -118,13 +111,34 @@
         var companyIdClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "CompanyId");
         var userNameClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
         var companyNameClaim = HttpContextAccessor.HttpContext?.User.Claims.FirstOrDefault(c => c.Type == "CompanyName");
+        // Retrieve **all** roles instead of just one
+        var userRoles = HttpContextAccessor.HttpContext?.User.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+        Console.WriteLine($"🔍 User Claims - CompanyId: {companyIdClaim?.Value}, UserName: {userNameClaim?.Value}, CompanyName: {companyNameClaim?.Value}, UserRoles: {string.Join(",", userRoles)}");
 
         if (companyIdClaim != null && userNameClaim != null && companyNameClaim != null)
         {
             userName = userNameClaim.Value;
             companyName = companyNameClaim.Value;
-            companyDetailsUrl = $"/edit-company/{companyIdClaim.Value}";
+
+            // ✅ Now correctly checking if user **has** SuperAdmin role
+            IsSuperAdmin = userRoles.Contains("SuperAdmin");
+            Console.WriteLine($"✅ User is SuperAdmin: {IsSuperAdmin}");
+
+            if (IsSuperAdmin)
+            {
+                companyDetailsUrl = "/Accounts/CompanyAccounts"; // SuperAdmin manages all companies
+            }
+            else
+            {
+                companyDetailsUrl = $"/edit-company/{companyIdClaim.Value}"; // Admins can edit only their company
+            }
         }
+
+        Console.WriteLine($"🏢 Assigned companyDetailsUrl: {companyDetailsUrl}");
     }
 
 
@@ -141,4 +155,19 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+
+    private string GetCompanyLabel()
+    {
+        string label = IsSuperAdmin ? "Company Accounts" : "Company Details";
+        Console.WriteLine($"🔖 GetCompanyLabel() -> {label}");
+        return label;
+    }
+
+    private string GetCompanyLink()
+    {
+        string link = IsSuperAdmin ? "/Accounts/CompanyAccounts" : companyDetailsUrl;
+        Console.WriteLine($"🔗 GetCompanyLink() -> {link}");
+        return link;
+    }
+
 }

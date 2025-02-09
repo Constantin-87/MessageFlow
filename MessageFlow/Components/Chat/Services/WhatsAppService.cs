@@ -37,7 +37,6 @@ namespace MessageFlow.Components.Chat.Services
                 existingSettings.AccessToken = whatsAppSettings.AccessToken;
                 existingSettings.BusinessAccountId = whatsAppSettings.BusinessAccountId;
                 existingSettings.PhoneNumbers = whatsAppSettings.PhoneNumbers;
-                existingSettings.WebhookVerifyToken = whatsAppSettings.WebhookVerifyToken;
             }
 
             await _dbContext.SaveChangesAsync();

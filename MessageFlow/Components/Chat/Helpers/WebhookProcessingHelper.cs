@@ -29,32 +29,5 @@ namespace MessageFlow.Components.Chat.Helpers
             }
         }
 
-        public static async Task<bool> VerifyTokenAsync<T>(
-             Func<Task<List<T>>> getAllSettingsFunc,
-             Func<T, string> getVerifyTokenFunc,
-             string hubMode,
-             string hubVerifyToken,
-            ILogger logger)
-        {
-            logger.LogInformation($"Verifying webhook: mode={hubMode}, token={hubVerifyToken}");
-
-            if (hubMode != "subscribe")
-            {
-                logger.LogWarning("Invalid hub mode.");
-                return false;
-            }
-
-            var allSettings = await getAllSettingsFunc();
-            var isMatched = allSettings.Any(settings => getVerifyTokenFunc(settings) == hubVerifyToken);
-
-            if (isMatched)
-            {
-                logger.LogInformation("Webhook verified successfully.");
-                return true;
-            }
-
-            logger.LogWarning("Webhook verification failed.");
-            return false;
-        }
     }
 }

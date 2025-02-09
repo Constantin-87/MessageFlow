@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using MessageFlow.Components.Accounts.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using MessageFlow.Components.AzureServices;
 
 namespace MessageFlow.Tests.Helpers
 {
@@ -106,8 +108,22 @@ namespace MessageFlow.Tests.Helpers
             var teamsLoggerMock = new Mock<ILogger<TeamsManagementService>>();
             var teamsManagementService = new TeamsManagementService(dbContextFactory, teamsLoggerMock.Object);
 
+            var blobStorageMock = new Mock<AzureBlobStorageService>(new Mock<IConfiguration>().Object);
+
+            // Create a mock for DocumentProcessingService
+            var documentProcessingMock = new Mock<DocumentProcessingService>(new Mock<IConfiguration>().Object, new Mock<ILogger<DocumentProcessingService>>().Object);
+
+            var azureSearchMock = new Mock<AzureSearchService>("https://fake-search-endpoint", "fake-api-key");
+
             // Create and return the service using IDbContextFactory and TeamsManagementService
-            return new CompanyManagementService(dbContextFactory, loggerMock.Object, httpContextAccessorMock.Object, teamsManagementService);
+            return new CompanyManagementService(
+                dbContextFactory,
+                loggerMock.Object,
+                httpContextAccessorMock.Object,
+                teamsManagementService,
+                blobStorageMock.Object,
+                documentProcessingMock.Object,
+                azureSearchMock.Object);
         }
 
 

@@ -43,9 +43,8 @@ namespace MessageFlow.Components.Chat.Services
             else
             {
                 // Update existing settings
-                existingSettings.AppId = facebookSettings.AppId;
+                existingSettings.PageId = facebookSettings.PageId;
                 existingSettings.AccessToken = facebookSettings.AccessToken;
-                existingSettings.WebhookVerifyToken = facebookSettings.WebhookVerifyToken;
             }
 
             await _dbContext.SaveChangesAsync();
