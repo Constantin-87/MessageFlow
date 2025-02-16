@@ -15,6 +15,9 @@ namespace MessageFlow.Models
 
         public string FileDescription { get; set; }
 
+        //[Required]
+        //public FileType FileType { get; set; }
+
         [NotMapped]
         public Stream FileContent { get; set; } // Holds the file content temporarily before upload
 

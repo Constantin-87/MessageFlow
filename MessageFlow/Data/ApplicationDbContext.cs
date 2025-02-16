@@ -25,6 +25,8 @@
         public DbSet<PretrainDataFile> PretrainDataFiles { get; set; }
         public DbSet<CompanyEmail> CompanyEmails { get; set; }
         public DbSet<CompanyPhoneNumber> CompanyPhoneNumbers { get; set; }
+        public DbSet<ProcessedPretrainData> ProcessedPretrainData { get; set; }
+
 
 
 

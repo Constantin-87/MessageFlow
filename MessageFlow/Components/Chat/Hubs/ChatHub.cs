@@ -158,6 +158,12 @@ public class ChatHub : Hub
     private async Task AddUserToGroups(string userId, string companyId, List<Team> teams)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"Company_{companyId}");
+
+        foreach (var team in teams)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Team_{team.TeamId}"); // ✅ Add to team-based group
+        }
+
         OnlineUsers[Context.ConnectionId] = new UserConnectionInfo
         {
             UserId = userId,

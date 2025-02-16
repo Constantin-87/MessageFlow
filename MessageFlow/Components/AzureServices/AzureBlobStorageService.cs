@@ -31,7 +31,7 @@ namespace MessageFlow.Components.AzureServices
                 await blobContainerClient.CreateIfNotExistsAsync(PublicAccessType.None);
 
                 // Set unique file name per company
-                string blobName = $"company_{companyId}/{Guid.NewGuid()}_{fileName}";
+                string blobName = $"company_{companyId}/{fileName}";
                 var blobClient = blobContainerClient.GetBlobClient(blobName);
 
                 var blobHttpHeaders = new BlobHttpHeaders { ContentType = contentType };
@@ -131,6 +131,50 @@ namespace MessageFlow.Components.AzureServices
                 throw;
             }
         }
+
+        /// <summary>
+        /// Retrieves all JSON files in the "CompanyRAGData" folder for a given company and returns their combined content.
+        /// </summary>
+        public async Task<string> GetAllCompanyRagDataFilesAsync(int companyId)
+        {
+            try
+            {
+                var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                string baseFolderPath = $"company_{companyId}/CompanyRAGData/";
+
+                List<string> fileContents = new List<string>();
+
+                // List all blobs in the CompanyRAGData folder
+                await foreach (BlobItem blobItem in blobContainerClient.GetBlobsAsync(prefix: baseFolderPath))
+                {
+                    if (blobItem.Name.EndsWith(".json")) // Ensure only JSON files are processed
+                    {
+                        var blobClient = blobContainerClient.GetBlobClient(blobItem.Name);
+
+                        // Download and read file content
+                        var response = await blobClient.DownloadContentAsync();
+                        string content = response.Value.Content.ToString();
+
+                        fileContents.Add(content);
+                    }
+                }
+
+                if (fileContents.Count == 0)
+                {
+                    Console.WriteLine($"⚠️ No JSON files found in {baseFolderPath}");
+                    return string.Empty;
+                }
+
+                // Combine all JSON file contents into a single string
+                return string.Join("\n", fileContents);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error retrieving files from {companyId}/CompanyRAGData/: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
 
 
     }

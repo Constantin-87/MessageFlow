@@ -88,6 +88,8 @@ builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddScoped<ChatArchivingService>();
 builder.Services.AddScoped<MessageProcessingService>();
 builder.Services.AddScoped<DocumentProcessingService>();
+builder.Services.AddScoped<AIChatBotService>();
+builder.Services.AddScoped<AzureSearchQueryService>();
 
 
 var searchServiceEndpoint = builder.Configuration["azure-ai-search-url"];
@@ -99,7 +101,14 @@ if (string.IsNullOrEmpty(searchServiceEndpoint) || string.IsNullOrEmpty(searchSe
 }
 
 builder.Services.AddScoped<AzureSearchService>(provider =>
-    new AzureSearchService(searchServiceEndpoint, searchServiceApiKey));
+{
+    var blobStorageService = provider.GetRequiredService<AzureBlobStorageService>();
+    return new AzureSearchService(searchServiceEndpoint, searchServiceApiKey, blobStorageService);
+});
+
+
+builder.Services.AddScoped<AzureSearchQueryService>();
+
 
 
 
