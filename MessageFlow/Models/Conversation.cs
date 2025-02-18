@@ -1,4 +1,4 @@
-﻿namespace MessageFlow.Models
+﻿namespace MessageFlow.Server.Models
 {
     public class Conversation
     {
@@ -6,6 +6,7 @@
         public string SenderId { get; set; } = string.Empty;
         public string SenderUsername { get; set; } = string.Empty;
         public string AssignedUserId { get; set; } = string.Empty;
+        public string AssignedTeamId { get; set; } = string.Empty;
         public string CompanyId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsAssigned { get; set; } = false;

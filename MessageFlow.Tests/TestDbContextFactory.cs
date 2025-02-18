@@ -1,4 +1,4 @@
-﻿using MessageFlow.Data;
+﻿using MessageFlow.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 

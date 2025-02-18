@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace MessageFlow.Migrations
+namespace MessageFlow.Server.Migrations
 {
     /// <inheritdoc />
     public partial class AddFacebookSettingsTable : Migration

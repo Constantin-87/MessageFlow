@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
-using MessageFlow.Data;
-using MessageFlow.Models;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace MessageFlow.Tests
+namespace MessageFlow.Server.Tests
 {
     public class TestDatabaseSeeder
     {

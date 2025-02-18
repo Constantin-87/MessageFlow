@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using System.Diagnostics.CodeAnalysis;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Server.Components.Accounts.Services
 {
     internal class IdentityRedirectManager(NavigationManager navigationManager)
     {

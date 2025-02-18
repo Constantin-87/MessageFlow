@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MessageFlow.Models
+namespace MessageFlow.Server.Models
 {
     public class PretrainDataFile
     {
@@ -14,6 +14,9 @@ namespace MessageFlow.Models
         public string FileUrl { get; set; } // URL to blob storage
 
         public string FileDescription { get; set; }
+
+        //[Required]
+        //public FileType FileType { get; set; }
 
         [NotMapped]
         public Stream FileContent { get; set; } // Holds the file content temporarily before upload

@@ -1,8 +1,8 @@
-﻿namespace MessageFlow.Data
+﻿namespace MessageFlow.Server.Data
 {
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    using MessageFlow.Models;
+    using MessageFlow.Server.Models;
 
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
@@ -25,6 +25,8 @@
         public DbSet<PretrainDataFile> PretrainDataFiles { get; set; }
         public DbSet<CompanyEmail> CompanyEmails { get; set; }
         public DbSet<CompanyPhoneNumber> CompanyPhoneNumbers { get; set; }
+        public DbSet<ProcessedPretrainData> ProcessedPretrainData { get; set; }
+
 
 
 

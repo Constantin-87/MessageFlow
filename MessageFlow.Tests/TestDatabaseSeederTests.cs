@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using Xunit;
-using MessageFlow.Data;
+using MessageFlow.Server.Data;
 
-namespace MessageFlow.Tests
+namespace MessageFlow.Server.Tests
 {
     public class TestDatabaseSeederTests
     {

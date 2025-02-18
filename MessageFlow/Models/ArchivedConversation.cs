@@ -1,4 +1,4 @@
-﻿namespace MessageFlow.Models
+﻿namespace MessageFlow.Server.Models
 {
     public class ArchivedConversation
     {

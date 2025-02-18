@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using MessageFlow.Data;
+using MessageFlow.Server.Data;
 
 #nullable disable
 
-namespace MessageFlow.Migrations
+namespace MessageFlow.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20241006123724_UpdatedFacebookSettingsTable4")]
@@ -158,7 +158,7 @@ namespace MessageFlow.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.ApplicationUser", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -226,7 +226,7 @@ namespace MessageFlow.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.Company", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.Company", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -247,7 +247,7 @@ namespace MessageFlow.Migrations
                     b.ToTable("Companies");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.FacebookSettingsModel", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.FacebookSettingsModel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -283,7 +283,7 @@ namespace MessageFlow.Migrations
                     b.ToTable("FacebookSettingsModels");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.Team", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.Team", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -305,7 +305,7 @@ namespace MessageFlow.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.UserTeam", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.UserTeam", b =>
                 {
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
@@ -331,7 +331,7 @@ namespace MessageFlow.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("MessageFlow.Models.ApplicationUser", null)
+                    b.HasOne("MessageFlow.Server.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -340,7 +340,7 @@ namespace MessageFlow.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("MessageFlow.Models.ApplicationUser", null)
+                    b.HasOne("MessageFlow.Server.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -355,7 +355,7 @@ namespace MessageFlow.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MessageFlow.Models.ApplicationUser", null)
+                    b.HasOne("MessageFlow.Server.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -364,16 +364,16 @@ namespace MessageFlow.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("MessageFlow.Models.ApplicationUser", null)
+                    b.HasOne("MessageFlow.Server.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.Team", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.Team", b =>
                 {
-                    b.HasOne("MessageFlow.Models.Company", "Company")
+                    b.HasOne("MessageFlow.Server.Models.Company", "Company")
                         .WithMany("Teams")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -382,15 +382,15 @@ namespace MessageFlow.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.UserTeam", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.UserTeam", b =>
                 {
-                    b.HasOne("MessageFlow.Models.Team", "Team")
+                    b.HasOne("MessageFlow.Server.Models.Team", "Team")
                         .WithMany("UserTeams")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MessageFlow.Models.ApplicationUser", "User")
+                    b.HasOne("MessageFlow.Server.Models.ApplicationUser", "User")
                         .WithMany("UserTeams")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -401,17 +401,17 @@ namespace MessageFlow.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.ApplicationUser", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.ApplicationUser", b =>
                 {
                     b.Navigation("UserTeams");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.Company", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.Company", b =>
                 {
                     b.Navigation("Teams");
                 });
 
-            modelBuilder.Entity("MessageFlow.Models.Team", b =>
+            modelBuilder.Entity("MessageFlow.Server.Models.Team", b =>
                 {
                     b.Navigation("UserTeams");
                 });

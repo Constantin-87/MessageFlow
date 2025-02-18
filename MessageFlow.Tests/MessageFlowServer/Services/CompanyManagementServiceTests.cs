@@ -1,6 +1,6 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
-using MessageFlow.Components.Accounts.Services;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
+using MessageFlow.Server.Components.Accounts.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using MessageFlow.Tests.Helpers;
+using MessageFlow.Server.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MessageFlow.Tests.MessageFlowServer.Services
+namespace MessageFlow.Server.Tests.MessageFlowServer.Services
 {
     public class CompanyManagementServiceTests : IAsyncLifetime
     {

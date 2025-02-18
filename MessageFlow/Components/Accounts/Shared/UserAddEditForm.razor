@@ -138,7 +138,7 @@
         // When in edit mode, fetch the user data and prepopulate fields
         if (IsEditMode && !string.IsNullOrEmpty(UserId))
         {
-            // Load the user's details by their Id
+            // Load the user's details by their Document_id
             ApplicationUser = await UserManager.FindByIdAsync(UserId);
             if (ApplicationUser == null)
             {

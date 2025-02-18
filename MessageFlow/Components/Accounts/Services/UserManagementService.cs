@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MessageFlow.Models; 
+using MessageFlow.Server.Models; 
 using Microsoft.EntityFrameworkCore;
-using MessageFlow.Components.Accounts.Services;
+using MessageFlow.Server.Components.Accounts.Services;
 
 public class UserManagementService
 {

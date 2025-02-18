@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MessageFlow.Migrations
+namespace MessageFlow.Server.Migrations
 {
     /// <inheritdoc />
     public partial class initialMigration : Migration

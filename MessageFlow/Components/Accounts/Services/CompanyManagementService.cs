@@ -1,14 +1,15 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Text.Json;
-using MessageFlow.Components.AzureServices;
-using MessageFlow.Components.Accounts.Helpers;
+using MessageFlow.AzureServices.Services;
+using MessageFlow.AzureServices.Helpers;
 using System.Text;
+using AutoMapper;
+using MessageFlow.Shared.DTOs;
 
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Server.Components.Accounts.Services
 {
     public class CompanyManagementService
     {
@@ -19,6 +20,7 @@ namespace MessageFlow.Components.Accounts.Services
         private readonly AzureBlobStorageService _blobStorageService;
         private readonly DocumentProcessingService _documentProcessingService;
         private readonly AzureSearchService _azureSearchService;
+        private readonly IMapper _mapper;
 
         public CompanyManagementService(
             IDbContextFactory<ApplicationDbContext> contextFactory,
@@ -27,7 +29,8 @@ namespace MessageFlow.Components.Accounts.Services
             TeamsManagementService teamsManagementService,
             AzureBlobStorageService blobStorageService,
             DocumentProcessingService documentProcessingService,
-            AzureSearchService azureSearchService)
+            AzureSearchService azureSearchService,
+            IMapper mapper)
         {
             _contextFactory = contextFactory;
             _logger = logger;
@@ -36,6 +39,7 @@ namespace MessageFlow.Components.Accounts.Services
             _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
             _documentProcessingService = documentProcessingService;
             _azureSearchService = azureSearchService;
+            _mapper = mapper;
         }
 
 
@@ -329,7 +333,7 @@ namespace MessageFlow.Components.Accounts.Services
             }
         }
 
-        // Retrieve company metadata
+        // To be changed to GetAllCompanyMetaData (display entire json of file used to create the index)
         public async Task<(bool success, string metadata, string errorMessage)> GetCompanyMetadataAsync(int companyId)
         {
             try
@@ -340,20 +344,14 @@ namespace MessageFlow.Components.Accounts.Services
                     return (false, string.Empty, errorMessage);
                 }
 
-                await using var dbContext = _contextFactory.CreateDbContext();
-                // Look for the structured data file instead of "metadata.json"
-                string structuredFileName = $"company_{companyId}_structured_data.json";
-                var metadataFile = await dbContext.PretrainDataFiles
-                    .Where(f => f.CompanyId == companyId && f.FileName == structuredFileName)
-                    .Select(f => f.FileUrl)
-                    .FirstOrDefaultAsync();
+                // 🔹 Use new method to retrieve all JSON files from CompanyRAGData folder
+                string metadataContent = await _blobStorageService.GetAllCompanyRagDataFilesAsync(companyId);
 
-                if (metadataFile == null)
+                if (string.IsNullOrEmpty(metadataContent))
                 {
                     return (false, string.Empty, "Metadata not found.");
                 }
 
-                var metadataContent = await _blobStorageService.DownloadFileContentAsync(metadataFile);
                 return (true, metadataContent, "Metadata retrieved successfully.");
             }
             catch (Exception ex)
@@ -374,62 +372,96 @@ namespace MessageFlow.Components.Accounts.Services
                 }
 
                 await using var dbContext = _contextFactory.CreateDbContext();
-                var uploadedFiles = await dbContext.PretrainDataFiles
-                    .Where(f => f.CompanyId == companyId)
-                    .ToListAsync();
-
-                // 🔹 Extract structured data from files
-                var processedDocuments = await ProcessUploadedFiles(uploadedFiles);
-
+                            
                 var company = await dbContext.Companies
                     .Include(c => c.CompanyEmails)
                     .Include(c => c.CompanyPhoneNumbers)
-                    .Include(c => c.Teams)
+                    .Select(c => new Company
+                    {
+                        Id = c.Id,
+                        AccountNumber = c.AccountNumber,
+                        CompanyName = c.CompanyName,
+                        CompanyEmails = c.CompanyEmails,
+                        CompanyPhoneNumbers = c.CompanyPhoneNumbers,
+                        Teams = c.Teams.Select(t => new Team
+                        {
+                            Id = t.Id,
+                            TeamName = t.TeamName,
+                            TeamDescription = t.TeamDescription
+                        }).ToList()
+                    })
                     .FirstOrDefaultAsync(c => c.Id == companyId);
+
 
                 if (company == null)
                 {
                     return (false, "Company not found.");
                 }
 
-                var metadata = new
-                {
-                    company.Id,
-                    company.CompanyName,
-                    company.Description,
-                    company.IndustryType,
-                    company.WebsiteUrl,
-                    Emails = company.CompanyEmails.Select(e => new { e.EmailAddress, e.Description }),
-                    PhoneNumbers = company.CompanyPhoneNumbers.Select(p => new { p.PhoneNumber, p.Description }),
-                    Teams = company.Teams.Select(t => new { t.Id, t.TeamName, t.TeamDescription })
-                };
+                // 🔹 1. Retrieve existing metadata records from the database
+                var existingFiles = await dbContext.ProcessedPretrainData
+                    .Where(f => f.CompanyId == companyId &&
+                                (f.FileType == FileType.CompanyEmails ||
+                                 f.FileType == FileType.CompanyDetails ||
+                                 f.FileType == FileType.CompanyPhoneNumbers))
+                    .ToListAsync();
 
-                // 🔹 Use JsonStructureHelper instead of manually building JSON
-                string jsonContent = JsonSerializer.Serialize(new { Company = metadata, Documents = processedDocuments }, new JsonSerializerOptions { WriteIndented = true });
-
-                // 🔹 Extract JSON structure dynamically
-                var structuredJson = JsonStructureHelper.ExtractJsonStructure(jsonContent);
-                if (structuredJson.Count == 0)
+                if (existingFiles.Any())
                 {
-                    return (false, "Error: Extracted JSON structure is empty.");
+                    Console.WriteLine($"🗑 Found {existingFiles.Count} existing metadata files. Deleting...");
+
+                    // 🔹 2. Delete files from Azure Blob Storage
+                    foreach (var file in existingFiles)
+                    {
+                        if (!string.IsNullOrEmpty(file.FileUrl))
+                        {
+                            await _blobStorageService.DeleteFileAsync(file.FileUrl);
+                            Console.WriteLine($"✅ Deleted from Blob Storage: {file.FileUrl}");
+                        }
+                    }
+
+                    // 🔹 3. Remove records from the database
+                    dbContext.ProcessedPretrainData.RemoveRange(existingFiles);
+                    await dbContext.SaveChangesAsync();
+                    Console.WriteLine("🗑 Old metadata records deleted from database.");
                 }
 
-                using var finalJsonStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(structuredJson, new JsonSerializerOptions { WriteIndented = true })));
+                Console.WriteLine($"🚀 Uploading new metadata files for Company ID {companyId}...");
 
-                string finalFileName = $"company_{companyId}_structured_data.json";
-                string finalFileUrl = await _blobStorageService.UploadFileAsync(finalJsonStream, finalFileName, "application/json", companyId);
 
-                dbContext.PretrainDataFiles.Add(new PretrainDataFile
+                var companyDto = _mapper.Map<CompanyDTO>(company);
+
+                // 🔹 Generate structured metadata documents and JSON contents
+                var (processedFilesDTO, jsonContents) = CompanyDataHelper.GenerateStructuredCompanyMetadata(companyDto);
+
+                if (processedFilesDTO.Count != jsonContents.Count)
                 {
-                    FileName = finalFileName,
-                    FileUrl = finalFileUrl,
-                    FileDescription = "Company Metadata",
-                    CompanyId = company.Id
-                });
+                    return (false, "Mismatch between processed metadata files and JSON contents.");
+                }
 
+                // `CompanyRAGData/` folder exists in blob storage
+                string baseFolderPath = $"CompanyRAGData/";
+
+                // 🔹 Upload JSON contents to Azure Blob Storage and link them to database entries
+                for (int i = 0; i < processedFilesDTO.Count; i++)
+                {
+                    var processedFile = processedFilesDTO[i];
+                    var jsonContent = jsonContents[i];
+
+                    using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonContent));
+                    string jsonFileName = $"{baseFolderPath}company_{companyId}_pretrain_{processedFile.Id}.json";
+                    string jsonFileUrl = await _blobStorageService.UploadFileAsync(jsonStream, jsonFileName, "application/json", companyId);
+
+                    // 🔹 Step 3: Update `FileUrl` after uploading to Azure Blob Storage
+                    processedFile.FileUrl = jsonFileUrl;
+                }
+
+                var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);
+                // 🔹 Step 4: Store metadata in the database
+                await dbContext.ProcessedPretrainData.AddRangeAsync(processedFiles);
                 await dbContext.SaveChangesAsync();
 
-                return (true, "Company data converted to a structured document and updated successfully.");
+                return (true, "Company metadata structured and uploaded successfully.");
             }
             catch (Exception ex)
             {
@@ -438,89 +470,29 @@ namespace MessageFlow.Components.Accounts.Services
             }
         }
 
-
-        private async Task<List<object>> ProcessUploadedFiles(List<PretrainDataFile> uploadedFiles)
-        {
-            var processedDocuments = new List<object>();
-
-            foreach (var file in uploadedFiles)
-            {
-                // Skip existing metadata file
-                if (file.FileName.EndsWith("_structured_data.json")) continue;
-
-                using var fileStream = await _blobStorageService.DownloadFileAsStreamAsync(file.FileUrl);
-                string fileExtension = Path.GetExtension(file.FileName).ToLower();
-
-                if (fileExtension == ".csv")
-                {
-                    var parsedData = CompanyDataHelper.ParseCsv(fileStream);
-                    if (parsedData.Any())
-                    {
-                        processedDocuments.Add(new { file.FileName, StructuredData = parsedData });
-                    }
-                }
-                else if (fileExtension == ".xlsx")
-                {
-                    var parsedData = CompanyDataHelper.ParseExcel(fileStream);
-                    if (parsedData.Any())
-                    {
-                        processedDocuments.Add(new { file.FileName, StructuredData = parsedData });
-                    }
-                }
-                else
-                {
-                    string extractedText = await _documentProcessingService.ExtractTextFromDocumentAsync(fileStream, "application/octet-stream");
-                    string processedJson = CompanyDataHelper.ProcessMetadataForAzureSearch(extractedText);
-                    var parsedExtractedText = JsonSerializer.Deserialize<object>(processedJson);
-                    processedDocuments.Add(new { file.FileName, ExtractedText = parsedExtractedText });
-                }
-            }
-
-            return processedDocuments;
-        }
-
-
-        public async Task<(bool success, string errorMessage)> CreateIndexFromMetadataAsync(int companyId)
+        public async Task<(bool success, string errorMessage)> CreateAzureAiSearchIndexAndUploadFilesAsync(int companyId)
         {
             try
             {
                 await using var dbContext = _contextFactory.CreateDbContext();
 
-                string structuredFileName = $"company_{companyId}_structured_data.json";
-                var metadataFileUrl = await dbContext.PretrainDataFiles
-                    .Where(f => f.CompanyId == companyId && f.FileName == structuredFileName)
-                    .Select(f => f.FileUrl)
-                    .FirstOrDefaultAsync();
+                // 🔹 Retrieve all processed pretrain data for the company
+                var processedFiles = await dbContext.ProcessedPretrainData
+                    .Where(f => f.CompanyId == companyId)
+                    .ToListAsync();
 
-                if (string.IsNullOrEmpty(metadataFileUrl))
+                if (!processedFiles.Any())
                 {
-                    return (false, "Metadata file not found for this company.");
-                }
-
-                string jsonContent = await _blobStorageService.DownloadFileContentAsync(metadataFileUrl);
-                if (string.IsNullOrEmpty(jsonContent))
-                {
-                    return (false, "Failed to retrieve metadata content.");
-                }
-
-                // Extract document-specific fields dynamically
-                //var dynamicDocumentFields = ExtractJsonStructure(jsonContent);
-                var dynamicDocumentFields = JsonStructureHelper.ExtractJsonStructure(jsonContent);
-
+                    return (false, "No processed data found for this company.");
+                }                
 
                 // Create the index dynamically
-                await _azureSearchService.CreateCompanyIndexAsync(companyId, dynamicDocumentFields);
+                await _azureSearchService.CreateCompanyIndexAsync(companyId);
 
-                // Convert JSON to searchable objects
-                //var documentObjects = ExtractJsonStructure(jsonContent);
-                var documentObjects = JsonStructureHelper.ExtractJsonStructure(jsonContent);
-                if (documentObjects.Count == 0)
-                {
-                    return (false, "No valid documents extracted from metadata.");
-                }
 
-                // ✅ Upload extracted documents to the index
-                await _azureSearchService.UploadDocumentsToIndexAsync(companyId, documentObjects);
+                var processedFilesDTO = _mapper.Map<List<ProcessedPretrainDataDTO>>(processedFiles);
+                // ✅ Upload structured documents to the index
+                await _azureSearchService.UploadDocumentsToIndexAsync(companyId, processedFilesDTO);
 
                 return (true, "Index created and populated successfully.");
             }
@@ -542,23 +514,50 @@ namespace MessageFlow.Components.Accounts.Services
                 }
 
                 await using var dbContext = _contextFactory.CreateDbContext();
-                var existingMetadata = await dbContext.PretrainDataFiles
-                    .FirstOrDefaultAsync(f => f.CompanyId == companyId && f.FileName == "metadata.json");
 
-                if (existingMetadata == null)
+                // 🔹 Find all metadata files related to the company
+                var existingMetadataFiles = await dbContext.ProcessedPretrainData
+                    .Where(f => f.CompanyId == companyId)
+                    .ToListAsync();
+
+                if (!existingMetadataFiles.Any())
                 {
-                    return (false, "Metadata not found.");
+                    return (false, "No metadata files found for this company.");
                 }
 
-                bool deletedFromStorage = await _blobStorageService.DeleteFileAsync(existingMetadata.FileUrl);
-                if (deletedFromStorage)
+                // 🔹 Step 1: Attempt to delete files from Azure Blob Storage
+                var successfullyDeletedFiles = new List<ProcessedPretrainData>();
+                bool allFilesDeleted = true;
+
+                foreach (var file in existingMetadataFiles)
                 {
-                    dbContext.PretrainDataFiles.Remove(existingMetadata);
+                    if (!string.IsNullOrEmpty(file.FileUrl))
+                    {
+                        bool deleted = await _blobStorageService.DeleteFileAsync(file.FileUrl);
+                        if (deleted)
+                        {
+                            successfullyDeletedFiles.Add(file); // Mark for removal from the database
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"Failed to delete file from Blob Storage: {file.FileUrl}");
+                            allFilesDeleted = false; // Track failure
+                        }
+                    }
+                }
+
+                // 🔹 Step 2: Remove only successfully deleted records from the database
+                if (successfullyDeletedFiles.Any())
+                {
+                    dbContext.ProcessedPretrainData.RemoveRange(successfullyDeletedFiles);
                     await dbContext.SaveChangesAsync();
-                    return (true, "Company metadata deleted successfully.");
                 }
 
-                return (false, "Failed to delete metadata.");
+                if (allFilesDeleted)
+                {
+                    return (true, "All company metadata files deleted successfully.");
+                }
+                return (false, "Some files failed to delete from Azure Blob Storage, their database records were retained.");
             }
             catch (Exception ex)
             {
@@ -568,26 +567,30 @@ namespace MessageFlow.Components.Accounts.Services
         }
 
 
+
+
         // Company Pretraining Files
         // Fetch Existing Pretraining Files
-        public async Task<(bool success, List<PretrainDataFile> files, string errorMessage)> GetCompanyPretrainingFilesAsync(int companyId)
+        public async Task<(bool success, List<ProcessedPretrainData> files, string errorMessage)> GetCompanyPretrainingFilesAsync(int companyId)
         {
             try
             {
                 await using var dbContext = _contextFactory.CreateDbContext();
-                var files = await dbContext.PretrainDataFiles.Where(f => f.CompanyId == companyId).ToListAsync();
+                var files = await dbContext.ProcessedPretrainData.Where(f => f.CompanyId == companyId).ToListAsync();
                 return (true, files, "Files retrieved successfully.");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error fetching pretraining files for company {CompanyId}", companyId);
-                return (false, new List<PretrainDataFile>(), "An error occurred while retrieving files.");
+                return (false, new List<ProcessedPretrainData>(), "An error occurred while retrieving files.");
             }
         }
 
         // Upload Multiple Files
-        public async Task<(bool success, string errorMessage)> UploadCompanyFilesAsync(int companyId, List<PretrainDataFile> files)
+        public async Task<(bool success, string errorMessage)> UploadCompanyFilesAsync(List<PretrainDataFile> files)
         {
+            var firstFile = files.FirstOrDefault();
+            int companyId = firstFile?.CompanyId ?? 0;
             try
             {
                 await using var dbContext = _contextFactory.CreateDbContext();
@@ -597,24 +600,70 @@ namespace MessageFlow.Components.Accounts.Services
                     return (false, "Company not found.");
                 }
 
-                foreach (var file in files)
+                // **Define base folder path**
+                string baseFolderPath = $"CompanyRAGData/";
+
+                // 🔹 **Step 1: Find and delete existing files of the specified types**
+                var existingFiles = await dbContext.ProcessedPretrainData
+                    .Where(f => f.CompanyId == companyId &&
+                                (f.FileType == FileType.CsvFile ||
+                                 f.FileType == FileType.ExcelFile ||
+                                 f.FileType == FileType.FAQFile ||
+                                 f.FileType == FileType.Other))
+                    .ToListAsync();
+
+                if (existingFiles.Any())
                 {
-                    string fileUrl = await _blobStorageService.UploadFileAsync(file.FileContent, file.FileName, "application/octet-stream", companyId);
-                    if (string.IsNullOrEmpty(fileUrl))
+                    Console.WriteLine($"🗑 Found {existingFiles.Count} existing files of type CSV, Excel, FAQ, or Other. Deleting...");
+
+                    foreach (var file in existingFiles)
                     {
-                        return (false, "File upload failed.");
+                        if (!string.IsNullOrEmpty(file.FileUrl))
+                        {
+                            await _blobStorageService.DeleteFileAsync(file.FileUrl);
+                            Console.WriteLine($"✅ Deleted from Blob Storage: {file.FileUrl}");
+                        }
                     }
 
-                    dbContext.PretrainDataFiles.Add(new PretrainDataFile
-                    {
-                        FileName = file.FileName,
-                        FileUrl = fileUrl,
-                        FileDescription = file.FileDescription,
-                        CompanyId = companyId
-                    });
+                    dbContext.ProcessedPretrainData.RemoveRange(existingFiles);
+                    await dbContext.SaveChangesAsync();
+                    Console.WriteLine("🗑 Old files deleted from database.");
                 }
 
+                Console.WriteLine($"🚀 Uploading new files for Company ID {companyId}...");
+
+
+                var filesDTO = _mapper.Map<List<PretrainDataFileDTO>>(files);
+
+                // 🔹 Step 1: Process files and extract structured documents
+                var (processedFilesDTO, jsonContents) = await CompanyDataHelper.ProcessUploadedFilesAsync(filesDTO, _documentProcessingService);
+
+
+                var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);
+
+                if (processedFiles.Count != jsonContents.Count)
+                {
+                    return (false, "Mismatch between processed files and JSON contents.");
+                }
+
+                // 🔹 Step 2: Upload JSON contents to Azure Blob Storage and link them to database entries
+                for (int i = 0; i < processedFiles.Count; i++)
+                {
+                    var processedFile = processedFiles[i];
+                    var jsonContent = jsonContents[i];
+
+                    using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonContent));
+                    string jsonFileName = $"{baseFolderPath}company_{companyId}_pretrain_{processedFile.Id}.json";
+                    string jsonFileUrl = await _blobStorageService.UploadFileAsync(jsonStream, jsonFileName, "application/json", companyId);
+
+                    // 🔹 Step 3: Update `FileUrl` after uploading to Azure Blob Storage
+                    processedFile.FileUrl = jsonFileUrl;
+                }
+
+                // 🔹 Step 4: Store metadata in the database
+                await dbContext.ProcessedPretrainData.AddRangeAsync(processedFiles);
                 await dbContext.SaveChangesAsync();
+
                 return (true, "Files uploaded successfully.");
             }
             catch (Exception ex)
@@ -630,7 +679,7 @@ namespace MessageFlow.Components.Accounts.Services
             {
                 await using var dbContext = _contextFactory.CreateDbContext();
 
-                var fileRecord = await dbContext.PretrainDataFiles
+                var fileRecord = await dbContext.ProcessedPretrainData
                     .FirstOrDefaultAsync(f => f.CompanyId == companyId && f.FileUrl == fileUrl);
 
                 if (fileRecord == null)
@@ -644,7 +693,7 @@ namespace MessageFlow.Components.Accounts.Services
                 if (deletedFromStorage)
                 {
                     // Step 2: Remove DB entry
-                    dbContext.PretrainDataFiles.Remove(fileRecord);
+                    dbContext.ProcessedPretrainData.Remove(fileRecord);
                     await dbContext.SaveChangesAsync();
                 }
 

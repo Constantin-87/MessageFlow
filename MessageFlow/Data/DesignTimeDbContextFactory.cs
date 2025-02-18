@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 
-namespace MessageFlow.Data
+namespace MessageFlow.Server.Data
 {
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {

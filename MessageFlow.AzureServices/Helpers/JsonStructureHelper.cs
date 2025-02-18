@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MessageFlow.Components.Accounts.Helpers
+namespace MessageFlow.AzureServices.Helpers
 {
     public static class JsonStructureHelper
     {

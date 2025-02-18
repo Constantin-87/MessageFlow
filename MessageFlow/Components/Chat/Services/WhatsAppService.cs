@@ -1,11 +1,11 @@
-﻿using MessageFlow.Components.Chat.Helpers;
-using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Components.Chat.Helpers;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Chat.Services
+namespace MessageFlow.Server.Components.Chat.Services
 {
     public class WhatsAppService
     {

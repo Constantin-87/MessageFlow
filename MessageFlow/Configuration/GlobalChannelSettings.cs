@@ -1,4 +1,4 @@
-﻿namespace MessageFlow.Configuration
+﻿namespace MessageFlow.Server.Configuration
 {
     public class GlobalChannelSettings
     {

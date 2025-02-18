@@ -7,9 +7,9 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.Security.Claims;
 using MessageFlow.Client;
-using MessageFlow.Models;
+using MessageFlow.Server.Models;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Server.Components.Accounts.Services
 {
     // This is a server-side AuthenticationStateProvider that revalidates the security stamp for the connected user
     // every 15 minutes an interactive circuit is connected. It also uses PersistentComponentState to flow the

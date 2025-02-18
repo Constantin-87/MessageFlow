@@ -123,8 +123,10 @@
                 @foreach (var file in ExistingFiles)
                 {
                     <tr>
-                        <td>@file.FileName</td>
+                        <td>@file.FileType</td>
                         <td>@file.FileDescription</td>
+                        <td>@file.FileUrl</td>
+                        <td>@file.ProcessedAt</td>
                         <td>
                             <button class="btn btn-danger btn-sm" @onclick="() => DeleteExistingFile(file)">Delete</button>
                         </td>
@@ -214,7 +216,7 @@
     private string CurrentMetadata { get; set; } = string.Empty;
 
     private List<PretrainDataFile> UploadedFiles { get; set; } = new();
-    private List<PretrainDataFile> ExistingFiles { get; set; } = new();
+    private List<ProcessedPretrainData> ExistingFiles { get; set; } = new();
     private InputFile fileInput;
 
     protected override void OnInitialized()
@@ -356,7 +358,7 @@
 
     private async Task CreateCompanyIndex()
     {
-        var result = await CompanyManagementService.CreateIndexFromMetadataAsync(Company.Id);
+        var result = await CompanyManagementService.CreateAzureAiSearchIndexAndUploadFilesAsync(Company.Id);
         await OnActionCompleted.InvokeAsync(result.success ? "Search index created successfully!" : $"Error: {result.errorMessage}");
     }
 
@@ -385,6 +387,7 @@
             {
                 UploadedFiles.Add(new PretrainDataFile
                     {
+                        CompanyId = Company.Id,
                         FileName = file.Name,
                         FileDescription = "",
                         FileContent = fileData
@@ -395,7 +398,7 @@
 
     private async Task UploadAllFiles()
     {
-        var result = await CompanyManagementService.UploadCompanyFilesAsync(Company.Id, UploadedFiles);
+        var result = await CompanyManagementService.UploadCompanyFilesAsync(UploadedFiles);
         await OnActionCompleted.InvokeAsync(result.errorMessage);
         if (result.success)
         {
@@ -404,7 +407,7 @@
         }
     }
 
-    private async Task DeleteExistingFile(PretrainDataFile file)
+    private async Task DeleteExistingFile(ProcessedPretrainData file)
     {
         var result = await CompanyManagementService.DeleteCompanyFileAsync(Company.Id, file.FileUrl);
         await OnActionCompleted.InvokeAsync(result ? "File deleted successfully." : "Error deleting file.");

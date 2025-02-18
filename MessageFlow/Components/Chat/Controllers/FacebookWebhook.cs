@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using MessageFlow.Components.Chat.Helpers;
-using MessageFlow.Components.Chat.Services;
-using MessageFlow.Configuration;
+using MessageFlow.Server.Components.Chat.Helpers;
+using MessageFlow.Server.Components.Chat.Services;
+using MessageFlow.Server.Configuration;
 using Microsoft.Extensions.Options;
 
 [Route("api/[controller]")]

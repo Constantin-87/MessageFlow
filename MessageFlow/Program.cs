@@ -1,17 +1,17 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MessageFlow.Components;
-using MessageFlow.Components.Accounts.Services;
-using MessageFlow.Data;
-using MessageFlow.Models;
-using MessageFlow.Middleware;
-using MessageFlow.Components.Chat.Services;
-using MessageFlow.Configuration;
+using MessageFlow.Server.Components.Accounts.Services;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
+using MessageFlow.Server.Middleware;
+using MessageFlow.Server.Components;
+using MessageFlow.Server.Components.Chat.Services;
+using MessageFlow.Server.Configuration;
 using Azure.Identity;
 using Azure.Core;
-using MessageFlow.Components.AzureServices;
-
+using MessageFlow.AzureServices.Services;
+using MessageFlow.Server.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
@@ -80,7 +80,6 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, PersistingRevalidatingAuthenticationStateProvider>();
 builder.Services.AddScoped<UserManagementService>();
-builder.Services.AddScoped<AzureBlobStorageService>();
 builder.Services.AddScoped<CompanyManagementService>();
 builder.Services.AddScoped<TeamsManagementService>();
 builder.Services.AddScoped<FacebookService>();
@@ -88,7 +87,10 @@ builder.Services.AddScoped<WhatsAppService>();
 builder.Services.AddScoped<ChatArchivingService>();
 builder.Services.AddScoped<MessageProcessingService>();
 builder.Services.AddScoped<DocumentProcessingService>();
-
+builder.Services.AddScoped<AIChatBotService>();
+builder.Services.AddScoped<AzureSearchQueryService>();
+builder.Services.AddScoped<AzureBlobStorageService>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var searchServiceEndpoint = builder.Configuration["azure-ai-search-url"];
 var searchServiceApiKey = builder.Configuration["azure-ai-search-key"];
@@ -99,7 +101,14 @@ if (string.IsNullOrEmpty(searchServiceEndpoint) || string.IsNullOrEmpty(searchSe
 }
 
 builder.Services.AddScoped<AzureSearchService>(provider =>
-    new AzureSearchService(searchServiceEndpoint, searchServiceApiKey));
+{
+    var blobStorageService = provider.GetRequiredService<AzureBlobStorageService>();
+    return new AzureSearchService(searchServiceEndpoint, searchServiceApiKey, blobStorageService);
+});
+
+
+builder.Services.AddScoped<AzureSearchQueryService>();
+
 
 
 

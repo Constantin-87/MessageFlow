@@ -1,22 +1,25 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Chat.Services
+namespace MessageFlow.Server.Components.Chat.Services
 {
     public class MessageProcessingService
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IHubContext<ChatHub> _chatHub;
         private readonly ILogger<MessageProcessingService> _logger;
+        private readonly AIChatBotService _aiChatBotService;
 
-        public MessageProcessingService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, ILogger<MessageProcessingService> logger)
+        public MessageProcessingService(ApplicationDbContext dbContext, IHubContext<ChatHub> chatHub, ILogger<MessageProcessingService> logger, AIChatBotService aiChatBotService)
         {
             _dbContext = dbContext;
             _chatHub = chatHub;
             _logger = logger;
+            _aiChatBotService = aiChatBotService;
         }
 
         public async Task ProcessMessageAsync(int companyId, string senderId, string username, string messageText, string providerMessageId, string source)
@@ -24,13 +27,36 @@ namespace MessageFlow.Components.Chat.Services
             var conversation = await _dbContext.Conversations
                 .FirstOrDefaultAsync(c => c.SenderId == senderId && c.CompanyId == companyId.ToString());
 
+            //if (conversation != null && conversation.IsActive)
+            //{
+            //    await AddMessageToConversationAsync(conversation, senderId, messageText, providerMessageId);
+            //}
+            //else
+            //{
+            //    await CreateAndBroadcastNewConversationAsync(companyId, senderId, username, messageText, providerMessageId, source);
+            //}
+
+            
             if (conversation != null && conversation.IsActive)
             {
-                await AddMessageToConversationAsync(conversation, senderId, messageText, providerMessageId);
+                if (!string.IsNullOrEmpty(conversation.AssignedUserId))
+                {
+                    if (conversation.AssignedUserId == "AI")
+                    {
+                        // ✅ Conversation is still with AI, let AI handle this message
+                        await HandleAIConversation(conversation, messageText, providerMessageId);
+                    }
+                    else
+                    {
+                        // ✅ Conversation assigned to a human agent, send message to them
+                        await AddMessageToConversationAsync(conversation, senderId, messageText, providerMessageId);
+                    }
+                }
             }
             else
             {
-                await CreateAndBroadcastNewConversationAsync(companyId, senderId, username, messageText, providerMessageId, source);
+                // ✅ Create a new conversation and assign it to AI first
+                await CreateAndAssignToAI(companyId, senderId, username, messageText, providerMessageId, source);
             }
         }
 
@@ -165,6 +191,102 @@ namespace MessageFlow.Components.Chat.Services
                 .SendAsync("NewConversationAdded", conversation);
 
             _logger.LogInformation($"New conversation created and sent to group: Company_{companyId}");
+        }
+
+
+
+        private async Task CreateAndAssignToAI(int companyId, string senderId, string username, string messageText, string providerMessageId, string source)
+        {
+            var conversation = new Conversation
+            {
+                Id = Guid.NewGuid().ToString(),
+                SenderId = senderId,
+                SenderUsername = username,
+                CompanyId = companyId.ToString(),
+                IsActive = true,
+                AssignedUserId = "AI", // 🚀 Assign AI as the first responder
+                Source = source
+            };
+
+            _dbContext.Conversations.Add(conversation);
+            await _dbContext.SaveChangesAsync();            
+
+            await HandleAIConversation(conversation, messageText, providerMessageId);
+        }
+
+        private async Task HandleAIConversation(Conversation conversation, string messageText, string providerMessageId)
+        {
+            var message = CreateMessage(conversation.Id, conversation.SenderId, "Customer", messageText, providerMessageId);
+
+            _dbContext.Messages.Add(message);
+            await _dbContext.SaveChangesAsync();
+
+            var (answered, response, targetTeamId) = await _aiChatBotService.HandleUserQueryAsync(messageText, conversation.CompanyId, conversation.Id);
+
+            if (answered)
+            {
+                if (!string.IsNullOrEmpty(targetTeamId))
+                {
+                    // 🚀 AI detected a request for redirection to a specific team
+                    await EscalateCompanyTeam(conversation, conversation.SenderId, messageText, providerMessageId, targetTeamId);
+                }
+                else
+                {
+                    // ✅ AI handled the message → send response back
+                    var aiMessage = CreateMessage(conversation.Id, "AI", "AI Assistant", response, providerMessageId);
+                    _dbContext.Messages.Add(aiMessage);
+                    await _dbContext.SaveChangesAsync();
+                    await SendAIResponseToPlatform(conversation.Source, conversation.SenderId, response, conversation.CompanyId, providerMessageId);
+                }
+            }
+            else
+            {
+                // ❌ AI couldn't handle → escalate to a general human agent
+                await SendAIResponseToPlatform(conversation.Source, conversation.SenderId, response, conversation.CompanyId, providerMessageId);
+            }
+        }
+
+        private async Task EscalateCompanyTeam(Conversation conversation, string senderId, string messageText, string providerMessageId, string targetTeamId)
+        {
+            // ✅ Update conversation to assign it to the detected team
+            conversation.AssignedTeamId = targetTeamId; // Store team ID for routing
+            await _dbContext.SaveChangesAsync();
+
+            // ✅ Notify human agents in the **specific team group**, not the entire company
+            await _chatHub.Clients.Group($"Team_{targetTeamId}").SendAsync("NewConversationAdded", conversation);
+
+            _logger.LogInformation($"Escalated conversation {conversation.Id} to team {targetTeamId}.");
+
+            // ✅ Notify user about escalation
+            string escalationMessage = $"Your request is being redirected to the **{targetTeamId}** team. Please wait for an available agent.";
+            await SendAIResponseToPlatform(conversation.Source, senderId, escalationMessage, conversation.CompanyId, providerMessageId);
+        }
+
+
+        private async Task SendAIResponseToPlatform(string source, string recipientId, string response, string companyId, string localMessageId)
+        {
+            switch (source)
+            {
+                case "Facebook":
+                    var facebookService = _dbContext.GetService<FacebookService>();
+                    if (facebookService != null)
+                    {
+                        await facebookService.SendMessageToFacebookAsync(recipientId, response, companyId, localMessageId);
+                    }
+                    break;
+
+                case "WhatsApp":
+                    var whatsappService = _dbContext.GetService<WhatsAppService>();
+                    if (whatsappService != null)
+                    {
+                        await whatsappService.SendMessageToWhatsAppAsync(recipientId, response, companyId, localMessageId);
+                    }
+                    break;
+
+                default:
+                    _logger.LogWarning($"Unknown source: {source}. Message not sent.");
+                    break;
+            }
         }
 
         private Message CreateMessage(string conversationId, string senderId, string username, string content, string providerMessageId)

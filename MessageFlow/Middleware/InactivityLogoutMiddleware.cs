@@ -1,7 +1,7 @@
-﻿using MessageFlow.Models;
+﻿using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.Identity;
 
-namespace MessageFlow.Middleware
+namespace MessageFlow.Server.Middleware
 {
     public class InactivityLogoutMiddleware
     {

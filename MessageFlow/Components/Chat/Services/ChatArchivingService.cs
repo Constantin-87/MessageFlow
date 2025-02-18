@@ -1,12 +1,12 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.Design;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MessageFlow.Components.Chat.Services
+namespace MessageFlow.Server.Components.Chat.Services
 {
     public class ChatArchivingService
     {
