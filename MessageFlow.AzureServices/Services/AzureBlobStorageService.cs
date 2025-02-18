@@ -1,7 +1,9 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Microsoft.Extensions.Configuration;
 
-namespace MessageFlow.Components.AzureServices
+
+namespace MessageFlow.AzureServices.Services
 {
     public class AzureBlobStorageService
     {

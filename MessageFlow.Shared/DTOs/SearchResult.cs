@@ -1,4 +1,4 @@
-﻿namespace MessageFlow.Components.AzureServices.DTO
+﻿namespace MessageFlow.Shared.DTOs
 {
     public class SearchResult
     {

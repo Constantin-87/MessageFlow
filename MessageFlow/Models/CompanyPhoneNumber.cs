@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MessageFlow.Models
+namespace MessageFlow.Server.Models
 {
     public class CompanyPhoneNumber
     {

@@ -1,6 +1,6 @@
 ﻿using Xunit;
-using MessageFlow.Data;
-using MessageFlow.Models;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -9,13 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using MessageFlow.Components.Accounts.Services;
+using MessageFlow.Server.Components.Accounts.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using MessageFlow.Tests.Helpers;
+using MessageFlow.Server.Tests.Helpers;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace MessageFlow.Tests.IntegrationTests
+namespace MessageFlow.Server.Tests.IntegrationTests
 {
     public class SuperAdminEndToEndWorkflowTests : IAsyncLifetime
     {

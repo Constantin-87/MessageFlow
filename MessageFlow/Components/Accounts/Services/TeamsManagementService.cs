@@ -1,8 +1,8 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Server.Components.Accounts.Services
 {
     public class TeamsManagementService
     {

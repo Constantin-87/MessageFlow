@@ -1,8 +1,8 @@
-﻿namespace MessageFlow.Data
+﻿namespace MessageFlow.Server.Data
 {
     using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore;
-    using MessageFlow.Models;
+    using MessageFlow.Server.Models;
 
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>

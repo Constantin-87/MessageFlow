@@ -2,11 +2,11 @@
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
-using MessageFlow.Components.AzureServices.Helpers;
-using MessageFlow.Models;
+using MessageFlow.AzureServices.Helpers;
+using MessageFlow.Shared.DTOs;
 using System.Text.Json;
 
-namespace MessageFlow.Components.AzureServices
+namespace MessageFlow.AzureServices.Services
 {
     public class AzureSearchService
     {
@@ -65,7 +65,7 @@ namespace MessageFlow.Components.AzureServices
         }
 
 
-        public async Task UploadDocumentsToIndexAsync(int companyId, List<ProcessedPretrainData> processedFiles)
+        public async Task UploadDocumentsToIndexAsync(int companyId, List<ProcessedPretrainDataDTO> processedFiles)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 

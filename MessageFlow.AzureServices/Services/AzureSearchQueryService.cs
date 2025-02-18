@@ -1,13 +1,14 @@
 ﻿using Azure.Search.Documents.Models;
 using Azure.Search.Documents;
 using Azure;
-using MessageFlow.Components.AzureServices.Helpers;
-using MessageFlow.Components.AzureServices.DTO;
+using MessageFlow.AzureServices.Helpers;
+using MessageFlow.Shared.DTOs;
 using Azure.Search.Documents.Indexes;
 using System.Text.Json;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 
-namespace MessageFlow.Components.AzureServices
+namespace MessageFlow.AzureServices.Services
 {
     public class AzureSearchQueryService
     {

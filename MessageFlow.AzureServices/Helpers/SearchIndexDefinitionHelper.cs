@@ -1,6 +1,6 @@
 ﻿using Azure.Search.Documents.Indexes.Models;
 
-namespace MessageFlow.Components.AzureServices.Helpers
+namespace MessageFlow.AzureServices.Helpers
 {
     public static class SearchIndexDefinitionHelper
     {

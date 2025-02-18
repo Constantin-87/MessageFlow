@@ -1,14 +1,15 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
-using MessageFlow.Components.AzureServices;
-using MessageFlow.Models;
+using MessageFlow.AzureServices.Services;
+using MessageFlow.Shared.DTOs;
+using MessageFlow.Shared.Enums;
 using OfficeOpenXml;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Accounts.Helpers
+namespace MessageFlow.AzureServices.Helpers
 {
     public static class CompanyDataHelper
     {
@@ -16,11 +17,11 @@ namespace MessageFlow.Components.Accounts.Helpers
         /// <summary>
         /// Processes a list of uploaded files and extracts structured data into separate documents.
         /// </summary>
-        public static async Task<(List<ProcessedPretrainData>, List<string>)> ProcessUploadedFilesAsync(
-            List<PretrainDataFile> uploadedFiles,
+        public static async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
+            List<PretrainDataFileDTO> uploadedFiles,
             DocumentProcessingService documentProcessingService)
         {
-            var processedFiles = new List<ProcessedPretrainData>();
+            var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
             foreach (var file in uploadedFiles)
@@ -32,7 +33,7 @@ namespace MessageFlow.Components.Accounts.Helpers
 
                 string fileExtension = Path.GetExtension(file.FileName).ToLower();
 
-                List<ProcessedPretrainData> generatedFiles = new();
+                List<ProcessedPretrainDataDTO> generatedFiles = new();
                 List<string> generatedJsonContents = new();
                 switch (fileExtension)
                 {
@@ -60,11 +61,11 @@ namespace MessageFlow.Components.Accounts.Helpers
         /// <summary>
         /// Converts a CSV file stream into individual structured JSON documents.
         /// </summary>
-        public static (List<ProcessedPretrainData>, List<string>) ConvertCsvToPretrainFiles(PretrainDataFile originalFile, Stream fileStream)
+        public static (List<ProcessedPretrainDataDTO>, List<string>) ConvertCsvToPretrainFiles(PretrainDataFileDTO originalFile, Stream fileStream)
         {
             using var reader = new StreamReader(fileStream);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-            var processedFiles = new List<ProcessedPretrainData>();
+            var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
             foreach (var record in csv.GetRecords<dynamic>())
@@ -77,7 +78,7 @@ namespace MessageFlow.Components.Accounts.Helpers
                 // Add to JSON contents list (for blob storage)
                 jsonContents.Add(jsonContent);
 
-                processedFiles.Add(new ProcessedPretrainData
+                processedFiles.Add(new ProcessedPretrainDataDTO
                 {
                     FileDescription = originalFile.FileDescription,
                     FileUrl = "",  // Will be set after uploading to Azure Blob Storage
@@ -95,10 +96,10 @@ namespace MessageFlow.Components.Accounts.Helpers
         /// <summary>
         /// Converts an Excel file stream into individual structured JSON documents.
         /// </summary>
-        public static (List<ProcessedPretrainData>, List<string>) ConvertExcelToPretrainFiles(PretrainDataFile originalFile, Stream fileStream)
+        public static (List<ProcessedPretrainDataDTO>, List<string>) ConvertExcelToPretrainFiles(PretrainDataFileDTO originalFile, Stream fileStream)
         {
             ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-            var processedFiles = new List<ProcessedPretrainData>();
+            var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
             using var package = new ExcelPackage(fileStream);
 
@@ -132,7 +133,7 @@ namespace MessageFlow.Components.Accounts.Helpers
                     // Add to JSON contents list (for blob storage)
                     jsonContents.Add(jsonContent);
 
-                    processedFiles.Add(new ProcessedPretrainData
+                    processedFiles.Add(new ProcessedPretrainDataDTO
                     {
                         FileDescription = originalFile.FileDescription,
                         FileUrl = "", // This will be set after uploading to Azure Blob Storage
@@ -150,9 +151,9 @@ namespace MessageFlow.Components.Accounts.Helpers
         /// <summary>
         /// Converts extracted text from a document into structured JSON documents.
         /// </summary>
-        public static (List<ProcessedPretrainData>, List<string>) ConvertTextToPretrainFiles(PretrainDataFile originalFile, string extractedText)
+        public static (List<ProcessedPretrainDataDTO>, List<string>) ConvertTextToPretrainFiles(PretrainDataFileDTO originalFile, string extractedText)
         {
-            var processedFiles = new List<ProcessedPretrainData>();
+            var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
             // 🔹 If no FAQ pattern is detected, store the text as a general document
@@ -170,7 +171,7 @@ namespace MessageFlow.Components.Accounts.Helpers
                 jsonContents.Add(jsonContent);
 
                 // Add metadata for DB storage
-                processedFiles.Add(new ProcessedPretrainData
+                processedFiles.Add(new ProcessedPretrainDataDTO
                 {
                     FileDescription = originalFile.FileDescription,
                     FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -198,7 +199,7 @@ namespace MessageFlow.Components.Accounts.Helpers
                 jsonContents.Add(jsonContent);
 
                 // Add metadata for DB storage
-                processedFiles.Add(new ProcessedPretrainData
+                processedFiles.Add(new ProcessedPretrainDataDTO
                 {
                     FileDescription = "FAQ List",
                     FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -238,9 +239,9 @@ namespace MessageFlow.Components.Accounts.Helpers
         /// <summary>
         /// Generates structured metadata documents for a company.
         /// </summary>
-        public static (List<ProcessedPretrainData>, List<string>) GenerateStructuredCompanyMetadata(Company company)
+        public static (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company)
         {
-            var processedFiles = new List<ProcessedPretrainData>();
+            var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
             // 🔹 1. General Company Information Document
@@ -256,7 +257,7 @@ namespace MessageFlow.Components.Accounts.Helpers
 
             jsonContents.Add(generalInfoJson);
 
-            processedFiles.Add(new ProcessedPretrainData
+            processedFiles.Add(new ProcessedPretrainDataDTO
             {
                 FileDescription = "General information about the company, including industry type and website.",
                 FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -271,7 +272,7 @@ namespace MessageFlow.Components.Accounts.Helpers
 
             jsonContents.Add(companyEmailsJson);
 
-            processedFiles.Add(new ProcessedPretrainData
+            processedFiles.Add(new ProcessedPretrainDataDTO
             {
                 FileDescription = "Company contact emails. Use this for support, inquiries, or reaching out to relevant departments.",
                 FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -286,7 +287,7 @@ namespace MessageFlow.Components.Accounts.Helpers
 
             jsonContents.Add(companyPhonesJson); // Store JSON for Blob Storage
 
-            processedFiles.Add(new ProcessedPretrainData
+            processedFiles.Add(new ProcessedPretrainDataDTO
             {
                 FileDescription = "Company contact phone numbers. Use this for customer support, direct contact, and urgent inquiries.",
                 FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -302,7 +303,7 @@ namespace MessageFlow.Components.Accounts.Helpers
 
             jsonContents.Add(companyTeamsJson); // Store JSON for Blob Storage
 
-            processedFiles.Add(new ProcessedPretrainData
+            processedFiles.Add(new ProcessedPretrainDataDTO
             {
                 FileDescription = "List of company teams. Keywords: support teams, customer service, redirect to agent, escalation, assistance, live agent.",
                 FileUrl = "",  // To be updated after uploading to Azure Blob Storage
@@ -313,119 +314,5 @@ namespace MessageFlow.Components.Accounts.Helpers
 
             return (processedFiles, jsonContents);
         }
-
-
-
-        ///// <summary>
-        ///// Parses a CSV file stream into a structured dictionary.
-        ///// </summary>
-        //public static List<Dictionary<string, string>> ParseCsv(Stream fileStream)
-        //{
-        //    using var reader = new StreamReader(fileStream);
-        //    using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture));
-        //    var records = new List<Dictionary<string, string>>();
-
-        //    foreach (var record in csv.GetRecords<dynamic>())
-        //    {
-        //        var rowDict = new Dictionary<string, string>();
-        //        foreach (var property in ((IDictionary<string, object>)record))
-        //        {
-        //            rowDict[property.Key] = property.Value?.ToString() ?? string.Empty;
-        //        }
-        //        records.Add(rowDict);
-        //    }
-        //    return records;
-        //}
-
-        ///// <summary>
-        ///// Parses an Excel file stream into a structured dictionary.
-        ///// </summary>
-        //public static List<Dictionary<string, string>> ParseExcel(Stream fileStream)
-        //{
-        //    ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
-        //    var data = new List<Dictionary<string, string>>();
-
-        //    using var package = new ExcelPackage(fileStream);
-        //    var worksheet = package.Workbook.Worksheets[0]; // First sheet
-        //    var rowCount = worksheet.Dimension.Rows;
-        //    var colCount = worksheet.Dimension.Columns;
-
-        //    var headers = new List<string>();
-        //    for (int col = 1; col <= colCount; col++)
-        //    {
-        //        headers.Add(worksheet.Cells[1, col].Text.Trim());
-        //    }
-
-        //    for (int row = 2; row <= rowCount; row++)
-        //    {
-        //        var rowDict = new Dictionary<string, string>();
-        //        for (int col = 1; col <= colCount; col++)
-        //        {
-        //            rowDict[headers[col - 1]] = worksheet.Cells[row, col].Text.Trim();
-        //        }
-        //        data.Add(rowDict);
-        //    }
-        //    return data;
-        //}
-
-        ///// <summary>
-        ///// Processes extracted text from a document into structured JSON for Azure Search.
-        ///// </summary>
-        //public static string ProcessMetadataForAzureSearch(string extractedText)
-        //{
-        //    try
-        //    {
-        //        var knowledgeBase = new List<object>();
-
-        //        if (DetectFAQPattern(extractedText))
-        //        {
-        //            var faqs = ExtractFAQs(extractedText);
-        //            knowledgeBase.AddRange(faqs.Select(faq => new
-        //            {
-        //                id = $"faq-{Guid.NewGuid()}",
-        //                type = "FAQ",
-        //                question = faq.Key,
-        //                answer = faq.Value
-        //            }));
-        //        }
-        //        else
-        //        {
-        //            knowledgeBase.Add(new
-        //            {
-        //                id = $"doc-{Guid.NewGuid()}",
-        //                type = "TextDocument",
-        //                content = extractedText
-        //            });
-        //        }
-
-        //        return JsonSerializer.Serialize(knowledgeBase, new JsonSerializerOptions { WriteIndented = true });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"🚨 Error processing metadata: {ex.Message}");
-        //        return string.Empty;
-        //    }
-        //}
-
-        //private static bool DetectFAQPattern(string text)
-        //{
-        //    return text.Contains("\nQ") && text.Contains("\nA:");
-        //}
-
-        //private static List<KeyValuePair<string, string>> ExtractFAQs(string text)
-        //{
-        //    var faqs = new List<KeyValuePair<string, string>>();
-        //    var questions = text.Split("\nQ", StringSplitOptions.RemoveEmptyEntries);
-
-        //    foreach (var question in questions)
-        //    {
-        //        var parts = question.Split("A:", 2);
-        //        if (parts.Length == 2)
-        //        {
-        //            faqs.Add(new KeyValuePair<string, string>("Q" + parts[0].Trim(), parts[1].Trim()));
-        //        }
-        //    }
-        //    return faqs;
-        //}
     }
 }

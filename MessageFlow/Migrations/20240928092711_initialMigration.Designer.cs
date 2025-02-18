@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using MessageFlow.Data;
+using MessageFlow.Server.Data;
 
 #nullable disable
 
-namespace MessageFlow.Migrations
+namespace MessageFlow.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20240928092711_initialMigration")]

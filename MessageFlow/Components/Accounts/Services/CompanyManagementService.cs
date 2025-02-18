@@ -1,15 +1,15 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System.Text.Json;
-using MessageFlow.Components.AzureServices;
-using MessageFlow.Components.Accounts.Helpers;
+using MessageFlow.AzureServices.Services;
+using MessageFlow.AzureServices.Helpers;
 using System.Text;
-using System.ComponentModel.Design;
+using AutoMapper;
+using MessageFlow.Shared.DTOs;
 
 
-namespace MessageFlow.Components.Accounts.Services
+namespace MessageFlow.Server.Components.Accounts.Services
 {
     public class CompanyManagementService
     {
@@ -20,6 +20,7 @@ namespace MessageFlow.Components.Accounts.Services
         private readonly AzureBlobStorageService _blobStorageService;
         private readonly DocumentProcessingService _documentProcessingService;
         private readonly AzureSearchService _azureSearchService;
+        private readonly IMapper _mapper;
 
         public CompanyManagementService(
             IDbContextFactory<ApplicationDbContext> contextFactory,
@@ -28,7 +29,8 @@ namespace MessageFlow.Components.Accounts.Services
             TeamsManagementService teamsManagementService,
             AzureBlobStorageService blobStorageService,
             DocumentProcessingService documentProcessingService,
-            AzureSearchService azureSearchService)
+            AzureSearchService azureSearchService,
+            IMapper mapper)
         {
             _contextFactory = contextFactory;
             _logger = logger;
@@ -37,6 +39,7 @@ namespace MessageFlow.Components.Accounts.Services
             _blobStorageService = blobStorageService ?? throw new ArgumentNullException(nameof(blobStorageService));
             _documentProcessingService = documentProcessingService;
             _azureSearchService = azureSearchService;
+            _mapper = mapper;
         }
 
 
@@ -425,10 +428,13 @@ namespace MessageFlow.Components.Accounts.Services
 
                 Console.WriteLine($"🚀 Uploading new metadata files for Company ID {companyId}...");
 
-                // 🔹 Generate structured metadata documents and JSON contents
-                var (processedFiles, jsonContents) = CompanyDataHelper.GenerateStructuredCompanyMetadata(company);
 
-                if (processedFiles.Count != jsonContents.Count)
+                var companyDto = _mapper.Map<CompanyDTO>(company);
+
+                // 🔹 Generate structured metadata documents and JSON contents
+                var (processedFilesDTO, jsonContents) = CompanyDataHelper.GenerateStructuredCompanyMetadata(companyDto);
+
+                if (processedFilesDTO.Count != jsonContents.Count)
                 {
                     return (false, "Mismatch between processed metadata files and JSON contents.");
                 }
@@ -437,9 +443,9 @@ namespace MessageFlow.Components.Accounts.Services
                 string baseFolderPath = $"CompanyRAGData/";
 
                 // 🔹 Upload JSON contents to Azure Blob Storage and link them to database entries
-                for (int i = 0; i < processedFiles.Count; i++)
+                for (int i = 0; i < processedFilesDTO.Count; i++)
                 {
-                    var processedFile = processedFiles[i];
+                    var processedFile = processedFilesDTO[i];
                     var jsonContent = jsonContents[i];
 
                     using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonContent));
@@ -450,6 +456,7 @@ namespace MessageFlow.Components.Accounts.Services
                     processedFile.FileUrl = jsonFileUrl;
                 }
 
+                var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);
                 // 🔹 Step 4: Store metadata in the database
                 await dbContext.ProcessedPretrainData.AddRangeAsync(processedFiles);
                 await dbContext.SaveChangesAsync();
@@ -480,10 +487,12 @@ namespace MessageFlow.Components.Accounts.Services
                 }                
 
                 // Create the index dynamically
-                await _azureSearchService.CreateCompanyIndexAsync(companyId);                
+                await _azureSearchService.CreateCompanyIndexAsync(companyId);
 
+
+                var processedFilesDTO = _mapper.Map<List<ProcessedPretrainDataDTO>>(processedFiles);
                 // ✅ Upload structured documents to the index
-                await _azureSearchService.UploadDocumentsToIndexAsync(companyId, processedFiles);
+                await _azureSearchService.UploadDocumentsToIndexAsync(companyId, processedFilesDTO);
 
                 return (true, "Index created and populated successfully.");
             }
@@ -624,8 +633,13 @@ namespace MessageFlow.Components.Accounts.Services
                 Console.WriteLine($"🚀 Uploading new files for Company ID {companyId}...");
 
 
+                var filesDTO = _mapper.Map<List<PretrainDataFileDTO>>(files);
+
                 // 🔹 Step 1: Process files and extract structured documents
-                var (processedFiles, jsonContents) = await CompanyDataHelper.ProcessUploadedFilesAsync(files, _documentProcessingService);
+                var (processedFilesDTO, jsonContents) = await CompanyDataHelper.ProcessUploadedFilesAsync(filesDTO, _documentProcessingService);
+
+
+                var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);
 
                 if (processedFiles.Count != jsonContents.Count)
                 {

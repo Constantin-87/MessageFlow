@@ -1,11 +1,11 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System.Text.Json;
 
-namespace MessageFlow.Components.Chat.Services
+namespace MessageFlow.Server.Components.Chat.Services
 {
     public class MessageProcessingService
     {

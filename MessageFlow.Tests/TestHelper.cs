@@ -4,16 +4,17 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System.Security.Claims;
-using MessageFlow.Data;
-using MessageFlow.Models;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using MessageFlow.Components.Accounts.Services;
+using MessageFlow.Server.Components.Accounts.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using MessageFlow.Components.AzureServices;
+using MessageFlow.AzureServices.Services;
+using AutoMapper;
 
-namespace MessageFlow.Tests.Helpers
+namespace MessageFlow.Server.Tests.Helpers
 {
     public static class TestHelper
     {
@@ -112,7 +113,7 @@ namespace MessageFlow.Tests.Helpers
 
             // Create a mock for DocumentProcessingService
             var documentProcessingMock = new Mock<DocumentProcessingService>(new Mock<IConfiguration>().Object, new Mock<ILogger<DocumentProcessingService>>().Object);
-
+            var mapperMock = new Mock<IMapper>();
             var azureSearchMock = new Mock<AzureSearchService>("https://fake-search-endpoint", "fake-api-key");
 
             // Create and return the service using IDbContextFactory and TeamsManagementService
@@ -123,7 +124,9 @@ namespace MessageFlow.Tests.Helpers
                 teamsManagementService,
                 blobStorageMock.Object,
                 documentProcessingMock.Object,
-                azureSearchMock.Object);
+                azureSearchMock.Object,
+                mapperMock.Object
+            );
         }
 
 

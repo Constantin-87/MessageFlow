@@ -1,15 +1,15 @@
-﻿using MessageFlow.Components.AzureServices;
-using Azure.AI.OpenAI;
+﻿using Azure.AI.OpenAI;
 using OpenAI.Chat;
 using Azure;
 using System.Text;
-using MessageFlow.Components.AzureServices.DTO;
+using MessageFlow.AzureServices.Services;
+using MessageFlow.Shared.DTOs;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using MessageFlow.Models;
-using MessageFlow.Data;
+using MessageFlow.Server.Models;
+using MessageFlow.Server.Data;
 
-namespace MessageFlow.Components.Chat.Services
+namespace MessageFlow.Server.Components.Chat.Services
 {
     public class AIChatBotService
     {

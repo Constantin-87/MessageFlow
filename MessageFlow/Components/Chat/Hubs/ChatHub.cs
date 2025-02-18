@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Concurrent;
-using MessageFlow.Data;
-using MessageFlow.Components.Chat.Services;
-using MessageFlow.Models;
+using MessageFlow.Server.Data;
+using MessageFlow.Server.Components.Chat.Services;
+using MessageFlow.Server.Models;
 using System.Security.Claims;
 
 public class ChatHub : Hub
@@ -199,7 +199,7 @@ public class ChatHub : Hub
         await Clients.Group($"Company_{conversation.CompanyId}").SendAsync("RemoveNewConversation", conversation);
     }
 
-    private async Task SendMessageToProvider(Conversation conversation, MessageFlow.Models.Message message)
+    private async Task SendMessageToProvider(Conversation conversation, MessageFlow.Server.Models.Message message)
     {
         switch (conversation.Source)
         {

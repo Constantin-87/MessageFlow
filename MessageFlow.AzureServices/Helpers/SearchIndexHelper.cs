@@ -1,4 +1,4 @@
-﻿namespace MessageFlow.Components.AzureServices.Helpers
+﻿namespace MessageFlow.AzureServices.Helpers
 {
     public class SearchIndexHelper
     {

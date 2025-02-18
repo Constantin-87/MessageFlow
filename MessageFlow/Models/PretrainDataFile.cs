@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MessageFlow.Models
+namespace MessageFlow.Server.Models
 {
     public class PretrainDataFile
     {

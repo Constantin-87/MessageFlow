@@ -1,10 +1,10 @@
-﻿using MessageFlow.Data;
-using MessageFlow.Models;
+﻿using MessageFlow.Server.Data;
+using MessageFlow.Server.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MessageFlow.Tests.Helpers;
+using MessageFlow.Server.Tests.Helpers;
 
-namespace MessageFlow.Tests.MessageFlowServer.Services
+namespace MessageFlow.Server.Tests.MessageFlowServer.Services
 {
     public class UserManagementServiceTests : IAsyncLifetime
     {
