@@ -2,7 +2,7 @@
 {
     public class SearchIndexHelper
     {
-        public static string GetIndexName(int companyId)
+        public static string GetIndexName(string companyId)
         {
             return $"company_{companyId}_index";
         }

@@ -1,36 +1,61 @@
-﻿using MessageFlow.Server.Data;
+﻿using MessageFlow.DataAccess.Configurations;
+using MessageFlow.DataAccess.Models;
+using MessageFlow.DataAccess.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
 public static class TestDbContextFactory
 {
-    public static ApplicationDbContext CreateTestDbContext(string databaseName = null)
+    public static IUnitOfWork CreateUnitOfWork(
+        ApplicationDbContext context = null,
+        UserManager<ApplicationUser> userManager = null,
+        IUserStore<ApplicationUser> userStore = null
+    )
     {
-        databaseName ??= $"SecuredChatDb_Test_{Guid.NewGuid()}";
+        context ??= CreateDbContext();
+
+        var dbContextFactoryMock = new Mock<IDbContextFactoryService>();
+        dbContextFactoryMock
+            .Setup(f => f.ExecuteScopedAsync(It.IsAny<Func<ApplicationDbContext, Task>>()))
+            .Returns<Func<ApplicationDbContext, Task>>(async action => await action(context));
+
+        // ✅ Mock UserManager if not provided
+        userStore ??= new Mock<IUserStore<ApplicationUser>>().Object;
+        userManager ??= MockUserManager(userStore);
+
+        return new UnitOfWork(userManager, userStore, context, dbContextFactoryMock.Object);
+    }
+
+    public static ApplicationDbContext CreateDbContext(string databaseName = null)
+    {
+        databaseName ??= $"TestDb_{Guid.NewGuid()}";
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer($"Server=localhost;Database={databaseName};Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;")
+            .UseInMemoryDatabase(databaseName)
             .Options;
 
-        // Instantiate the DbContext directly
         var context = new ApplicationDbContext(options);
-
-        // Ensure the database is created
         context.Database.EnsureCreated();
         return context;
     }
 
-    public static IDbContextFactory<ApplicationDbContext> CreateTestDbContextFactory(string databaseName = null)
+    private static UserManager<ApplicationUser> MockUserManager(IUserStore<ApplicationUser> userStore)
     {
-        databaseName ??= $"SecuredChatDb_Test_{Guid.NewGuid()}";
+        var userManagerMock = new Mock<UserManager<ApplicationUser>>(
+            userStore,
+            null, null, null, null, null, null, null, null
+        );
 
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer($"Server=localhost;Database={databaseName};Trusted_Connection=True;Encrypt=True;TrustServerCertificate=True;")
-            .Options;
+        userManagerMock.Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()))
+            .ReturnsAsync(IdentityResult.Success);
 
-        var factoryMock = new Mock<IDbContextFactory<ApplicationDbContext>>();
-        factoryMock.Setup(f => f.CreateDbContext()).Returns(new ApplicationDbContext(options));
+        userManagerMock.Setup(u => u.FindByIdAsync(It.IsAny<string>()))
+            .ReturnsAsync((string userId) => new ApplicationUser { Id = userId });
 
-        return factoryMock.Object;
+        userManagerMock.Setup(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()))
+            .ReturnsAsync(new List<string> { "User" });
+
+        return userManagerMock.Object;
     }
 }

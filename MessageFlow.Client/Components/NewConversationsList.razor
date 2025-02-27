@@ -36,16 +36,19 @@
         {
             HubConnection.On<Conversation>("NewConversationAdded", (conversation) =>
             {
+                Console.WriteLine($"📥 Received 'NewConversationAdded' event for conversation ID: {conversation.Id}");
                 AddConversation(conversation);
             });
 
             HubConnection.On<Conversation>("RemoveNewConversation", (conversation) =>
             {
+                Console.WriteLine($"🗑️ Received 'RemoveNewConversation' event for conversation ID: {conversation.Id}");
                 RemoveConversation(conversation);
             });
 
             HubConnection.On<List<Conversation>>("LoadNewConversations", (newConversations) =>
            {
+               Console.WriteLine($"🔄 Received 'LoadNewConversations' event with {newConversations.Count} conversations.");
                LoadNewConversations(newConversations);
            });
         }
@@ -63,6 +66,8 @@
 
     public void AddConversation(Conversation conversation)
     {
+        Console.WriteLine($"➕ Attempting to add conversation ID: {conversation.Id}");
+
         if (!Conversations.Any(c => c.Id == conversation.Id))
         {
             Conversations.Add(conversation);

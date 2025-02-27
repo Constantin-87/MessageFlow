@@ -22,7 +22,7 @@ namespace MessageFlow.AzureServices.Services
         }
 
 
-        public async Task CreateCompanyIndexAsync(int companyId)
+        public async Task CreateCompanyIndexAsync(string companyId)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 
@@ -49,7 +49,7 @@ namespace MessageFlow.AzureServices.Services
             {
                 new SearchField("document_id", SearchFieldDataType.String) { IsKey = true, IsFilterable = true },
                 new SearchField("file_description", SearchFieldDataType.String) { IsSearchable = true },
-                new SearchField("company_id", SearchFieldDataType.Int32) { IsFilterable = true },
+                new SearchField("company_id", SearchFieldDataType.String) { IsFilterable = true },
                 new SearchField("content", SearchFieldDataType.String) { IsSearchable = true },
                 new SearchField("processed_at", SearchFieldDataType.DateTimeOffset) { IsFilterable = true, IsSortable = true }
             };
@@ -65,7 +65,7 @@ namespace MessageFlow.AzureServices.Services
         }
 
 
-        public async Task UploadDocumentsToIndexAsync(int companyId, List<ProcessedPretrainDataDTO> processedFiles)
+        public async Task UploadDocumentsToIndexAsync(string companyId, List<ProcessedPretrainDataDTO> processedFiles)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 

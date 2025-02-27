@@ -1,0 +1,95 @@
+﻿@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="whatsAppSettings">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Business Account ID</label>
+            <InputText class="form-control" @bind-Value="whatsAppSettings.BusinessAccountId" />
+        </div>
+
+        <div class="mb-3">
+            <label>Access Token</label>
+            <InputText class="form-control" @bind-Value="whatsAppSettings.AccessToken" />
+        </div>
+
+        <h4>Phone Numbers</h4>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Phone Number</th>
+                        <th>Phone Number ID</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var phoneNumber in whatsAppSettings.PhoneNumbers)
+                    {
+                        <tr>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumber" />
+                            </td>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumberId" />
+                            </td>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumberDesc" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-success btn-sm" @onclick="() => SavePhoneNumber(phoneNumber)">Save</button>
+                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeletePhoneNumber(phoneNumber)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="btn btn-primary mt-2" @onclick="AddNewPhoneNumber">Add New Phone Number</button>
+    </EditForm>
+}
+@code {
+    [Parameter] public string CompanyId { get; set; }
+
+    private WhatsAppSettingsDTO whatsAppSettings = new();
+    private bool isLoading = true;
+
+    [Inject] private IWhatsAppService WhatsAppService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        whatsAppSettings = await WhatsAppService.GetWhatsAppSettingsAsync(CompanyId) ?? new WhatsAppSettingsDTO();
+        isLoading = false;
+    }
+
+    private async Task SavePhoneNumber(PhoneNumberInfoDTO phoneNumber)
+    {
+        if (!whatsAppSettings.PhoneNumbers.Contains(phoneNumber))
+        {
+            whatsAppSettings.PhoneNumbers.Add(phoneNumber);
+        }
+
+        await WhatsAppService.SaveWhatsAppSettingsAsync(CompanyId, whatsAppSettings);
+    }
+
+    private async Task DeletePhoneNumber(PhoneNumberInfoDTO phoneNumber)
+    {
+        whatsAppSettings.PhoneNumbers.Remove(phoneNumber);
+        await WhatsAppService.SaveWhatsAppSettingsAsync(CompanyId, whatsAppSettings);
+    }
+
+    private void AddNewPhoneNumber()
+    {
+        var newPhoneNumber = new PhoneNumberInfoDTO();
+        whatsAppSettings.PhoneNumbers.Add(newPhoneNumber);
+    }
+}
+
+

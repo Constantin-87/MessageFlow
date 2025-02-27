@@ -1,0 +1,130 @@
+﻿@page "/ChannelSetup"
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@rendermode RenderMode.InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CompanyManagementService CompanyService
+
+
+<h3>Channel Setup</h3>
+
+@if (IsSuperAdmin)
+{
+    <div class="mb-3">
+        <label>Select Company</label>
+        <select class="form-select" @onchange="HandleCompanyChange">
+            @foreach (var company in companies)
+            {
+                <option value="@company.Id" selected="@((selectedCompany != null && selectedCompany.Id == company.Id) ? "selected" : null)">
+                    @company.CompanyName
+                </option>
+            }
+        </select>
+    </div>
+}
+else if (selectedCompany != null)
+{
+    <p>Managing channels for: @selectedCompany?.CompanyName</p>
+}
+
+@if (selectedCompany != null)
+{
+    <div class="container">
+        @foreach (var channel in channels)
+        {
+            <div class="mb-3">
+                <div class="card channel-card" @onclick="() => ToggleChannel(channel.Name)">
+                    <div class="card-body">
+                        <h5>@channel.Name</h5>
+                    </div>
+                </div>
+
+                @if (channel.Name == "Facebook" && showFacebook)
+                {
+                    <div class="settings-form">
+                        <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
+                    </div>
+                }
+
+                @if (channel.Name == "WhatsApp" && showWhatsApp)
+                {
+                    <div class="settings-form">
+                        <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
+                    </div>
+                }
+            </div>
+
+        }
+    </div>
+}
+
+@code {
+    private bool IsSuperAdmin;
+    private CompanyDTO? selectedCompany;
+    private List<CompanyDTO> companies = new();
+    private List<Channel> channels = new()
+    {
+        new Channel { Name = "Facebook", Icon = "facebook.png" },
+        new Channel { Name = "WhatsApp", Icon = "whatsapp.png" }
+    };
+
+    private bool showFacebook = false;
+    private bool showWhatsApp = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Check if the user is a SuperAdmin or Admin
+        IsSuperAdmin = user.IsInRole("SuperAdmin");
+
+        if (IsSuperAdmin)
+        {
+            companies = await CompanyService.GetAllCompaniesAsync();
+            // Preselect the first company for SuperAdmin
+            if (companies.Any())
+            {
+                selectedCompany = companies.FirstOrDefault();
+            }
+        }
+        else
+        {
+            selectedCompany = await CompanyService.GetCompanyForUserAsync(user);
+        }
+        StateHasChanged();
+    }
+
+    private async Task HandleCompanyChange(ChangeEventArgs e)
+    {
+        var companyId = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(companyId))
+        {
+            selectedCompany = await CompanyService.GetCompanyByIdAsync(companyId);
+            showFacebook = false;
+            showWhatsApp = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleChannel(string channelName)
+    {
+        if (channelName == "Facebook")
+        {
+            showFacebook = !showFacebook;
+            showWhatsApp = false;
+        }
+        else if (channelName == "WhatsApp")
+        {
+            showWhatsApp = !showWhatsApp;
+            showFacebook = false;
+        }
+    }
+
+    public class Channel
+    {
+        public string Name { get; set; }
+        public string Icon { get; set; }
+    }
+}

@@ -5,7 +5,7 @@ namespace MessageFlow.Shared.DTOs
 {
     public class CompanyDTO
     {
-        public int Id { get; set; }  // Primary key
+        public string Id { get; set; }  // Primary key
 
         [Required(ErrorMessage = "Company Account Number is required.")]
         public string AccountNumber { get; set; }
@@ -29,7 +29,6 @@ namespace MessageFlow.Shared.DTOs
         public ICollection<TeamDTO> Teams { get; set; } = new List<TeamDTO>();
 
         // Property to hold the total users count dynamically
-        [NotMapped] // Property is not persisted in the database
         public int TotalUsers { get; set; }
     }
 }

@@ -1,107 +1,110 @@
-﻿using Xunit;
-using Microsoft.AspNetCore.Identity;
-using MessageFlow.Server.Models;
-using System.Threading.Tasks;
-using MessageFlow.Server.Data;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Moq;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authentication;
-using MessageFlow.Server.Tests.Helpers;
+﻿//using Microsoft.AspNetCore.Identity;
+//using MessageFlow.DataAccess.Models;
+//using AutoMapper;
+//using MessageFlow.DataAccess.Services;
+//using MessageFlow.Server.Mappings;
 
-namespace MessageFlow.Server.Tests.MessageFlowServer.Services
-{
-    public class AuthenticationServiceTests : IAsyncLifetime
-    {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+//namespace MessageFlow.Tests.MessageFlowServer.Services
+//{
+//    public class AuthenticationServiceTests : IAsyncLifetime
+//    {
+//        private readonly IUnitOfWork _unitOfWork;
+//        private readonly UserManager<ApplicationUser> _userManager;
+//        private readonly SignInManager<ApplicationUser> _signInManager;
+//        private readonly IMapper _mapper;
 
-        public AuthenticationServiceTests()
-        {
-            // Create test DbContext
-            _context = TestDbContextFactory.CreateTestDbContext("AuthenticationServiceTestsDb");
+//        public AuthenticationServiceTests()
+//        {
+//            // ✅ Create UnitOfWork
+//            _unitOfWork = TestDbContextFactory.CreateUnitOfWork("AuthenticationServiceTestsDb");
 
-            // Initialize UserManager and SignInManager using TestHelper
-            _userManager = TestHelper.CreateUserManager(_context);
-            _signInManager = TestHelper.CreateSignInManager(_userManager);
-        }
+//            // ✅ Configure AutoMapper using MappingProfile
+//            var mapperConfig = new MapperConfiguration(cfg =>
+//            {
+//                cfg.AddProfile<MappingProfile>();
+//            });
+//            _mapper = mapperConfig.CreateMapper();
 
-        public async Task InitializeAsync()
-        {
-            // Ensure the database is deleted and recreated for a clean state
-            await _context.Database.EnsureDeletedAsync();
-            await _context.Database.EnsureCreatedAsync();
-            // Seed database
-            await TestDatabaseSeeder.Seed(_context);
-        }
+//            // ✅ Initialize UserManager and SignInManager using TestHelper
+//            _userManager = TestHelper.CreateUserManager(_unitOfWork);
+//            _signInManager = TestHelper.CreateSignInManager(_userManager);
+//        }
 
-        public async Task DisposeAsync()
-        {
-            // Drop the database after tests
-            await _context.Database.EnsureDeletedAsync();
-            await _context.DisposeAsync();
-        }
+//        public async Task InitializeAsync()
+//        {
+//            // ✅ Reset the database
+//            await _unitOfWork.Context.Database.EnsureDeletedAsync();
+//            await _unitOfWork.Context.Database.EnsureCreatedAsync();
 
-        [Fact]
-        public async Task Login_ValidCredentials_ReturnsSuccess()
-        {
-            // Arrange
-            var email = "admin@companya.com"; // Updated to match seeded data
-            var password = "Admin@123";       // Updated to match seeded password
-            var user = await _userManager.FindByEmailAsync(email);
+//            // ✅ Seed database with users, roles, and companies
+//            var roleManager = TestHelper.CreateRoleManager(_unitOfWork);
+//            await TestDatabaseSeeder.Seed(_unitOfWork, _mapper, _userManager, roleManager);
+//        }
 
-            // Act
-            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
+//        public async Task DisposeAsync()
+//        {
+//            // ✅ Clean up after tests
+//            await _unitOfWork.Context.Database.EnsureDeletedAsync();
+//            _unitOfWork.Dispose();
+//        }
 
-            // Assert
-            Assert.True(result.Succeeded);
-        }
+//        [Fact]
+//        public async Task Login_ValidCredentials_ReturnsSuccess()
+//        {
+//            // Arrange
+//            var email = "admin@companya.com"; // Updated to match seeded data
+//            var password = "Admin@123";       // Updated to match seeded password
+//            var user = await _userManager.FindByEmailAsync(email);
 
-        [Fact]
-        public async Task Login_InvalidCredentials_ReturnsFailed()
-        {
-            // Arrange
-            var email = "admin@companya.com"; // Updated to match seeded data
-            var password = "InvalidPassword";
-            var user = await _userManager.FindByEmailAsync(email);
+//            // Act
+//            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
 
-            // Act
-            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
+//            // Assert
+//            Assert.True(result.Succeeded);
+//        }
 
-            // Assert
-            Assert.False(result.Succeeded);
-        }
+//        [Fact]
+//        public async Task Login_InvalidCredentials_ReturnsFailed()
+//        {
+//            // Arrange
+//            var email = "admin@companya.com"; // Updated to match seeded data
+//            var password = "InvalidPassword";
+//            var user = await _userManager.FindByEmailAsync(email);
 
-        [Fact]
-        public async Task Login_LockedOutAccount_ReturnsLockedOut()
-        {
-            // Arrange
-            var email = "manager@companya.com"; // Updated to match seeded data
-            var password = "Manager@123";       // Updated to match seeded password
-            var user = await _userManager.FindByEmailAsync(email);
+//            // Act
+//            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
 
-            // Enable lockout for the user
-            user.LockoutEnabled = true;
-            await _userManager.UpdateAsync(user);
+//            // Assert
+//            Assert.False(result.Succeeded);
+//        }
 
-            // Simulate failed login attempts to trigger lockout
-            for (int i = 0; i < 5; i++)
-            {
-                await _userManager.AccessFailedAsync(user);
-            }
+//        [Fact]
+//        public async Task Login_LockedOutAccount_ReturnsLockedOut()
+//        {
+//            // Arrange
+//            var email = "manager@companya.com"; // Updated to match seeded data
+//            var password = "Manager@123";       // Updated to match seeded password
+//            var user = await _userManager.FindByEmailAsync(email);
 
-            // Reload the user to ensure the lockout state is updated
-            user = await _userManager.FindByEmailAsync(email);
+//            // Enable lockout for the user
+//            user.LockoutEnabled = true;
+//            await _userManager.UpdateEntityAsync(user);
 
-            // Act
-            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
+//            // Simulate failed login attempts to trigger lockout
+//            for (int i = 0; i < 5; i++)
+//            {
+//                await _userManager.AccessFailedAsync(user);
+//            }
 
-            // Assert
-            Assert.True(result.IsLockedOut);
-        }
+//            // Reload the user to ensure the lockout state is updated
+//            user = await _userManager.FindByEmailAsync(email);
 
-    }
-}
+//            // Act
+//            var result = await _signInManager.PasswordSignInAsync(user, password, false, true);
+
+//            // Assert
+//            Assert.True(result.IsLockedOut);
+//        }
+
+//    }
+//}

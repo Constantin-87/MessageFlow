@@ -29,7 +29,7 @@ namespace MessageFlow.AzureServices.Services
             _searchIndexClient = new SearchIndexClient(new Uri(_searchServiceEndpoint), new AzureKeyCredential(_searchServiceApiKey));
         }
 
-        public async Task<List<SearchResult>> QueryIndexAsync(string query, int companyId)
+        public async Task<List<SearchResultDTO>> QueryIndexAsync(string query, string companyId)
         {
 
             string indexName = SearchIndexHelper.GetIndexName(companyId);
@@ -40,7 +40,7 @@ namespace MessageFlow.AzureServices.Services
                 new AzureKeyCredential(_searchServiceApiKey)
             );
 
-            var results = new List<SearchResult>();
+            var results = new List<SearchResultDTO>();
             try
             {
                 // ✅ Ensure the query is properly formatted
@@ -74,7 +74,7 @@ namespace MessageFlow.AzureServices.Services
                     string content = ExtractContentFromDocument(result.Document);
 
                     // ✅ Handle missing fields safely
-                    results.Add(new SearchResult
+                    results.Add(new SearchResultDTO
                     {
                         Id = result.Document.TryGetValue("document_id", out var idValue) ? idValue.ToString() : "N/A",
                         FileDescription = result.Document.TryGetValue("file_description", out var descriptionValue) ? descriptionValue.ToString() : "N/A",

@@ -1,0 +1,47 @@
+﻿@rendermode RenderMode.InteractiveServer
+
+
+@if (isLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="facebookSettings" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Page ID</label>
+            <InputText class="form-control" @bind-Value="facebookSettings.PageId" />
+        </div>
+
+
+        <div class="mb-3">
+            <label>Access Token</label>
+            <InputText type="text" class="form-control" @bind-Value="facebookSettings.AccessToken" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string CompanyId { get; set; }
+
+    private FacebookSettingsDTO facebookSettings = new();
+    private bool isLoading = true;
+
+    [Inject] private IFacebookService FacebookService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        facebookSettings = await FacebookService.GetFacebookSettingsAsync(CompanyId) ?? new FacebookSettingsDTO();
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await FacebookService.SaveFacebookSettingsAsync(CompanyId, facebookSettings);
+    }
+}
