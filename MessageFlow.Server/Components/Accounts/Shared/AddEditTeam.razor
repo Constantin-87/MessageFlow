@@ -1,4 +1,4 @@
-﻿@* @using MessageFlow.Server.Models *@
+﻿@* 
 @inject TeamsManagementService TeamsManagementService
 @inject CompanyManagementService CompanyManagementService
 @rendermode RenderMode.InteractiveServer
@@ -70,6 +70,8 @@
         <div class="text-danger mt-2">@errorMessage</div>
     }
 </div>
+
+
 
 @code {
     [Parameter] public string CompanyId { get; set; }
@@ -177,7 +179,7 @@
             // Update existing team
             Team.TeamName = teamName;
             Team.TeamDescription = teamDescription;
-            Team.UsersDTO = assignedUsers;
+            Team.AssignedUsersDTO = assignedUsers;
 
             var (updateSuccess, updateMessage) = await TeamsManagementService.UpdateTeamAsync(Team);
             success = updateSuccess;
@@ -200,3 +202,4 @@
 
 
 }
+ *@

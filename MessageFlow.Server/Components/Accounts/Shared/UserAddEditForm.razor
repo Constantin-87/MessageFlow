@@ -1,4 +1,4 @@
-﻿@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+﻿@* @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveServer
 
 @inject IUserManagementService UserManagementService
@@ -148,12 +148,12 @@
         // Remove SuperAdmin role if logged-in user is not a SuperAdmin or selected company is not company 00000
         UpdateSuperAdminRole();
 
-        // Check for any status messages stored in cookies
-        if (HttpContext != null && HttpContext.Request.Cookies.ContainsKey(IdentityRedirectManager.StatusCookieName))
-        {
-            messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
-            HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
-        }
+        // // Check for any status messages stored in cookies
+        // if (HttpContext != null && HttpContext.Request.Cookies.ContainsKey(IdentityRedirectManager.StatusCookieName))
+        // {
+        //     messageFromCookie = HttpContext.Request.Cookies[IdentityRedirectManager.StatusCookieName];
+        //     HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+        // }
     }
 
     private async Task HandleSubmit()
@@ -242,3 +242,4 @@
         Message = message;
     }
 }
+ *@

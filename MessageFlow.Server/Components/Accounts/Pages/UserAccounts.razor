@@ -1,19 +1,9 @@
-﻿@page "/Accounts/UserAccounts"
+﻿@* @page "/Accounts/UserAccounts"
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveServer
 
 @inject NavigationManager NavigationManager
 @inject IUserManagementService UserManagementService
-
-
-@* @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
-@inject NavigationManager NavigationManager
-@inject UserManager<ApplicationUser> UserManager
-@inject IHttpContextAccessor HttpContextAccessor
-@inject UserManagementService UserManagementService
-@using System.Security.Claims; *@
-
-
 
 <h3>User Accounts</h3>
 
@@ -100,65 +90,6 @@ else
         users = await UserManagementService.GetUsersAsync();
     }
 
-    // protected override async Task OnInitializedAsync()
-    // {
-    //     // Get the logged-in user's claims
-    //     var userClaims = HttpContextAccessor.HttpContext.User.Claims;
-
-    //     // Extract the CompanyId from claims
-    //     var companyIdClaim = userClaims.FirstOrDefault(c => c.Type == "CompanyId");
-    //     var currentUserCompanyId = companyIdClaim != null ? companyIdClaim.Value : string.Empty;
-
-    //     // Extract roles from claims
-    //     var roles = userClaims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
-
-    //     List<UserInfo> userList = new List<UserInfo>();
-
-    //     await using var dbContext = DbContextFactory.CreateDbContext();
-
-    //     // Load users with related company and teams in a single query
-    //     var usersToLoad = await dbContext.Users
-    //         .Include(u => u.Company) // Eager load company details
-    //         .Include(u => u.Teams) // Eager load team details
-    //         .ToListAsync();
-
-    //     if (!roles.Contains("SuperAdmin"))
-    //     {
-    //         // Filter users by company for non-SuperAdmins
-    //         usersToLoad = usersToLoad.Where(u => u.CompanyId == currentUserCompanyId).ToList();
-    //     }
-
-    //     // Preload user roles for all users
-    //     var userIds = usersToLoad.Select(u => u.Id).ToList();
-    //     var userRoles = new Dictionary<string, List<string>>();
-
-    //     foreach (var user in usersToLoad)
-    //     {
-    //         userRoles[user.Id] = (await UserManager.GetRolesAsync(user)).ToList();
-    //     }
-
-    //     // Map data to UserInfo
-    //     foreach (var user in usersToLoad)
-    //     {
-    //         userList.Add(new UserInfo
-    //             {
-    //                 Id = user.Id,
-    //                 UserName = user.UserName,
-    //                 Email = user.Email,
-    //                 PhoneNumber = user.PhoneNumber,
-    //                 CompanyName = user.Company?.CompanyName ?? string.Empty,
-    //                 Role = userRoles[user.Id].FirstOrDefault() ?? string.Empty,
-    //                 Teams = user.Teams.Select(ut => ut.TeamName ?? string.Empty).ToList()
-    //             });
-    //     }
-
-    //     users = userList;
-    // }
-
-
-
-
-
     private void NavigateToCreateUser()
     {
         NavigationManager.NavigateTo("/Accounts/Create-user");
@@ -195,14 +126,5 @@ else
         CancelDelete();
     }
 
-    // private class UserInfo
-    // {
-    //     public string Id { get; set; } = string.Empty;
-    //     public string UserName { get; set; } = string.Empty;
-    //     public string Email { get; set; } = string.Empty;
-    //     public string PhoneNumber { get; set; } = string.Empty;
-    //     public string CompanyName { get; set; } = string.Empty;
-    //     public string Role { get; set; } = string.Empty;
-    //     public List<string> Teams { get; set; } = new();
-    // }
 }
+ *@

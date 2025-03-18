@@ -1,0 +1,151 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using MessageFlow.Server.Components.Accounts.Services;
+using MessageFlow.Shared.DTOs;
+using Microsoft.AspNetCore.Authorization;
+
+namespace MessageFlow.Server.Controllers
+{
+    [Route("api/company")]
+    [ApiController]
+    [Authorize(Roles = "Admin, SuperAdmin")]
+    public class CompanyController : ControllerBase
+    {
+        private readonly CompanyManagementService _companyService;
+        private readonly ILogger<CompanyController> _logger;
+
+        public CompanyController(CompanyManagementService companyService, ILogger<CompanyController> logger)
+        {
+            _companyService = companyService;
+            _logger = logger;
+        }
+
+        // ✅ Get all companies (SuperAdmin sees all, Admin sees only their own)
+        [HttpGet("all")]
+        public async Task<ActionResult<List<CompanyDTO>>> GetAllCompanies()
+        {
+            var companies = await _companyService.GetAllCompaniesAsync();
+            return Ok(companies);
+        }
+
+        // ✅ Get company details by ID
+        [HttpGet("{companyId}")]
+        public async Task<ActionResult<CompanyDTO>> GetCompanyById(string companyId)
+        {
+            var company = await _companyService.GetCompanyByIdAsync(companyId);
+            if (company == null) return NotFound("Company not found.");
+            return Ok(company);
+        }
+
+        // ✅ Create a new company (SuperAdmins only)
+        [HttpPost("create")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult> CreateCompany([FromBody] CompanyDTO companyDto)
+        {
+            var (success, message) = await _companyService.CreateCompanyAsync(companyDto);
+            if (!success) return BadRequest(message);
+            return Ok(message);
+        }
+
+        // ✅ Update company details
+        [HttpPut("update")]
+        public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO companyDto)
+        {
+            var (success, message) = await _companyService.UpdateCompanyDetailsAsync(companyDto);
+            if (!success) return BadRequest(message);
+            return Ok(message);
+        }
+
+        // ✅ Delete company (SuperAdmins only)
+        [HttpDelete("delete/{companyId}")]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<ActionResult> DeleteCompany(string companyId)
+        {
+            var (success, message) = await _companyService.DeleteCompanyAsync(companyId);
+            if (!success) return BadRequest(message);
+            return Ok(message);
+        }
+
+        // ✅ Get the logged-in user's company details
+        [HttpGet("user-company")]
+        public async Task<ActionResult<CompanyDTO>> GetCompanyForUser()
+        {
+            var company = await _companyService.GetCompanyForUserAsync(User);
+            if (company == null) return NotFound("Company not found for the user.");
+            return Ok(company);
+        }
+
+        // ✅ Update company emails
+        [HttpPut("update-emails")]
+        public async Task<ActionResult> UpdateCompanyEmails([FromBody] List<CompanyEmailDTO> emails)
+        {
+            var (success, message) = await _companyService.UpdateCompanyEmailsAsync(emails);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+        // ✅ Update company phone numbers
+        [HttpPut("update-phone-numbers")]
+        public async Task<ActionResult> UpdateCompanyPhoneNumbers([FromBody] List<CompanyPhoneNumberDTO> phoneNumbers)
+        {
+            var (success, message) = await _companyService.UpdateCompanyPhoneNumbersAsync(phoneNumbers);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+        // ✅ Fetch company metadata
+        [HttpGet("{companyId}/metadata")]
+        public async Task<ActionResult<string>> GetCompanyMetadata(string companyId)
+        {
+            var (success, metadata, message) = await _companyService.GetCompanyMetadataAsync(companyId);
+            return success ? Ok(metadata) : BadRequest(message);
+        }
+
+        // ✅ Generate and upload metadata
+        [HttpPost("{companyId}/generate-metadata")]
+        public async Task<ActionResult> GenerateAndUploadMetadata(string companyId)
+        {
+            var (success, message) = await _companyService.GenerateAndUploadCompanyMetadataAsync(companyId);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+        // ✅ Delete metadata
+        [HttpDelete("{companyId}/delete-metadata")]
+        public async Task<ActionResult> DeleteCompanyMetadata(string companyId)
+        {
+            var (success, message) = await _companyService.DeleteCompanyMetadataAsync(companyId);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+        // ✅ Fetch pretraining files
+        [HttpGet("{companyId}/pretraining-files")]
+        public async Task<ActionResult<List<ProcessedPretrainDataDTO>>> GetPretrainingFiles(string companyId)
+        {
+            var (success, files, message) = await _companyService.GetCompanyPretrainingFilesAsync(companyId);
+            return success ? Ok(files) : BadRequest(message);
+        }
+
+        // ✅ Upload pretraining files
+        [HttpPost("upload-files")]
+        public async Task<ActionResult> UploadPretrainingFiles([FromBody] List<PretrainDataFileDTO> files)
+        {
+            var (success, message) = await _companyService.UploadCompanyFilesAsync(files);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+        // ✅ Delete a specific file
+        [HttpDelete("delete-file")]
+        public async Task<ActionResult> DeleteFile([FromBody] ProcessedPretrainDataDTO file)
+        {
+            var success = await _companyService.DeleteCompanyFileAsync(file);
+            return success ? Ok("File deleted successfully.") : BadRequest("Failed to delete file.");
+        }
+
+        // ✅ Create Azure AI Search Index
+        [HttpPost("{companyId}/create-search-index")]
+        public async Task<ActionResult> CreateSearchIndex(string companyId)
+        {
+            var (success, message) = await _companyService.CreateAzureAiSearchIndexAndUploadFilesAsync(companyId);
+            return success ? Ok(message) : BadRequest(message);
+        }
+
+
+    }
+}

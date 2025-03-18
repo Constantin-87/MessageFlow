@@ -3,20 +3,28 @@ using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
+using System.Net.Http;
 
 namespace MessageFlow.Server.Components.Accounts.Services
 {
     public class TeamsManagementService
     {
+        private readonly HttpClient _httpClient;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<TeamsManagementService> _logger;
         private readonly IMapper _mapper;
 
-        public TeamsManagementService(IUnitOfWork unitOfWork, ILogger<TeamsManagementService> logger, IMapper mapper)
+        public TeamsManagementService
+        (
+            IUnitOfWork unitOfWork,
+            ILogger<TeamsManagementService> logger,
+            IMapper mapper,
+            HttpClient httpClient)
         {
             _unitOfWork = unitOfWork;
             _logger = logger;
             _mapper = mapper;
+            _httpClient = httpClient;
         }
 
         // Method to retrieve users for a specific team by team ID
@@ -27,10 +35,10 @@ namespace MessageFlow.Server.Components.Accounts.Services
         }
 
         // ✅ Count total users in a company (across all teams)
-        public async Task<int> GetTotalUsersForCompanyAsync(string companyId)
-        {
-            return await _unitOfWork.ApplicationUsers.CountUsersByCompanyAsync(companyId);
-        }
+        //public async Task<int> GetTotalUsersForCompanyAsync(string companyId)
+        //{
+        //    return await _unitOfWork.ApplicationUsers.CountUsersByCompanyAsync(companyId);
+        //}
 
         // Fetch teams for a specific user
         public async Task<List<TeamDTO>> GetUserTeamsAsync(string userId)
@@ -47,34 +55,83 @@ namespace MessageFlow.Server.Components.Accounts.Services
         }
 
         // Add a new team to a company
-        public async Task<(bool success, string errorMessage)> AddTeamToCompanyAsync(string companyId, string teamName, string teamDescription, List<ApplicationUserDTO> assignedUsers)
+        public async Task<(bool success, string errorMessage)> AddTeamToCompanyAsync(TeamDTO teamDto)
         {
             try
             {
-                var company = await _unitOfWork.Companies.GetByIdStringAsync(companyId);
-                if (company == null)
+                List<ApplicationUser> mappedUsers = new();
+
+                if (teamDto.AssignedUserIds != null && teamDto.AssignedUserIds.Any())
                 {
-                    return (false, "Company not found.");
+                    // ✅ Call Identity Service to get user details by IDs
+                    var response = await _httpClient.PostAsJsonAsync("api/user-management/get-users-by-ids", teamDto.AssignedUserIds);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogError("Failed to fetch users from Identity Service.");
+                        return (false, "An error occurred while retrieving the users.");
+                    }
+
+                    var existingUsers = await response.Content.ReadFromJsonAsync<List<ApplicationUserDTO>>();
+
+                    if (existingUsers == null)
+                    {
+                        _logger.LogError("Identity Service returned null users list.");
+                        return (false, "An error occurred while retrieving the users.");
+                    }
+
+                    // ✅ Map ApplicationUserDTO to ApplicationUser entities
+                    mappedUsers = _mapper.Map<List<ApplicationUser>>(existingUsers);
                 }
 
-                // ✅ Fetch existing ApplicationUser entities by their IDs
-                var userIds = assignedUsers.Select(user => user.Id).ToList();
-                var existingUsers = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(userIds);
-
+                // ✅ Create and populate the new Team entity
                 var team = new Team
                 {
                     Id = Guid.NewGuid().ToString(),
-                    TeamName = teamName,
-                    CompanyId = companyId,
-                    TeamDescription = teamDescription,
-                    Users = existingUsers
+                    TeamName = teamDto.TeamName,
+                    TeamDescription = teamDto.TeamDescription,
+                    CompanyId = teamDto.CompanyId,
+                    Users = mappedUsers
                 };
 
                 await _unitOfWork.Teams.AddEntityAsync(team);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation($"Team {teamName} added successfully to company {companyId}.");
+                _logger.LogInformation($"Team '{team.TeamName}' added successfully to company {team.CompanyId}.");
+
                 return (true, "Team added successfully.");
+
+                //// ✅ Fetch existing ApplicationUser entities by their IDs
+                //var userIds = assignedUsers.Select(user => user.Id).ToList();
+
+                ////var existingUsers = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(userIds);
+
+                //var response = await _httpClient.PostAsJsonAsync("api/user-management/get-users-by-ids", userIds);
+
+                //if (!response.IsSuccessStatusCode)
+                //{
+                //    _logger.LogError("Failed to fetch users from Identity Service.");
+                //    return (false, "An error occurred while retreiving the users.");
+                //}
+
+                //var existingUsers = await response.Content.ReadFromJsonAsync<List<ApplicationUserDTO>>();
+                //var mappedUsers = _mapper.Map<List<ApplicationUser>>(existingUsers);
+
+
+                //var team = new Team
+                //{
+                //    Id = Guid.NewGuid().ToString(),
+                //    TeamName = teamName,
+                //    CompanyId = companyId,
+                //    TeamDescription = teamDescription,
+                //    Users = mappedUsers
+                //};
+
+                //await _unitOfWork.Teams.AddEntityAsync(team);
+                //await _unitOfWork.SaveChangesAsync();
+
+                //_logger.LogInformation($"Team {teamName} added successfully to company {companyId}.");
+                //return (true, "Team added successfully.");
             }
             catch (Exception ex)
             {
@@ -175,13 +232,25 @@ namespace MessageFlow.Server.Components.Accounts.Services
                 // ✅ Clear existing users to prevent duplicate tracking issues
                 existingTeam.Users.Clear();
 
-                if (teamDto.UsersDTO?.Any() == true)
+                if (teamDto.AssignedUserIds?.Any() == true)
                 {
-                    var userIds = teamDto.UsersDTO.Select(u => u.Id).ToList();
-                    var users = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(userIds); // Efficient batch fetch
+                    var userIds = teamDto.AssignedUserIds;
+
+                    //var users = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(userIds); // Efficient batch fetch
+
+                    var response = await _httpClient.PostAsJsonAsync("api/user-management/get-users-by-ids", userIds);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        _logger.LogError("Failed to fetch users from Identity Service.");
+                        return (false, "An error occurred while retreiving the users.");
+                    }
+
+                    var existingUsers = await response.Content.ReadFromJsonAsync<List<ApplicationUserDTO>>();
+                    var mappedUsers = _mapper.Map<List<ApplicationUser>>(existingUsers);
 
                     // ✅ Add the fetched users (EF tracks these properly)
-                    foreach (var user in users)
+                    foreach (var user in mappedUsers)
                     {
                         existingTeam.Users.Add(user);
                     }

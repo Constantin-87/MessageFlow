@@ -1,39 +1,54 @@
-﻿using MessageFlow.DataAccess.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using System.Net.Http.Headers;
+using System.Security.Claims;
 
 namespace MessageFlow.Server.Components.Accounts.Services
 {
-    public class UpdateLastActivityFilter : IActionFilter
+    public class UpdateLastActivityFilter : IAsyncActionFilter
     {
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly HttpClient _httpClient;
 
-        public UpdateLastActivityFilter(UserManager<ApplicationUser> userManager)
+        public UpdateLastActivityFilter(IHttpClientFactory httpClientFactory)
         {
-            _userManager = userManager;
+            _httpClient = httpClientFactory.CreateClient("IdentityAPI");
         }
 
-        public void OnActionExecuting(ActionExecutingContext context) { }
-
-        public void OnActionExecuted(ActionExecutedContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            if (context.HttpContext.User.Identity?.IsAuthenticated == true)
+            var resultContext = await next(); // Execute action first
+
+            var user = resultContext.HttpContext.User;
+            if (user.Identity?.IsAuthenticated == true)
             {
-                var userId = _userManager.GetUserId(context.HttpContext.User);
-                var user = _userManager.FindByIdAsync(userId).GetAwaiter().GetResult();
-                if (user != null)
+                var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    user.LastActivity = DateTime.UtcNow;
-                    _userManager.UpdateAsync(user).GetAwaiter().GetResult();
-                    // Debugging log
-                    Console.WriteLine($"[UpdateLastActivityFilter] Updated LastActivity for userId: {userId} at {user.LastActivity}");
+                    // 🔹 Retrieve the token from the request headers (if applicable)
+                    var token = resultContext.HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    }
+
+                    // 🔹 Call Identity API to update last activity
+                    var response = await _httpClient.PostAsync("api/auth/update-activity", null);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"✅ [UpdateLastActivityFilter] Updated LastActivity for userId: {userId}");
+                    }
+                    else
+                    {
+                        var errorMessage = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"❌ [UpdateLastActivityFilter] Failed to update last activity. Status: {response.StatusCode}, Error: {errorMessage}");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine($"[UpdateLastActivityFilter] User not found with userId: {userId}");
+                    Console.WriteLine("[UpdateLastActivityFilter] UserId claim not found.");
                 }
             }
         }
     }
-
 }

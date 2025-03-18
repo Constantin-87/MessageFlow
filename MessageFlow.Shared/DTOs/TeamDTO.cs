@@ -12,11 +12,10 @@ namespace MessageFlow.Shared.DTOs
         // Foreign key for Company
         public string CompanyId { get; set; }
 
-        // Many-to-many relationship with Users (through UserTeam)
-        //public ICollection<UserTeamDTO> UserTeamsDTO { get; set; }  // Navigation property
+        public List<string> AssignedUserIds { get; set; } = new();
 
         // Navigation properties
-        public ICollection<ApplicationUserDTO> UsersDTO { get; set; } = new List<ApplicationUserDTO>();
+        //public ICollection<ApplicationUserDTO> AssignedUsersDTO { get; set; } = new List<ApplicationUserDTO>();
 
     }
 }

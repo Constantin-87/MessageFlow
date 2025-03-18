@@ -1,6 +1,0 @@
-@MessageFlow.Identity_HostAddress = http://localhost:5027
-
-GET {{MessageFlow.Identity_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

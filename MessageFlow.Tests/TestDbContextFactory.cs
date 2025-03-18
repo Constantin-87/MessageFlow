@@ -24,7 +24,7 @@ public static class TestDbContextFactory
         userStore ??= new Mock<IUserStore<ApplicationUser>>().Object;
         userManager ??= MockUserManager(userStore);
 
-        return new UnitOfWork(userManager, userStore, context, dbContextFactoryMock.Object);
+        return new UnitOfWork(context);
     }
 
     public static ApplicationDbContext CreateDbContext(string databaseName = null)

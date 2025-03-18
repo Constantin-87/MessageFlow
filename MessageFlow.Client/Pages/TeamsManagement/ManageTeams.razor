@@ -1,0 +1,146 @@
+﻿@page "/Accounts/ManageTeams"
+@inject TeamsManagementService TeamsManagementService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode RenderMode.InteractiveWebAssembly
+@inject IJSRuntime JSRuntime
+@inject ILogger<ManageTeams> Logger
+
+
+<h4>Manage Teams</h4>
+
+<!-- Teams Table -->
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Team Name</th>
+            <th>Current Users</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var team in teams)
+        {
+            <tr class="@GetRowClass(team)" @onclick="@(() => ShowAddEditTeam(team, false))">
+                <td>@team.TeamName</td>
+                <td>
+                    @if (team != null && team.AssignedUserIds.Any())
+                    {
+                        @string.Join(", ", team.AssignedUserIds)
+                    }
+                    else
+                    {
+                        <em>No users assigned</em>
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm" @onclick:stopPropagation @onclick="() => ConfirmDeleteTeam(team.Id)">
+                        Delete
+                    </button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- AddEditTeam Component -->
+@if (showAddEditTeam)
+{
+    <AddEditTeam @key="selectedTeam?.Id" NewTeam="isNewTeam" Team="selectedTeam" CompanyId="@companyId" OnClose="OnAddEditTeamClose" />
+}
+
+<!-- Button to Show Create New Team UI -->
+<button class="btn btn-primary mb-3" @onclick="@(() => ShowAddEditTeam(null, true))">Create New Team</button>
+
+@code {
+    private List<TeamDTO> teams = new List<TeamDTO>();
+    private TeamDTO? selectedTeam;
+    private bool showAddEditTeam = false;
+    private bool isNewTeam = false;
+    private string companyId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not { IsAuthenticated: true })
+        {
+            Logger.LogWarning("⛔ User not authenticated.");
+            NavigationManager.NavigateTo("/Accounts/AccessDenied", forceLoad: true);
+            return;
+        }
+
+        var companyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value;
+        Logger.LogInformation($"🏢 Extracted CompanyId Claim: {companyIdClaim ?? "Not Found"}");
+
+        if (!string.IsNullOrEmpty(companyIdClaim))
+        {
+            companyId = companyIdClaim;
+            Logger.LogInformation($"🏢 CompanyId set to: {companyId}");
+            await LoadTeams();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/"); // Redirect to home if company ID is not available
+        }
+
+        // var userClaims = HttpContextAccessor.HttpContext?.User;
+
+        
+        // var companyIdClaim = userClaims?.Claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value;
+        // Logger.LogInformation($"🏢 Extracted CompanyId Claim: {(string.IsNullOrEmpty(companyIdClaim) ? "Not Found" : companyIdClaim)}");
+
+        // if (!string.IsNullOrEmpty(companyIdClaim))
+        // {
+        //     companyId = companyIdClaim;
+        //     Logger.LogInformation($"🏢 Extracted CompanyId Claim: {("companyId set to: " + companyId)}");
+        //     await LoadTeams();
+        // }
+        // else
+        // {
+        //     NavigationManager.NavigateTo("/"); // Redirect to home if company ID is not available
+        // }
+    }
+
+    private async Task LoadTeams()
+    {
+        teams = await TeamsManagementService.GetTeamsForCompanyAsync(companyId);
+    }
+
+    private void ShowAddEditTeam(TeamDTO? team, bool newTeam)
+    {
+        selectedTeam = team;
+        isNewTeam = newTeam;
+        showAddEditTeam = true;
+        StateHasChanged();
+    }
+
+    private async Task DeleteTeam(string teamId)
+    {
+        var (success, _) = await TeamsManagementService.DeleteTeamByIdAsync(teamId);
+        if (success)
+        {
+            await LoadTeams();
+        }
+    }
+
+    private async Task ConfirmDeleteTeam(string teamId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete this team?"))
+        {
+            await DeleteTeam(teamId);
+        }
+    }
+
+
+    private string GetRowClass(TeamDTO team) => selectedTeam?.Id == team.Id ? "table-active" : "";
+
+    private async Task OnAddEditTeamClose()
+    {
+        showAddEditTeam = false;
+        await LoadTeams();
+        StateHasChanged();
+    }
+}

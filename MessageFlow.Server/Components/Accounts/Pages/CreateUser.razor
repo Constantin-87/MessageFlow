@@ -1,4 +1,4 @@
-﻿@page "/Accounts/Create-user"
+﻿@* @page "/Accounts/Create-user"
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveServer
 
@@ -17,3 +17,4 @@
         NavigationManager.NavigateTo("/Accounts/UserAccounts");
     }
 }
+ *@

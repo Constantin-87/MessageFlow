@@ -1,0 +1,126 @@
+﻿@page "/Accounts/CompanyAccounts"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@rendermode RenderMode.InteractiveWebAssembly
+
+@inject CompanyManagementService CompanyManagementService
+@inject TeamsManagementService TeamsManagementService
+@inject NavigationManager NavigationManager
+
+<h3>Company Accounts</h3>
+
+<button class="btn btn-primary mb-3" @onclick="NavigateToCreateCompany">Create New Company Account</button>
+
+@if (!isDataLoaded)
+{
+    <p>Loading...</p>
+}
+else if (companies.Count == 0)
+{
+    <p>No company accounts available.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Account Number</th>
+                <th>Company Name</th>
+                <th>Total Users</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var company in companies)
+            {
+                <tr>
+                    <td>@company.Id</td>
+                    <td>@company.AccountNumber</td>
+                    <td>@company.CompanyName</td>
+                    <td>@company.TotalUsers</td>
+                    <td>
+                        <button class="btn btn-secondary" @onclick="() => NavigateToEditCompany(company.Id)">Edit</button>
+                    </td>
+                    <td>
+                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(company.Id, company.CompanyName)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<!-- Confirmation Modal -->
+@if (isDeleteConfirmationVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" @onclick="HideDeleteConfirmation"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the company <strong>@companyToDeleteName</strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="HideDeleteConfirmation">Cancel</button>
+                    <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<CompanyDTO> companies = new(); 
+    private bool isDeleteConfirmationVisible = false;
+    private string? companyToDeleteId;
+    private string? companyToDeleteName;
+    private bool isDataLoaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        companies = await CompanyManagementService.GetAllCompaniesAsync();
+        isDataLoaded = true;
+    }
+
+
+    private void ShowDeleteConfirmation(string companyId, string companyName)
+    {
+        companyToDeleteId = companyId;
+        companyToDeleteName = companyName;
+        isDeleteConfirmationVisible = true;
+    }
+
+    private void HideDeleteConfirmation()
+    {
+        isDeleteConfirmationVisible = false;
+        companyToDeleteId = string.Empty;
+        companyToDeleteName = string.Empty;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        isDeleteConfirmationVisible = false;
+        var (success, errorMessage) = await CompanyManagementService.DeleteCompanyAsync(companyToDeleteId);
+
+        if (success)
+        {
+            companies = companies.Where(c => c.Id != companyToDeleteId).ToList(); // Update UI after deletion
+        }
+        else
+        {
+            Console.WriteLine($"Failed to delete company: {errorMessage}");
+        }
+    }
+
+    private void NavigateToCreateCompany()
+    {
+        NavigationManager.NavigateTo("/Accounts/Create-company");
+    }
+
+    private void NavigateToEditCompany(string companyId)
+    {
+        NavigationManager.NavigateTo($"/edit-company/{companyId}");
+    }       
+}

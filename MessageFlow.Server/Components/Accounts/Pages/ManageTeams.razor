@@ -1,4 +1,4 @@
-﻿@page "/Accounts/ManageTeams"
+﻿@* @page "/Accounts/ManageTeams"
 @inject TeamsManagementService TeamsManagementService
 @inject NavigationManager NavigationManager
 @inject IHttpContextAccessor HttpContextAccessor
@@ -24,9 +24,9 @@
             <tr class="@GetRowClass(team)" @onclick="@(() => ShowAddEditTeam(team, false))">
                 <td>@team.TeamName</td>
                 <td>
-                    @if (team != null && team.UsersDTO.Any())
+                    @if (team != null && team.AssignedUsersDTO.Any())
                     {
-                        @string.Join(", ", team.UsersDTO.Select(ut => ut.UserName))
+                        @string.Join(", ", team.AssignedUsersDTO.Select(ut => ut.UserName))
                     }
                     else
                     {
@@ -134,3 +134,4 @@
         StateHasChanged();
     }
 }
+ *@

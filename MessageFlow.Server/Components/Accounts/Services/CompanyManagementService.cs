@@ -10,12 +10,14 @@ using MessageFlow.Shared.Enums;
 using MessageFlow.DataAccess.Configurations;
 using MessageFlow.DataAccess.Services;
 using System.ComponentModel.Design;
+using System.Net.Http;
 
 
 namespace MessageFlow.Server.Components.Accounts.Services
 {
     public class CompanyManagementService
     {
+        private readonly HttpClient _httpClient;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<CompanyManagementService> _logger;
         private readonly ClaimsPrincipal _currentUser;
@@ -26,6 +28,7 @@ namespace MessageFlow.Server.Components.Accounts.Services
         private readonly IMapper _mapper;
 
         public CompanyManagementService(
+            HttpClient httpClient,
             IUnitOfWork unitOfWork,
             ILogger<CompanyManagementService> logger,
             IHttpContextAccessor httpContextAccessor,
@@ -35,6 +38,7 @@ namespace MessageFlow.Server.Components.Accounts.Services
             AzureSearchService azureSearchService,
             IMapper mapper)
         {
+            _httpClient = httpClient;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _currentUser = httpContextAccessor.HttpContext?.User ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -109,21 +113,14 @@ namespace MessageFlow.Server.Components.Accounts.Services
 
         public async Task<CompanyDTO?> GetCompanyForUserAsync(ClaimsPrincipal user)
         {
-            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return null;
-            }
-
-            // ✅ Use UnitOfWork to fetch the user including their company ID
-            var applicationUser = await _unitOfWork.ApplicationUsers.GetUserByIdAsync(userId);
-            if (applicationUser == null || string.IsNullOrEmpty(applicationUser.CompanyId))
+            var userCompanyId = user.FindFirstValue("CompanyId");
+            if (string.IsNullOrEmpty(userCompanyId))
             {
                 return null;
             }
 
             // ✅ Use UnitOfWork to fetch the company details
-            var company = await _unitOfWork.Companies.GetByIdStringAsync(applicationUser.CompanyId);
+            var company = await _unitOfWork.Companies.GetByIdStringAsync(userCompanyId);
             if (company == null)
             {
                 return null;
@@ -134,14 +131,14 @@ namespace MessageFlow.Server.Components.Accounts.Services
         }
 
         // Fetch all users for a specific company
-        public async Task<List<ApplicationUserDTO>> GetUsersForCompanyAsync(string companyId)
-        {
-            // ✅ Use UnitOfWork to get users by company
-            var users = await _unitOfWork.ApplicationUsers.GetUsersForCompanyAsync(companyId);
+        //public async Task<List<ApplicationUserDTO>> GetUsersForCompanyAsync(string companyId)
+        //{
+        //    // ✅ Use UnitOfWork to get users by company
+        //    var users = await _unitOfWork.ApplicationUsers.GetUsersForCompanyAsync(companyId);
 
-            // ✅ Map to DTOs
-            return _mapper.Map<List<ApplicationUserDTO>>(users);
-        }
+        //    // ✅ Map to DTOs
+        //    return _mapper.Map<List<ApplicationUserDTO>>(users);
+        //}
 
 
         // Create a new company
@@ -197,11 +194,19 @@ namespace MessageFlow.Server.Components.Accounts.Services
                 }
 
                 // ✅ Remove all users associated with this company
-                var users = await _unitOfWork.ApplicationUsers.GetUsersForCompanyAsync(companyId);
-                foreach (var user in users)
+                // 🔹 Call Identity API to delete all users for a given company
+                var response = await _httpClient.DeleteAsync($"api/user-management/delete-company-users/{companyId}");
+                if (!response.IsSuccessStatusCode)
                 {
-                    await _unitOfWork.ApplicationUsers.DeleteUserByIdAsync(user.Id);
+                    _logger.LogError($"Failed to delete users for company {companyId} via Identity API.");
+                    return (false, "Failed to delete users for this company.");
                 }
+
+                //var users = await _unitOfWork.ApplicationUsers.GetUsersForCompanyAsync(companyId);
+                //foreach (var user in users)
+                //{
+                //    await _unitOfWork.ApplicationUsers.DeleteUserByIdAsync(user.Id);
+                //}
 
                 // ✅ Delete all teams associated with the company via repository
                 await _teamsManagementService.DeleteTeamsByCompanyIdAsync(companyId);
@@ -800,14 +805,6 @@ namespace MessageFlow.Server.Components.Accounts.Services
 
         private async Task<(bool isAuthorized, string? userCompanyId, bool isSuperAdmin, string errorMessage)> CanUserEditCompanyAsync(string companyId)
         {
-            //await using var dbContext = _contextFactory.CreateDbContext();
-
-            //var userId = _currentUser.FindFirstValue(ClaimTypes.NameIdentifier);
-            //var userRoles = await dbContext.UserRoles
-            //    .Where(ur => ur.UserId == userId)
-            //    .Join(dbContext.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
-            //    .ToListAsync();
-
             // ✅ Get the user ID from the ClaimsPrincipal
             var userId = _currentUser.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -816,8 +813,7 @@ namespace MessageFlow.Server.Components.Accounts.Services
             }
 
             // ✅ Fetch user roles using repository
-            var userRoles = await _unitOfWork.ApplicationUsers.GetRoleForUserAsync(userId);
-
+            var userRoles = _currentUser.FindFirstValue(ClaimTypes.Role);
 
             var isSuperAdmin = userRoles.Contains("SuperAdmin");
 
@@ -827,7 +823,7 @@ namespace MessageFlow.Server.Components.Accounts.Services
             }
 
             // ✅ Fetch the user's company ID
-            var userCompanyId = await _unitOfWork.ApplicationUsers.GetUserCompanyIdAsync(userId);
+            var userCompanyId = _currentUser.FindFirstValue("CompanyId");
 
             if (userCompanyId == null || companyId != userCompanyId)
             {

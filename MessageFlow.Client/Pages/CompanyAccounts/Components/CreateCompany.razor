@@ -1,0 +1,36 @@
+﻿@page "/Accounts/Create-company"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@rendermode RenderMode.InteractiveWebAssembly
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Company</PageTitle>
+
+@if (!string.IsNullOrEmpty(NotificationMessage))
+{
+    <div class="alert alert-info">@NotificationMessage</div>
+}
+
+<!-- Pass the company object down to the CompanyForm component -->
+<CompanyAddEditForm IsEditMode="false" Company="company" OnActionCompleted="HandleActionCompleted" />
+
+@code {
+    private CompanyDTO company = new CompanyDTO();
+
+    private string NotificationMessage = string.Empty;
+
+    private async Task HandleActionCompleted(string message)
+    {
+        NotificationMessage = message;
+        StateHasChanged();
+
+        if (!message.Contains("Error", StringComparison.OrdinalIgnoreCase))
+        {
+            // If no error, show message and redirect
+            await Task.Delay(3000);
+            NavigationManager.NavigateTo("/Accounts/CompanyAccounts");
+        }
+        // Else, stay on the page and show the error message
+    }
+
+}

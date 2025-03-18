@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@* @inject UserActivityService UserActivityService *@
+
+<div class="container-fluid">
+    <div class="row">
+
+        @if (!IsPublicPage && IsAuthenticated)
+        {
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+                <NavMenu/>
+            </nav>
+        }
+
+        <!-- Main content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <article class="content">
+                @Body
+            </article>
+        </main>
+
+    </div>
+</div>
+
+@code {
+    private bool IsPublicPage => NavigationManager.Uri == NavigationManager.BaseUri || NavigationManager.Uri.Contains("Login");
+    private bool IsAuthenticated;
+    // private bool _initialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserState();
+    }
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender && !_initialized)
+    //     {
+    //         _initialized = true;
+    //         if (IsAuthenticated)
+    //         {
+    //             await UserActivityService.InitializeAsync();
+    //         }
+    //     }
+    // }
+    
+    private async Task LoadUserState()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated ?? false)
+        {
+            IsAuthenticated = true;
+        }
+    }
+}

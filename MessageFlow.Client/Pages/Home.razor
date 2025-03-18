@@ -1,0 +1,19 @@
+﻿@inject NavigationManager NavigationManager
+@rendermode RenderMode.InteractiveWebAssembly
+@page "/"
+<PageTitle>Welcome</PageTitle>
+
+<h1>Welcome to Message Flow Chat</h1>
+
+<p>Please log in to continue</p>
+
+<div>
+    <button @onclick="NavigateToLogin" class="btn btn-primary">Go to Login Page</button>
+</div>
+
+@code {
+    private void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/Login");
+    }
+}

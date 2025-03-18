@@ -1,4 +1,4 @@
-﻿using MessageFlow.Client.Components;
+﻿//using MessageFlow.Client.Components;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using MessageFlow.DataAccess.Services;
@@ -17,14 +17,17 @@ public class ChatHub : Hub
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IFacebookService _facebookService;
-    private readonly IWhatsAppService _whatsAppService; /// FROM HERE !!!!!!
+    private readonly IWhatsAppService _whatsAppService;
+    private readonly HttpClient _httpClient;
 
     public ChatHub(
+        HttpClient httpClient,
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IFacebookService facebookService,
         IWhatsAppService whatsAppService)
     {
+        _httpClient = httpClient;
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _facebookService = facebookService ?? throw new ArgumentNullException(nameof(facebookService));
@@ -52,19 +55,21 @@ public class ChatHub : Hub
             }
 
             // ✅ Retrieve the ApplicationUser entity from repository
-            var applicationUser = await _unitOfWork.ApplicationUsers.GetUserByIdAsync(userId);
+            //var applicationUser = await _unitOfWork.ApplicationUsers.GetUserByIdAsync(userId);
 
-            if (applicationUser == null)
+            // ✅ Call Identity API to fetch the user DTO
+            var response = await _httpClient.GetAsync($"https://IDENTITY_SERVICE_URL/api/user-management/user/{userId}");
+
+            if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"❌ No user found with ID: {userId}. Aborting connection.");
+                Console.WriteLine($"❌ Failed to fetch user from Identity Service for userId {userId}.");
                 Context.Abort();
                 return;
             }
 
-            // ✅ Map to DTO
-            var applicationUserDto = _mapper.Map<ApplicationUserDTO>(applicationUser);
+            var applicationUserDto = await response.Content.ReadFromJsonAsync<ApplicationUserDTO>();
 
-            if (string.IsNullOrEmpty(applicationUserDto.CompanyId))
+            if (applicationUserDto == null || string.IsNullOrEmpty(applicationUserDto.CompanyId))
             {
                 Console.WriteLine($"❌ User {userId} does not have a valid CompanyId. Aborting connection.");
                 Context.Abort();
@@ -108,9 +113,9 @@ public class ChatHub : Hub
             if (OnlineUsers.TryRemove(Context.ConnectionId, out var userInfo) && userInfo != null)
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Company_{userInfo.CompanyId}");
-                foreach (var team in userInfo.TeamsDTO)
+                foreach (var teamId in userInfo.TeamIds)
                 {
-                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Team_{team.Id}");
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Team_{teamId}");
                 }
             }
 
@@ -209,9 +214,9 @@ public class ChatHub : Hub
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"Company_{applicationUserDto.CompanyId}");
 
-        foreach (var team in applicationUserDto.TeamsDTO)
+        foreach (var teamId in applicationUserDto.TeamIds)
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"Team_{team.Id}"); // ✅ Add to team-based group
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"Team_{teamId}"); // ✅ Add to team-based group
         }
 
         OnlineUsers[Context.ConnectionId] = applicationUserDto;
@@ -262,13 +267,17 @@ public class ChatHub : Hub
     private async Task BroadcastTeamMembers(string companyId)
     {
         var teamMembers = OnlineUsers.Values
-            .Where(user => user.CompanyId == companyId)
-            .Select(user => new TeamMembers.TeamMember
-            {
-                Name = user.UserName,
-                Team = string.Join(", ", user.TeamsDTO.Select(t => t.TeamName)),
-                Status = "Online"
-            });
+        .Where(user => user.CompanyId == companyId)
+        .Select(user => new ApplicationUserDTO
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            CompanyId = user.CompanyId,
+            Role = user.Role,
+            LockoutEnabled = user.LockoutEnabled,
+            TeamIds = user.TeamIds, // Keep Teams data
+            LastActivity = DateTime.UtcNow
+        });
 
         foreach (var member in teamMembers)
         {
@@ -317,15 +326,19 @@ public class ChatHub : Hub
     {
         if (OnlineUsers.TryGetValue(Context.ConnectionId, out var userInfo))
         {
-            var teamMember = new TeamMembers.TeamMember
+            var disconnectedUser = new ApplicationUserDTO
             {
-                Name = userInfo.UserName,
-                Team = string.Join(", ", userInfo.TeamsDTO.Select(t => t.TeamName)),
-                Status = "Offline"
+                Id = userInfo.Id,
+                UserName = userInfo.UserName,
+                CompanyId = userInfo.CompanyId,
+                Role = userInfo.Role,
+                LockoutEnabled = userInfo.LockoutEnabled,
+                TeamIds = userInfo.TeamIds,
+                LastActivity = DateTime.UtcNow
             };
 
             // Broadcast the team member removal to all clients in the same company
-            await Clients.Group($"Company_{companyId}").SendAsync("RemoveTeamMember", teamMember);
+            await Clients.Group($"Company_{companyId}").SendAsync("RemoveTeamMember", disconnectedUser);
         }
     }
 

@@ -7,11 +7,10 @@ using System.Security.Claims;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.DataAccess.Models;
 using Microsoft.AspNetCore.Authentication;
-using MessageFlow.Server.Components.Accounts.Services;
-using MessageFlow.AzureServices.Services;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using MessageFlow.Identity.Services;
 
 namespace MessageFlow.Tests
 {
@@ -94,58 +93,58 @@ namespace MessageFlow.Tests
             return httpContextAccessorMock;
         }
 
-        // Create CompanyManagementService using IUnitOfWork, IMapper, and IHttpContextAccessor
-        public static CompanyManagementService CreateCompanyManagementService(
-            IUnitOfWork unitOfWork,
-            IMapper mapper,
-            string userId,
-            string role)
-        {
-            var loggerMock = new Mock<ILogger<CompanyManagementService>>();
-            var httpContextAccessorMock = CreateHttpContextAccessor(userId, role);
+        //// Create CompanyManagementService using IUnitOfWork, IMapper, and IHttpContextAccessor
+        //public static CompanyManagementService CreateCompanyManagementService(
+        //    IUnitOfWork unitOfWork,
+        //    IMapper mapper,
+        //    string userId,
+        //    string role)
+        //{
+        //    var loggerMock = new Mock<ILogger<CompanyManagementService>>();
+        //    var httpContextAccessorMock = CreateHttpContextAccessor(userId, role);
 
-            var teamsService = new TeamsManagementService(unitOfWork, new Mock<ILogger<TeamsManagementService>>().Object, mapper);
-            var azureSearchMock = new Mock<AzureSearchService>("https://fake-search-endpoint", "fake-api-key");
-            var documentProcessingMock = new Mock<DocumentProcessingService>(new Mock<IConfiguration>().Object, new Mock<ILogger<DocumentProcessingService>>().Object);
-            var blobStorageMock = new Mock<AzureBlobStorageService>(new Mock<IConfiguration>().Object);
+        //    var teamsService = new TeamsManagementService(unitOfWork, new Mock<ILogger<TeamsManagementService>>().Object, mapper);
+        //    var azureSearchMock = new Mock<AzureSearchService>("https://fake-search-endpoint", "fake-api-key");
+        //    var documentProcessingMock = new Mock<DocumentProcessingService>(new Mock<IConfiguration>().Object, new Mock<ILogger<DocumentProcessingService>>().Object);
+        //    var blobStorageMock = new Mock<AzureBlobStorageService>(new Mock<IConfiguration>().Object);
 
-            return new CompanyManagementService(
-                unitOfWork,
-                loggerMock.Object,
-                httpContextAccessorMock.Object,
-                teamsService,
-                blobStorageMock.Object,
-                documentProcessingMock.Object,
-                azureSearchMock.Object,
-                mapper
-            );
-        }
+        //    return new CompanyManagementService(
+        //        unitOfWork,
+        //        loggerMock.Object,
+        //        httpContextAccessorMock.Object,
+        //        teamsService,
+        //        blobStorageMock.Object,
+        //        documentProcessingMock.Object,
+        //        azureSearchMock.Object,
+        //        mapper
+        //    );
+        //}
 
-        // Create UserManagementService with IUnitOfWork and necessary mocks
-        public static UserManagementService CreateUserManagementService(
-            IUnitOfWork unitOfWork,
-            UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
-            IMapper mapper,
-            string userId,
-            string role)
-        {
-            var loggerMock = new Mock<ILogger<UserManagementService>>();
-            var httpContextAccessorMock = CreateHttpContextAccessor(userId, role);
+        //// Create UserManagementService with IUnitOfWork and necessary mocks
+        //public static UserManagementService CreateUserManagementService(
+        //    IUnitOfWork unitOfWork,
+        //    UserManager<ApplicationUser> userManager,
+        //    RoleManager<IdentityRole> roleManager,
+        //    IMapper mapper,
+        //    string userId,
+        //    string role)
+        //{
+        //    var loggerMock = new Mock<ILogger<UserManagementService>>();
+        //    var httpContextAccessorMock = CreateHttpContextAccessor(userId, role);
 
-            var teamsService = new TeamsManagementService(unitOfWork, new Mock<ILogger<TeamsManagementService>>().Object, mapper);
+        //    var teamsService = new TeamsManagementService(unitOfWork, new Mock<ILogger<TeamsManagementService>>().Object, mapper);
 
-            // ✅ Create UserStore using the context from UnitOfWork
-            var userStore = new UserStore<ApplicationUser>(unitOfWork.Context);
+        //    // ✅ Create UserStore using the context from UnitOfWork
+        //    var userStore = new UserStore<ApplicationUser>(unitOfWork.Context);
 
-            return new UserManagementService(
-                unitOfWork,
-                teamsService,
-                loggerMock.Object,
-                httpContextAccessorMock.Object,
-                mapper
-            );
-        }
+        //    return new UserManagementService(
+        //        unitOfWork,
+        //        teamsService,
+        //        loggerMock.Object,
+        //        httpContextAccessorMock.Object,
+        //        mapper
+        //    );
+        //}
 
         //// Create TeamsManagementService with IUnitOfWork
         //public static TeamsManagementService CreateTeamsManagementService(IUnitOfWork unitOfWork)

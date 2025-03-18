@@ -1,4 +1,4 @@
-﻿@page "/ChannelSetup"
+﻿@* @page "/ChannelSetup"
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveServer
 
@@ -128,3 +128,4 @@ else if (selectedCompany != null)
         public string Icon { get; set; }
     }
 }
+ *@

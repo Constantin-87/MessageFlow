@@ -17,6 +17,8 @@ namespace MessageFlow.DataAccess.Models
 
         // Activity timestamp
         public DateTime LastActivity { get; set; } = DateTime.UtcNow;
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
     }
 }
 

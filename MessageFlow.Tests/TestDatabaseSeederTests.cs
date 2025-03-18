@@ -2,7 +2,7 @@
 using Xunit;
 using MessageFlow.DataAccess.Configurations;
 using AutoMapper;
-using MessageFlow.Server.Mappings;
+using MessageFlow.Infrastructure.Mappings;
 
 namespace MessageFlow.Tests
 {

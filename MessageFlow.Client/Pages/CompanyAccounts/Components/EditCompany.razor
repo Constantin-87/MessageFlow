@@ -1,0 +1,71 @@
+﻿@page "/edit-company/{companyId:guid}"
+@attribute [Authorize(Roles = "SuperAdmin, Admin")]
+@rendermode RenderMode.InteractiveWebAssembly
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CompanyManagementService CompanyManagementService
+@inject NavigationManager NavigationManager
+@* @inject IHttpContextAccessor HttpContextAccessor *@
+@using System.Security.Claims
+
+<PageTitle>Edit Company</PageTitle>
+
+@if (!string.IsNullOrEmpty(NotificationMessage))
+{
+    <div class="alert alert-info">@NotificationMessage</div>
+}
+
+<CompanyAddEditForm IsEditMode="true" Company="company" OnActionCompleted="HandleActionCompleted" />
+
+@code {
+    private CompanyDTO company = new CompanyDTO();
+    private string NotificationMessage = string.Empty;
+
+    [Parameter]
+    public Guid companyId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // var userId = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var userId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        var userCompanyId = user.FindFirst("CompanyId")?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            Console.WriteLine("⛔ User not authenticated.");
+            NavigationManager.NavigateTo("/Accounts/AccessDenied", forceLoad: true);
+            return;
+        }
+
+        var userRoles = user.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .ToList();
+
+
+        bool isSuperAdmin = userRoles.Contains("SuperAdmin");
+
+        // // ✅ Get the user's company ID using CompanyManagementService
+        // var userCompany = await CompanyManagementService.GetCompanyForUserAsync(user);
+        // var userCompanyId = userCompany?.Id;
+
+        if (!isSuperAdmin && userCompanyId != companyId.ToString())
+        {
+            Console.WriteLine($"⛔ Unauthorized access attempt by user {userId} to company {companyId.ToString()}");
+            NavigationManager.NavigateTo("/Accounts/AccessDenied", forceLoad: true);
+            return;
+        }
+
+        // ✅ Fetch the company using CompanyManagementService
+        company = await CompanyManagementService.GetCompanyByIdAsync(companyId.ToString()) ?? new CompanyDTO();
+    }
+
+    private void HandleActionCompleted(string message)
+    {
+        NotificationMessage = message;
+        StateHasChanged();
+    }
+
+}

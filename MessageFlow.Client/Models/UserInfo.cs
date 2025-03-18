@@ -1,4 +1,4 @@
-namespace MessageFlow.Client
+namespace MessageFlow.Client.Models
 {
     public class UserInfo
     {
@@ -7,6 +7,6 @@ namespace MessageFlow.Client
         public required string CompanyId { get; set; }
         public required string CompanyName { get; set; }
         public required string UserTeams { get; set; }
-        
+
     }
 }

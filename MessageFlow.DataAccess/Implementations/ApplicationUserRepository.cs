@@ -11,16 +11,16 @@ namespace MessageFlow.DataAccess.Implementations
     {
         private readonly ApplicationDbContext? _context;
         //private readonly IDbContextFactoryService? _dbContextFactory;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserStore<ApplicationUser> _userStore;
+        //private readonly UserManager<ApplicationUser> _userManager;
+        //private readonly IUserStore<ApplicationUser> _userStore;
 
         // ✅ Constructor for ApplicationDbContext usage (for UnitOfWork)
-        public ApplicationUserRepository(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IUserStore<ApplicationUser> userStore)
+        public ApplicationUserRepository(ApplicationDbContext context/*, UserManager<ApplicationUser> userManager, IUserStore<ApplicationUser> userStore*/)
             : base(context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            _userStore = userStore ?? throw new ArgumentNullException(nameof(userStore));
+            //_userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            //_userStore = userStore ?? throw new ArgumentNullException(nameof(userStore));
         }
 
         // ✅ Constructor for factory-based usage (optional, if needed by your UnitOfWork)
@@ -31,85 +31,85 @@ namespace MessageFlow.DataAccess.Implementations
         //    _userStore = userStore ?? throw new ArgumentNullException(nameof(userStore));
         //}
 
-        public async Task<(bool success, string errorMessage)> CreateUserAsync(ApplicationUser user, string password)
-        {
-            var result = await _userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-            {
-                var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
-                return (false, errorMsg);
-            }
+        //public async Task<(bool success, string errorMessage)> CreateUserAsync(ApplicationUser user, string password)
+        //{
+        //    var result = await _userManager.CreateAsync(user, password);
+        //    if (!result.Succeeded)
+        //    {
+        //        var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
+        //        return (false, errorMsg);
+        //    }
 
-            return (true, "User created successfully");
-        }
+        //    return (true, "User created successfully");
+        //}
 
-        public async Task<(bool success, string errorMessage)> UpdateEmailAsync(ApplicationUser user, string newEmail)
-        {
-            var emailStore = (IUserEmailStore<ApplicationUser>)_userStore;
-            await emailStore.SetEmailAsync(user, newEmail, CancellationToken.None);
+        //public async Task<(bool success, string errorMessage)> UpdateEmailAsync(ApplicationUser user, string newEmail)
+        //{
+        //    var emailStore = (IUserEmailStore<ApplicationUser>)_userStore;
+        //    await emailStore.SetEmailAsync(user, newEmail, CancellationToken.None);
 
-            var result = await _userManager.UpdateAsync(user);
-            if (!result.Succeeded)
-            {
-                var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
-                return (false, errorMsg);
-            }
+        //    var result = await _userManager.UpdateAsync(user);
+        //    if (!result.Succeeded)
+        //    {
+        //        var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
+        //        return (false, errorMsg);
+        //    }
 
-            return (true, "Email updated successfully");
-        }
+        //    return (true, "Email updated successfully");
+        //}
 
         // ✅ Fetch all role names
-        public async Task<List<string>> GetAllRolesAsync()
-        {
-            return await _context.Roles
-                .Select(r => r.Name)
-                .ToListAsync() ?? new List<string>();
-        }
+        //public async Task<List<string>> GetAllRolesAsync()
+        //{
+        //    return await _context.Roles
+        //        .Select(r => r.Name)
+        //        .ToListAsync() ?? new List<string>();
+        //}
 
-        public async Task<(bool success, string errorMessage)> AssignRoleAsync(ApplicationUser user, string role)
-        {
-            var roleResult = await _userManager.AddToRoleAsync(user, role);
-            if (!roleResult.Succeeded)
-            {
-                var errorMsg = string.Join(", ", roleResult.Errors.Select(e => e.Description));
-                return (false, errorMsg);
-            }
+        //public async Task<(bool success, string errorMessage)> AssignRoleAsync(ApplicationUser user, string role)
+        //{
+        //    var roleResult = await _userManager.AddToRoleAsync(user, role);
+        //    if (!roleResult.Succeeded)
+        //    {
+        //        var errorMsg = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+        //        return (false, errorMsg);
+        //    }
 
-            return (true, "Role assigned successfully");
-        }
+        //    return (true, "Role assigned successfully");
+        //}
 
         // ✅ Remove all roles
-        public async Task<(bool success, string errorMessage)> RemoveUserRolesAsync(ApplicationUser user)
-        {
-            var currentRoles = await GetRoleForUserAsync(user.Id);
-            if (!currentRoles.Any())
-                return (true, "No roles to remove.");
+        //public async Task<(bool success, string errorMessage)> RemoveUserRolesAsync(ApplicationUser user)
+        //{
+        //    var currentRoles = await GetRoleForUserAsync(user.Id);
+        //    if (!currentRoles.Any())
+        //        return (true, "No roles to remove.");
 
-            var result = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+        //    var result = await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
-            if (!result.Succeeded)
-            {
-                var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
-                return (false, errorMsg);
-            }
+        //    if (!result.Succeeded)
+        //    {
+        //        var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
+        //        return (false, errorMsg);
+        //    }
 
-            return (true, "Roles removed successfully");
-        }
+        //    return (true, "Roles removed successfully");
+        //}
 
         // ✅ Update password
-        public async Task<(bool success, string errorMessage)> UpdatePasswordAsync(ApplicationUser user, string newPassword)
-        {
-            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var passwordResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
+        //public async Task<(bool success, string errorMessage)> UpdatePasswordAsync(ApplicationUser user, string newPassword)
+        //{
+        //    var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        //    var passwordResult = await _userManager.ResetPasswordAsync(user, resetToken, newPassword);
 
-            if (!passwordResult.Succeeded)
-            {
-                var errorMsg = string.Join(", ", passwordResult.Errors.Select(e => e.Description));
-                return (false, errorMsg);
-            }
+        //    if (!passwordResult.Succeeded)
+        //    {
+        //        var errorMsg = string.Join(", ", passwordResult.Errors.Select(e => e.Description));
+        //        return (false, errorMsg);
+        //    }
 
-            return (true, "Password updated successfully");
-        }
+        //    return (true, "Password updated successfully");
+        //}
 
 
         public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
@@ -154,13 +154,13 @@ namespace MessageFlow.DataAccess.Implementations
             return true;
         }
 
-        public async Task<List<string>> GetRoleForUserAsync(string userId)
-        {
-            return await _context.UserRoles
-                .Where(ur => ur.UserId == userId)
-                .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
-                .ToListAsync();
-        }
+        //public async Task<List<string>> GetRoleForUserAsync(string userId)
+        //{
+        //    return await _context.UserRoles
+        //        .Where(ur => ur.UserId == userId)
+        //        .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
+        //        .ToListAsync();
+        //}
 
         // DataAccess Layer: Fetch roles for multiple users in one query
         public async Task<Dictionary<string, List<string>>> GetRolesForUsersAsync(List<string> userIds)
@@ -179,6 +179,14 @@ namespace MessageFlow.DataAccess.Implementations
                 .Where(u => u.Id == userId)
                 .Select(u => u.CompanyId) // Nullable to handle cases where user might not exist
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<ApplicationUser?> GetUserByUsernameAsync(string username)
+        {
+            return await _context.Users
+                .Include(u => u.Company)
+                .Include(u => u.Teams)
+                .FirstOrDefaultAsync(u => u.UserName == username);
         }
 
         public async Task<int> CountUsersByCompanyAsync(string companyId)

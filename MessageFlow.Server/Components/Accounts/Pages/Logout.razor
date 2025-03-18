@@ -1,4 +1,4 @@
-﻿@page "/Accounts/Logout"
+﻿@* @page "/Accounts/Logout"
 @inject SignInManager<ApplicationUser> SignInManager
 @inject NavigationManager NavigationManager
 @inject ILogger<Logout> Logger
@@ -21,3 +21,4 @@
         NavigationManager.NavigateTo("/");
     }
 }
+ *@

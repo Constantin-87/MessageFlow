@@ -1,0 +1,22 @@
+[
+  {
+    "Name": "Both client and server",
+    "Projects": [
+      {
+        "Path": "MessageFlow.Identity\\MessageFlow.Identity.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "MessageFlow.Server\\MessageFlow.Server.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "MessageFlow.Client\\MessageFlow.Client.csproj",
+        "Action": "Start",
+        "DebugTarget": "MessageFlow.Client"
+      }
+    ]
+  }
+]
