@@ -1,5 +1,6 @@
 ﻿@page "/edit-company/{companyId:guid}"
 @attribute [Authorize(Roles = "SuperAdmin, Admin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -25,9 +26,7 @@
     public Guid companyId { get; set; }
 
     protected override async Task OnInitializedAsync()
-    {
-        // var userId = HttpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+    {        
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
         var userId = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -46,10 +45,6 @@
 
 
         bool isSuperAdmin = userRoles.Contains("SuperAdmin");
-
-        // // ✅ Get the user's company ID using CompanyManagementService
-        // var userCompany = await CompanyManagementService.GetCompanyForUserAsync(user);
-        // var userCompanyId = userCompany?.Id;
 
         if (!isSuperAdmin && userCompanyId != companyId.ToString())
         {

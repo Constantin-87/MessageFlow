@@ -1,0 +1,15 @@
+﻿.workspace-container {
+    display: flex;
+    gap: 1rem;
+    height: 60vh;
+}
+
+/* chat window style*/
+.chat-section {
+    flex: 0 0 50%; /* Fixed to 50% width */
+    background-color: #f9f9f9;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow-y: auto;
+}

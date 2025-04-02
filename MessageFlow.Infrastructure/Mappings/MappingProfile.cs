@@ -55,7 +55,8 @@ namespace MessageFlow.Infrastructure.Mappings
                 .ForMember(dest => dest.CompanyDTO, opt => opt.MapFrom(src => src.Company))
                 .ForMember(dest => dest.TeamIds, opt => opt.MapFrom(src => src.Teams.Select(t => t.Id)))
                 .ForMember(dest => dest.Role, opt => opt.Ignore()) // Role will be set manually after mapping
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(dest => dest.Company, opt => opt.Ignore());
 
             // ✅ Add this to your MappingProfile constructor
             CreateMap<FacebookSettingsDTO, FacebookSettingsModel>()

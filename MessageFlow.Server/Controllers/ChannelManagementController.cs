@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Shared.Interfaces;
+using MessageFlow.Server.Services.Interfaces;
 
 namespace MessageFlow.Server.Controllers
 {

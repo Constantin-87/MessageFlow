@@ -2,6 +2,7 @@
 @inject TeamsManagementService TeamsManagementService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 @inject IJSRuntime JSRuntime
 @inject ILogger<ManageTeams> Logger
@@ -73,35 +74,16 @@
         }
 
         var companyIdClaim = user.Claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value;
-        Logger.LogInformation($"🏢 Extracted CompanyId Claim: {companyIdClaim ?? "Not Found"}");
 
         if (!string.IsNullOrEmpty(companyIdClaim))
         {
             companyId = companyIdClaim;
-            Logger.LogInformation($"🏢 CompanyId set to: {companyId}");
             await LoadTeams();
         }
         else
         {
             NavigationManager.NavigateTo("/"); // Redirect to home if company ID is not available
         }
-
-        // var userClaims = HttpContextAccessor.HttpContext?.User;
-
-        
-        // var companyIdClaim = userClaims?.Claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value;
-        // Logger.LogInformation($"🏢 Extracted CompanyId Claim: {(string.IsNullOrEmpty(companyIdClaim) ? "Not Found" : companyIdClaim)}");
-
-        // if (!string.IsNullOrEmpty(companyIdClaim))
-        // {
-        //     companyId = companyIdClaim;
-        //     Logger.LogInformation($"🏢 Extracted CompanyId Claim: {("companyId set to: " + companyId)}");
-        //     await LoadTeams();
-        // }
-        // else
-        // {
-        //     NavigationManager.NavigateTo("/"); // Redirect to home if company ID is not available
-        // }
     }
 
     private async Task LoadTeams()

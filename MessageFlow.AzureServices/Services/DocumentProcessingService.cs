@@ -1,11 +1,12 @@
 ﻿using Azure;
 using Azure.AI.DocumentIntelligence;
+using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.AzureServices.Services
 {
-    public class DocumentProcessingService
+    public class DocumentProcessingService : IDocumentProcessingService
     {
         private readonly DocumentIntelligenceClient _client;
         private readonly ILogger<DocumentProcessingService> _logger;

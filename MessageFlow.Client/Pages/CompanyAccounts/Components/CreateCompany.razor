@@ -1,5 +1,6 @@
 ﻿@page "/Accounts/Create-company"
 @attribute [Authorize(Roles = "SuperAdmin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 
 @inject NavigationManager NavigationManager

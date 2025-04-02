@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using MessageFlow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Shared.DTOs;
 using AutoMapper;
@@ -15,7 +14,7 @@ namespace MessageFlow.Tests
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager)
         {
-            // 🚀 1. Seed Roles (Using RoleManager)
+            // Seed Roles (Using RoleManager)
             var roles = new List<string> { "SuperAdmin", "Admin", "Manager", "Agent" };
 
             foreach (var roleName in roles)
@@ -70,13 +69,25 @@ namespace MessageFlow.Tests
             }
             await unitOfWork.SaveChangesAsync();
 
-
             // Seed Teams
             var teams = new List<TeamDTO>
             {
-                new TeamDTO { Id = "1", TeamName = "Development Team", CompanyId = "2" }, // Company A
-                new TeamDTO { Id = "2", TeamName = "Support Team", CompanyId = "3" }      // Company B
+                // HeadCompany (Id = "1")
+                new TeamDTO { Id = "1", TeamName = "HQ Dev Team", TeamDescription = "Handles internal development", CompanyId = "1" },
+                new TeamDTO { Id = "2", TeamName = "HQ Support Team", TeamDescription = "Handles internal support", CompanyId = "1" },
+                new TeamDTO { Id = "3", TeamName = "HQ Ops Team", TeamDescription = "Manages operations", CompanyId = "1" },
+
+                // Company A (Id = "2")
+                new TeamDTO { Id = "4", TeamName = "A Dev Team", TeamDescription = "Develops products", CompanyId = "2" },
+                new TeamDTO { Id = "5", TeamName = "A Support Team", TeamDescription = "Customer support", CompanyId = "2" },
+                new TeamDTO { Id = "6", TeamName = "A Marketing Team", TeamDescription = "Marketing and outreach", CompanyId = "2" },
+
+                // Company B (Id = "3")
+                new TeamDTO { Id = "7", TeamName = "B Hardware Team", TeamDescription = "Builds hardware", CompanyId = "3" },
+                new TeamDTO { Id = "8", TeamName = "B QA Team", TeamDescription = "Tests products", CompanyId = "3" },
+                new TeamDTO { Id = "9", TeamName = "B Sales Team", TeamDescription = "Sales and distribution", CompanyId = "3" }
             };
+
             foreach (var teamDTO in teams)
             {
                 var teamEntity = mapper.Map<Team>(teamDTO);  // Map DTO to entity
@@ -84,7 +95,7 @@ namespace MessageFlow.Tests
             }
             await unitOfWork.SaveChangesAsync();
 
-            // 🚀 4. Seed Users (Using UserManager and assign roles)
+            // Seed Users (Using UserManager and assign roles)
             var usersToSeed = new List<(ApplicationUser User, string Password, string Role)>
             {
                 (new ApplicationUser { Id = "1", UserName = "superadmin@headcompany.com", Email = "superadmin@headcompany.com", CompanyId = "1" }, "SuperAdmin@123", "SuperAdmin"),
@@ -120,124 +131,17 @@ namespace MessageFlow.Tests
                 }
             }
 
+            // Assign users to teams
+            var companyATeam = await unitOfWork.Teams.GetTeamByIdAsync("4");
+            var manager = await userManager.FindByEmailAsync("manager@companya.com");
+            companyATeam.Users = new List<ApplicationUser> { manager };
+
+            var companyBTeam = await unitOfWork.Teams.GetTeamByIdAsync("7");
+            var agent = await userManager.FindByEmailAsync("agent@companyb.com");
+            companyBTeam.Users = new List<ApplicationUser> { agent };
+
             await unitOfWork.SaveChangesAsync();
 
-
-            //// 🚀 Assign roles to users using ApplicationUserRepository
-            //var userRolesToAssign = new List<(string UserId, string RoleName)>
-            //{
-            //    ("1", "SuperAdmin"),
-            //    ("2", "Agent"),
-            //    ("3", "Admin"),
-            //    ("4", "Manager"),
-            //    ("5", "Agent")
-            //};
-
-            //foreach (var (userId, roleName) in userRolesToAssign)
-            //{
-            //    var existingRoles = await unitOfWork.ApplicationUsers.GetRoleForUserAsync(userId);
-
-            //    if (!existingRoles.Contains(roleName))
-            //    {
-            //        // Create new IdentityUserRole and add it directly to the context
-            //        var userRole = new IdentityUserRole<string>
-            //        {
-            //            UserId = userId,
-            //            RoleId = (await Context.Roles.FirstOrDefaultAsync(r => r.Name == roleName))?.Id
-            //                     ?? throw new Exception($"Role '{roleName}' not found.")
-            //        };
-
-            //        Context.UserRoles.Add(userRole);  // Add the user-role mapping
-            //    }
-            //}
-
-            //await unitOfWork.SaveChangesAsync();  // Save user-role assignments
-
-
-            //// Seed Users
-            //var passwordHasher = new PasswordHasher<ApplicationUser>();
-
-            //var superAdmin = new ApplicationUser
-            //{
-            //    Id = "1",
-            //    UserName = "superadmin@headcompany.com",
-            //    Email = "superadmin@headcompany.com",
-            //    NormalizedUserName = "SUPERADMIN@HEADCOMPANY.COM",
-            //    NormalizedEmail = "SUPERADMIN@HEADCOMPANY.COM",
-            //    EmailConfirmed = true,
-            //    LockoutEnabled = false,
-            //    CompanyId = company0.Id
-            //};
-            //superAdmin.PasswordHash = passwordHasher.HashPassword(superAdmin, "SuperAdmin@123");
-
-            //var agentHeadCompany = new ApplicationUser
-            //{
-            //    Id = "2",
-            //    UserName = "agent@headcompany.com",
-            //    Email = "agent@headcompany.com",
-            //    NormalizedUserName = "AGENT@HEADCOMPANY.COM",
-            //    NormalizedEmail = "AGENT@HEADCOMPANY.COM",
-            //    EmailConfirmed = true,
-            //    LockoutEnabled = false,
-            //    CompanyId = company0.Id
-            //};
-            //agentHeadCompany.PasswordHash = passwordHasher.HashPassword(agentHeadCompany, "Agent@123");
-
-            //var adminCompanyA = new ApplicationUser
-            //{
-            //    Id = "3",
-            //    UserName = "admin@companya.com",
-            //    Email = "admin@companya.com",
-            //    NormalizedUserName = "ADMIN@COMPANYA.COM",
-            //    NormalizedEmail = "ADMIN@COMPANYA.COM",
-            //    EmailConfirmed = true,
-            //    LockoutEnabled = false,
-            //    CompanyId = company1.Id // Belongs to Company A
-            //};
-            //adminCompanyA.PasswordHash = passwordHasher.HashPassword(adminCompanyA, "Admin@123");
-
-            //var managerCompanyA = new ApplicationUser
-            //{
-            //    Id = "4",
-            //    UserName = "manager@companya.com",
-            //    Email = "manager@companya.com",
-            //    NormalizedUserName = "MANAGER@COMPANYA.COM",
-            //    NormalizedEmail = "MANAGER@COMPANYA.COM",
-            //    EmailConfirmed = true,
-            //    LockoutEnabled = false,
-            //    CompanyId = company1.Id // Belongs to Company A
-            //};
-            //managerCompanyA.PasswordHash = passwordHasher.HashPassword(managerCompanyA, "Manager@123");
-
-            //var agentCompanyB = new ApplicationUser
-            //{
-            //    Id = "5",
-            //    UserName = "agent@companyb.com",
-            //    Email = "agent@companyb.com",
-            //    NormalizedUserName = "AGENT@COMPANYB.COM",
-            //    NormalizedEmail = "AGENT@COMPANYB.COM",
-            //    EmailConfirmed = true,
-            //    LockoutEnabled = false,
-            //    CompanyId = company2.Id // Belongs to Company B
-            //};
-            //agentCompanyB.PasswordHash = passwordHasher.HashPassword(agentCompanyB, "Agent@123");
-
-            //context.Users.AddRange(superAdmin, agentHeadCompany, adminCompanyA, managerCompanyA, agentCompanyB);
-
-            //// Save users
-            //context.SaveChanges();
-
-            //// Assign roles to users
-            //context.UserRoles.AddRange(
-            //    new IdentityUserRole<string> { UserId = superAdmin.Id, RoleId = "1" }, // SuperAdmin
-            //    new IdentityUserRole<string> { UserId = agentHeadCompany.Id, RoleId = "4" }, // Agent
-            //    new IdentityUserRole<string> { UserId = adminCompanyA.Id, RoleId = "2" },     // Admin
-            //    new IdentityUserRole<string> { UserId = managerCompanyA.Id, RoleId = "3" },   // Manager
-            //    new IdentityUserRole<string> { UserId = agentCompanyB.Id, RoleId = "4" }     // Agent
-            //);
-
-            //// Save user-role assignments
-            //context.SaveChanges();
         }
     }
 }

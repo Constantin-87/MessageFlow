@@ -4,7 +4,7 @@ namespace MessageFlow.Shared.DTOs
 {
     public class CompanyDTO
     {
-        public string Id { get; set; }  // Primary key
+        public string? Id { get; set; }  // Primary key
 
         [Required(ErrorMessage = "Company Account Number is required.")]
         public string AccountNumber { get; set; }

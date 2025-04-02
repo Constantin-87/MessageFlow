@@ -5,7 +5,7 @@ namespace MessageFlow.Shared.DTOs
 {
     public class ApplicationUserDTO
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         [Required(ErrorMessage = "The UserName field is required.")]
         public string UserName { get; set; }

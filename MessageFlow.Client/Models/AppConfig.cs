@@ -4,5 +4,6 @@
     {
         public string IdentityApiUrl { get; set; }
         public string ServerApiUrl { get; set; }
+        public SocialLinks SocialLinks { get; set; } = new();
     }
 }

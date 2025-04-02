@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using MessageFlow.Server.Components.Accounts.Services;
 using MessageFlow.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using MessageFlow.Server.Services;
+using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MessageFlow.Infrastructure.Mediator;
+using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
+using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.Controllers
 {
@@ -10,12 +14,14 @@ namespace MessageFlow.Server.Controllers
     [Authorize(Roles = "Admin, SuperAdmin")]
     public class CompanyController : ControllerBase
     {
-        private readonly CompanyManagementService _companyService;
+        //private readonly CompanyManagementService _companyService;
         private readonly ILogger<CompanyController> _logger;
+        private readonly IMediator _mediator;
 
-        public CompanyController(CompanyManagementService companyService, ILogger<CompanyController> logger)
+        public CompanyController(IMediator mediator/*, CompanyManagementService companyService*/, ILogger<CompanyController> logger)
         {
-            _companyService = companyService;
+            //_companyService = companyService;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -23,7 +29,7 @@ namespace MessageFlow.Server.Controllers
         [HttpGet("all")]
         public async Task<ActionResult<List<CompanyDTO>>> GetAllCompanies()
         {
-            var companies = await _companyService.GetAllCompaniesAsync();
+            var companies = await _mediator.Send(new GetAllCompaniesQuery());
             return Ok(companies);
         }
 
@@ -31,7 +37,7 @@ namespace MessageFlow.Server.Controllers
         [HttpGet("{companyId}")]
         public async Task<ActionResult<CompanyDTO>> GetCompanyById(string companyId)
         {
-            var company = await _companyService.GetCompanyByIdAsync(companyId);
+            var company = await _mediator.Send(new GetCompanyByIdQuery(companyId));
             if (company == null) return NotFound("Company not found.");
             return Ok(company);
         }
@@ -41,7 +47,7 @@ namespace MessageFlow.Server.Controllers
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult> CreateCompany([FromBody] CompanyDTO companyDto)
         {
-            var (success, message) = await _companyService.CreateCompanyAsync(companyDto);
+            var (success, message) = await _mediator.Send(new CreateCompanyCommand(companyDto));
             if (!success) return BadRequest(message);
             return Ok(message);
         }
@@ -50,7 +56,7 @@ namespace MessageFlow.Server.Controllers
         [HttpPut("update")]
         public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO companyDto)
         {
-            var (success, message) = await _companyService.UpdateCompanyDetailsAsync(companyDto);
+            var (success, message) = await _mediator.Send(new UpdateCompanyDetailsCommand(companyDto));
             if (!success) return BadRequest(message);
             return Ok(message);
         }
@@ -60,89 +66,95 @@ namespace MessageFlow.Server.Controllers
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult> DeleteCompany(string companyId)
         {
-            var (success, message) = await _companyService.DeleteCompanyAsync(companyId);
+            var (success, message) = await _mediator.Send(new DeleteCompanyCommand(companyId));
             if (!success) return BadRequest(message);
             return Ok(message);
         }
 
-        // ✅ Get the logged-in user's company details
         [HttpGet("user-company")]
         public async Task<ActionResult<CompanyDTO>> GetCompanyForUser()
         {
-            var company = await _companyService.GetCompanyForUserAsync(User);
-            if (company == null) return NotFound("Company not found for the user.");
+            var company = await _mediator.Send(new GetCompanyForUserQuery());
+
+            if (company == null)
+                return NotFound("Company not found for the user.");
+
             return Ok(company);
         }
 
-        // ✅ Update company emails
+        // Update company emails
         [HttpPut("update-emails")]
         public async Task<ActionResult> UpdateCompanyEmails([FromBody] List<CompanyEmailDTO> emails)
         {
-            var (success, message) = await _companyService.UpdateCompanyEmailsAsync(emails);
+            var (success, message) = await _mediator.Send(new UpdateCompanyEmailsCommand(emails));
+
             return success ? Ok(message) : BadRequest(message);
         }
 
-        // ✅ Update company phone numbers
+        // Update company phone numbers
         [HttpPut("update-phone-numbers")]
         public async Task<ActionResult> UpdateCompanyPhoneNumbers([FromBody] List<CompanyPhoneNumberDTO> phoneNumbers)
         {
-            var (success, message) = await _companyService.UpdateCompanyPhoneNumbersAsync(phoneNumbers);
+            var (success, message) = await _mediator.Send(new UpdateCompanyPhoneNumbersCommand(phoneNumbers));
             return success ? Ok(message) : BadRequest(message);
         }
 
-        // ✅ Fetch company metadata
+        // Fetch company metadata
         [HttpGet("{companyId}/metadata")]
         public async Task<ActionResult<string>> GetCompanyMetadata(string companyId)
         {
-            var (success, metadata, message) = await _companyService.GetCompanyMetadataAsync(companyId);
+            var (success, metadata, message) = await _mediator.Send(new GetCompanyMetadataQuery(companyId));
             return success ? Ok(metadata) : BadRequest(message);
         }
 
-        // ✅ Generate and upload metadata
+        // Generate and upload metadata
         [HttpPost("{companyId}/generate-metadata")]
         public async Task<ActionResult> GenerateAndUploadMetadata(string companyId)
         {
-            var (success, message) = await _companyService.GenerateAndUploadCompanyMetadataAsync(companyId);
+            var (success, message) = await _mediator.Send(new GenerateCompanyMetadataCommand(companyId));
             return success ? Ok(message) : BadRequest(message);
         }
 
-        // ✅ Delete metadata
+        // Delete metadata
         [HttpDelete("{companyId}/delete-metadata")]
         public async Task<ActionResult> DeleteCompanyMetadata(string companyId)
         {
-            var (success, message) = await _companyService.DeleteCompanyMetadataAsync(companyId);
+            var (success, message) = await _mediator.Send(new DeleteCompanyMetadataCommand(companyId));
             return success ? Ok(message) : BadRequest(message);
         }
 
-        // ✅ Fetch pretraining files
+        // Fetch pretraining files
         [HttpGet("{companyId}/pretraining-files")]
         public async Task<ActionResult<List<ProcessedPretrainDataDTO>>> GetPretrainingFiles(string companyId)
         {
-            var (success, files, message) = await _companyService.GetCompanyPretrainingFilesAsync(companyId);
+            var (success, files, message) = await _mediator.Send(new GetCompanyPretrainingFilesQuery(companyId));
             return success ? Ok(files) : BadRequest(message);
         }
 
-        // ✅ Upload pretraining files
+        // Upload pretraining files
         [HttpPost("upload-files")]
         public async Task<ActionResult> UploadPretrainingFiles([FromBody] List<PretrainDataFileDTO> files)
         {
-            var (success, message) = await _companyService.UploadCompanyFilesAsync(files);
+            var (success, message) = await _mediator.Send(new UploadCompanyFilesCommand(files));
+
             return success ? Ok(message) : BadRequest(message);
         }
 
-        // ✅ Delete a specific file
+        // Delete a specific file
         [HttpDelete("delete-file")]
         public async Task<ActionResult> DeleteFile([FromBody] ProcessedPretrainDataDTO file)
         {
-            var success = await _companyService.DeleteCompanyFileAsync(file);
+            var success = await _mediator.Send(new DeleteCompanyFileCommand(file));
+
             return success ? Ok("File deleted successfully.") : BadRequest("Failed to delete file.");
         }
 
-        // ✅ Create Azure AI Search Index
+        // Create Azure AI Search Index
         [HttpPost("{companyId}/create-search-index")]
         public async Task<ActionResult> CreateSearchIndex(string companyId)
         {
-            var (success, message) = await _companyService.CreateAzureAiSearchIndexAndUploadFilesAsync(companyId);
+            var (success, message) = await _mediator.Send(new CreateSearchIndexCommand(companyId));
+
             return success ? Ok(message) : BadRequest(message);
         }
 

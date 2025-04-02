@@ -1,7 +1,9 @@
-﻿using MessageFlow.Server.Components.Accounts.Services;
-using MessageFlow.Shared.DTOs;
+﻿using MessageFlow.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MessageFlow.Server.MediatorComponents.TeamManagement.Queries;
+using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
 
 namespace MessageFlow.Server.Controllers
 {
@@ -10,45 +12,46 @@ namespace MessageFlow.Server.Controllers
     [Authorize(Roles = "SuperAdmin,Admin")]
     public class TeamsManagementController : ControllerBase
     {
-        private readonly TeamsManagementService _teamsManagementService;
+        //private readonly TeamsManagementService _teamsManagementService;
+        private readonly IMediator _mediator;
 
-        public TeamsManagementController(TeamsManagementService teamsManagementService)
+        public TeamsManagementController(IMediator mediator)
         {
-            _teamsManagementService = teamsManagementService;
+            _mediator = mediator;
         }
 
         [HttpGet("company/{companyId}")]
         public async Task<IActionResult> GetTeamsForCompany(string companyId)
         {
-            var teams = await _teamsManagementService.GetTeamsForCompanyAsync(companyId);
+            var teams = await _mediator.Send(new GetTeamsForCompanyQuery(companyId));
             return Ok(teams);
         }
 
         [HttpGet("{teamId}")]
         public async Task<IActionResult> GetUsersForTeam(string teamId)
         {
-            var users = await _teamsManagementService.GetUsersForTeamAsync(teamId);
+            var users = await _mediator.Send(new GetUsersForTeamQuery(teamId));
             return Ok(users);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateTeam([FromBody] TeamDTO teamDto)
         {
-            var (success, errorMessage) = await _teamsManagementService.AddTeamToCompanyAsync(teamDto);
+            var (success, errorMessage) = await _mediator.Send(new AddTeamToCompanyCommand(teamDto));
             return success ? Ok("Team created successfully") : BadRequest(errorMessage);
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateTeam([FromBody] TeamDTO teamDto)
         {
-            var (success, errorMessage) = await _teamsManagementService.UpdateTeamAsync(teamDto);
+            var (success, errorMessage) = await _mediator.Send(new UpdateTeamCommand(teamDto));
             return success ? Ok("Team updated successfully") : BadRequest(errorMessage);
         }
 
         [HttpDelete("{teamId}")]
         public async Task<IActionResult> DeleteTeam(string teamId)
         {
-            var (success, errorMessage) = await _teamsManagementService.DeleteTeamByIdAsync(teamId);
+            var (success, errorMessage) = await _mediator.Send(new DeleteTeamByIdCommand(teamId));
             return success ? Ok("Team deleted successfully") : BadRequest(errorMessage);
         }
     }

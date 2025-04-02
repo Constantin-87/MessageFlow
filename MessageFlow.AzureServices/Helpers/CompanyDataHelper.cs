@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.AzureServices.Services;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Shared.Enums;
@@ -19,7 +20,7 @@ namespace MessageFlow.AzureServices.Helpers
         /// </summary>
         public static async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
             List<PretrainDataFileDTO> uploadedFiles,
-            DocumentProcessingService documentProcessingService)
+            IDocumentProcessingService documentProcessingService)
         {
             var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();

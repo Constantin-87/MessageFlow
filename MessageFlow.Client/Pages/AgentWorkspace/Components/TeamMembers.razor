@@ -1,5 +1,4 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
-<link href="css/TeamMembers.css" rel="stylesheet" />
 
 <div class="team-members">
     <h4>Teams:</h4>
@@ -16,7 +15,7 @@
                     <ul>
                         @foreach (var member in GroupedTeamMembers[team])
                         {
-                            <li>@member.Name (@member.Status)</li>
+                            <li>@member.UserName (@GetActivityStatus(member.LastActivity))</li>
                         }
                     </ul>
                 }
@@ -30,7 +29,7 @@
 </div>
 
 @code {
-    private Dictionary<string, List<TeamMember>> GroupedTeamMembers = new();
+    private Dictionary<string, List<ApplicationUserDTO>> GroupedTeamMembers = new();
     private HashSet<string> ExpandedTeams = new();
 
     [Parameter] 
@@ -38,20 +37,30 @@
     [Parameter]
     public string? CurrentUserName { get; set; }
 
+    protected override void OnParametersSet()
+    {
+        if (HubConnection != null)
+        {
+            RegisterHandlers();
+        }
+    }
+
     public void RegisterHandlers()
     {
         if (HubConnection != null)
         {
-            HubConnection.On<TeamMembers.TeamMember>("AddTeamMember", AddTeamMember);
-            HubConnection.On<TeamMembers.TeamMember>("RemoveTeamMember", RemoveTeamMember);
+            HubConnection.On<ApplicationUserDTO>("AddTeamMember", AddTeamMember);
+            HubConnection.On<ApplicationUserDTO>("RemoveTeamMember", RemoveTeamMember);
         }
     }
 
-    public void AddTeamMember(TeamMember member)
+    public void AddTeamMember(ApplicationUserDTO member)
     {
-        if (member.Name == CurrentUserName) return; // Exclude the current user
+        if (member.UserName == CurrentUserName) return; // Exclude the current user
 
-        var teamNames = member.Team.Split(", ").ToList();
+        var teamNames = member.TeamIds.Any()
+            ? member.TeamIds
+            : new List<string> { "Unassigned" };
 
         foreach (var teamName in teamNames)
         {
@@ -59,10 +68,10 @@
 
             if (!GroupedTeamMembers.ContainsKey(displayTeam))
             {
-                GroupedTeamMembers[displayTeam] = new List<TeamMember>();
+                GroupedTeamMembers[displayTeam] = new List<ApplicationUserDTO>();
             }
 
-            if (!GroupedTeamMembers[displayTeam].Any(m => m.Name == member.Name))
+            if (!GroupedTeamMembers[displayTeam].Any(m => m.Id == member.Id))
             {
                 GroupedTeamMembers[displayTeam].Add(member);
             }
@@ -72,9 +81,11 @@
     }
 
     // Remove a team member
-    public void RemoveTeamMember(TeamMember member)
+    public void RemoveTeamMember(ApplicationUserDTO member)
     {
-        var teamNames = member.Team.Split(", ").ToList();
+        var teamNames = member.TeamIds.Any()
+            ? member.TeamIds
+            : new List<string> { "Unassigned" };
 
         foreach (var teamName in teamNames)
         {
@@ -82,7 +93,7 @@
 
             if (GroupedTeamMembers.ContainsKey(displayTeam))
             {
-                GroupedTeamMembers[displayTeam].RemoveAll(m => m.Name == member.Name);
+                GroupedTeamMembers[displayTeam].RemoveAll(m => m.Id == member.Id);
                 if (GroupedTeamMembers[displayTeam].Count == 0)
                 {
                     GroupedTeamMembers.Remove(displayTeam);
@@ -105,11 +116,28 @@
         }
     }
 
-    public class TeamMember
+    private string GetActivityStatus(DateTime lastActivity)
     {
-        public string Name { get; set; } = string.Empty;
-        public string Status { get; set; } = "Offline";
-        public string Team { get; set; } = string.Empty;
+        var now = DateTime.UtcNow;
+        var timeDifference = now - lastActivity;
+
+        if (timeDifference.TotalMinutes < 1)
+        {
+            return "Active";
+        }
+        else
+        {
+            var minutesAgo = (int)Math.Floor(timeDifference.TotalMinutes);
+            return $"Last seen {minutesAgo} minute{(minutesAgo != 1 ? "s" : "")} ago";
+        }
     }
+
+
+    // public class TeamMember
+    // {
+    //     public string Name { get; set; } = string.Empty;
+    //     public string Status { get; set; } = "Offline";
+    //     public string Team { get; set; } = string.Empty;
+    // }
 
 }

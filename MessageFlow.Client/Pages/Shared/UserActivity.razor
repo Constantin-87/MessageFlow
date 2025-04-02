@@ -1,0 +1,36 @@
+﻿@inject CurrentUserService CurrentUser
+
+@if (CurrentUser.IsLoggedIn)
+{
+    <div class="text-white text-end">
+        <div>@CurrentUser.CompanyName</div>
+        <small>@CurrentUser.Username - <span>@GetActivityStatus()</span></small>
+    </div>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        CurrentUser.OnChange += OnUserChanged;
+    }
+
+    private void OnUserChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetActivityStatus()
+    {
+        var last = CurrentUser.LastActivity?.ToUniversalTime();
+        if (last == null) return "Status unknown";
+
+        var now = DateTime.UtcNow;
+        var diff = now - last.Value;
+        return diff.TotalMinutes < 1 ? "Active" : $"Last seen {(int)diff.TotalMinutes} minute{(diff.TotalMinutes >= 2 ? "s" : "")} ago";
+    }
+
+    public void Dispose()
+    {
+        CurrentUser.OnChange -= OnUserChanged;
+    }
+}

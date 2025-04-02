@@ -1,0 +1,19 @@
+﻿@page "/Accounts/Create-user"
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create User</PageTitle>
+
+<!-- Call the UserForm component and handle submission within the form -->
+<UserAddEditForm IsEditMode="false" OnValidSubmit="AddUser" />
+
+@code {
+
+    // Handle form submission by redirecting after successful user creation
+    private void AddUser()
+    {
+        NavigationManager.NavigateTo("/Accounts/UserAccounts");
+    }
+}

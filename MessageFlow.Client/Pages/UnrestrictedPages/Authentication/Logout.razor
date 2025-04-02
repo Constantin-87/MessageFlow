@@ -1,0 +1,34 @@
+﻿@page "/Accounts/Logout"
+@inject AuthService AuthService
+@inject NavigationManager NavigationManager
+@layout Pages.Shared.Layout.PublicSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+
+<PageTitle>Logging Out</PageTitle>
+
+<div class="d-flex align-items-center justify-content-center vh-100">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="mb-2">Logging you out...</h4>
+        <p class="text-muted">Redirecting to the home page</p>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Logout request error: {ex.Message}");
+        }
+
+        // ✅ Redirect to home or login page after logout
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+}

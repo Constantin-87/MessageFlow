@@ -10,7 +10,7 @@ namespace MessageFlow.DataAccess.Services
         ICompanyEmailRepository CompanyEmails { get; }
         ICompanyPhoneNumberRepository CompanyPhoneNumbers { get; }
         ITeamRepository Teams { get; }
-        //IApplicationUserRepository ApplicationUsers { get; }
+        IApplicationUserRepository ApplicationUsers { get; }
         IArchivedConversationRepository ArchivedConversations { get; }
         IArchivedMessageRepository ArchivedMessages { get; }
         IConversationRepository Conversations { get; }

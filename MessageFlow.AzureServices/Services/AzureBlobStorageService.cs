@@ -1,11 +1,11 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Configuration;
-
 
 namespace MessageFlow.AzureServices.Services
 {
-    public class AzureBlobStorageService
+    public class AzureBlobStorageService : IAzureBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
         private readonly string _containerName = "company-files"; // Change this to your container name

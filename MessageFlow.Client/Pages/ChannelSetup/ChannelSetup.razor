@@ -1,7 +1,7 @@
 ﻿@page "/ChannelSetup"
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveWebAssembly
-
+@layout Pages.Shared.Layout.PrivateSubLayout
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject CompanyManagementService CompanyService

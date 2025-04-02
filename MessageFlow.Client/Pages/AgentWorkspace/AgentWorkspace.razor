@@ -1,36 +1,35 @@
 ﻿@page "/AgentWorkspace"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "Agent, Manager, Admin, SuperAdmin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IAsyncDisposable
-
-<link href="css/AgentWorkspace.css" rel="stylesheet" />
+@inject AppConfig AppConfig
+@inject IJSRuntime JSRuntime
 
 <h3>Agent Workspace</h3>
 
 <div class="workspace-container">
     <!-- Team Members List -->
     <div class="team-members">
-        <TeamMembers @ref="TeamMembersRef" CurrentUserName="@UserName" HubConnection="@hubConnection" />
+        <TeamMembers CurrentUserName="@UserName" HubConnection="@hubConnection" />
     </div>
 
     <!-- Chat Section -->
     <div class="chat-section">
-        <ChatWindow @ref="ChatWindowRef" UserId="@UserId" CurrentUserName="@UserName" HubConnection="@hubConnection" />
+        <ChatWindow UserId="@UserId" CurrentUserName="@UserName" HubConnection="@hubConnection" />
     </div>
 
     <!-- New Conversations List -->
-    <NewConversationsList @ref="NewConversationsListRef" UserId="@UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
+    <NewConversationsList UserId="@UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
 
 </div>
 
 @code {
     private HubConnection? hubConnection;
     private ChatWindow? ChatWindowRef;
-    private NewConversationsList? NewConversationsListRef;
-    private TeamMembers? TeamMembersRef;
 
     private string? UserId;
     private string? UserName;
@@ -42,31 +41,30 @@
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
 
+            if (user.Identity == null || !user.Identity.IsAuthenticated)
+            {
+                Console.WriteLine("User is not authenticated.");
+                return;
+            }
+
             UserId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             UserName = user?.Identity?.Name;
-
+          
             hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{NavigationManager.BaseUri}chatHub")
+                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var token = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");
+                        return token;
+                    };
+                })
                 .WithAutomaticReconnect()
                 .AddNewtonsoftJsonProtocol()
                 .Build();
-
             await hubConnection.StartAsync();
-
-            // Connection is established before calling OnHubConnected
-            if (hubConnection.State == HubConnectionState.Connected)
-            {
-                OnHubConnected();
-            }
             StateHasChanged();
         }
-    }
-
-    private void OnHubConnected()
-    {
-        NewConversationsListRef?.RegisterHandlers();
-        ChatWindowRef?.RegisterHandlers();
-        TeamMembersRef?.RegisterHandlers();
     }
 
     public async ValueTask DisposeAsync()
@@ -75,7 +73,6 @@
         {
             await hubConnection.StopAsync();
             await hubConnection.DisposeAsync();
-            Console.WriteLine("SignalR connection disposed.");
         }
     }
 

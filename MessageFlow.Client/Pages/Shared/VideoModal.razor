@@ -1,0 +1,19 @@
+﻿<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.75);" @onclick="Close">
+    <div class="modal-dialog modal-lg modal-dialog-centered" @onclick:stopPropagation>
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9">
+                    <iframe src="@VideoUrl" frameborder="0" allowfullscreen></iframe>
+                </div>
+            </div>
+            <button type="button" class="btn-close position-absolute top-0 end-0 m-2" @onclick="Close" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string VideoUrl { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task Close() => await OnClose.InvokeAsync();
+}

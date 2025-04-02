@@ -1,0 +1,37 @@
+﻿@inject NavigationManager NavigationManager
+
+@if (Visible)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Session Expired</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Your session expired. Press OK to login again.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="RedirectToLogin">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public bool Visible { get; private set; }
+
+    public void Show()
+    {
+        Visible = true;
+        StateHasChanged();
+    }
+
+    private void RedirectToLogin()
+    {
+        Visible = false;
+        NavigationManager.NavigateTo("/Accounts/Logout");
+    }
+}

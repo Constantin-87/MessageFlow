@@ -3,18 +3,18 @@ using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using MessageFlow.AzureServices.Helpers;
+using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
-using System.Text.Json;
 
 namespace MessageFlow.AzureServices.Services
 {
-    public class AzureSearchService
+    public class AzureSearchService : IAzureSearchService
     {
         private readonly SearchIndexClient _searchIndexClient;
         private readonly string _searchServiceApiKey;
-        private readonly AzureBlobStorageService _azureBlobStorageService;
+        private readonly IAzureBlobStorageService _azureBlobStorageService;
 
-        public AzureSearchService(string searchServiceEndpoint, string adminApiKey, AzureBlobStorageService azureBlobStorageService)
+        public AzureSearchService(string searchServiceEndpoint, string adminApiKey, IAzureBlobStorageService azureBlobStorageService)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _searchServiceApiKey = adminApiKey;

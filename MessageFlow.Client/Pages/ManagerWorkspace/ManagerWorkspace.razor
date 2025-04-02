@@ -1,7 +1,7 @@
 ﻿@page "/AgentManagerWorkspace"
 @attribute [Authorize(Roles = "Manager, Admin, SuperAdmin")]
 @inject NavigationManager NavigationManager
-
+@layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 
 <h3>Manager Workspace</h3>

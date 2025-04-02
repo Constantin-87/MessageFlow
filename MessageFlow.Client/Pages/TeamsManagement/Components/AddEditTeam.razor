@@ -98,17 +98,17 @@
         var allCompanyUsers = await UserManagementService.GetUsersForCompanyAsync(CompanyId);
         // Exclude users who are already assigned to the team using a custom comparer
 
-        Logger.LogInformation("📄 All Company Users:");
-        foreach (var user in allCompanyUsers)
-        {
-            Logger.LogInformation($"➡️ User: {user.UserName}, Id: {user.Id}");
-        }
+        // Logger.LogInformation("📄 All Company Users:");
+        // foreach (var user in allCompanyUsers)
+        // {
+        //     Logger.LogInformation($"➡️ User: {user.UserName}, Id: {user.Id}");
+        // }
 
-        Logger.LogInformation("📄 Assigned Users:");
-        foreach (var user in assignedUsers)
-        {
-            Logger.LogInformation($"➡️ Assigned User: {user.UserName}, Id: {user.Id}");
-        }
+        // Logger.LogInformation("📄 Assigned Users:");
+        // foreach (var user in assignedUsers)
+        // {
+        //     Logger.LogInformation($"➡️ Assigned User: {user.UserName}, Id: {user.Id}");
+        // }
 
 
         availableUsers = allCompanyUsers

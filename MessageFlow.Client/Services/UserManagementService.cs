@@ -9,7 +9,7 @@ namespace MessageFlow.Client.Services
 
         public UserManagementService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClientFactory.CreateClient("IdentityAPI"); // ✅ Use Identity API
+            _httpClient = httpClientFactory.CreateClient("ServerAPI"); // ✅ Use Server API
         }
 
         public async Task<List<ApplicationUserDTO>> GetUsersAsync()
@@ -36,12 +36,14 @@ namespace MessageFlow.Client.Services
 
         public async Task<(bool success, string message)> CreateUserAsync(ApplicationUserDTO user)
         {
+            user.CompanyDTO = null; // ✅ Ignore it during create/update calls
             var response = await _httpClient.PostAsJsonAsync("api/user-management/create", user);
             return response.IsSuccessStatusCode ? (true, "User created") : (false, await response.Content.ReadAsStringAsync());
         }
 
         public async Task<(bool success, string message)> UpdateUserAsync(ApplicationUserDTO user)
         {
+            user.CompanyDTO = null; // ✅ Ignore it during create/update calls
             var response = await _httpClient.PutAsJsonAsync($"api/user-management/update/{user.Id}", user);
             return response.IsSuccessStatusCode ? (true, "User updated") : (false, await response.Content.ReadAsStringAsync());
         }

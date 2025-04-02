@@ -1,7 +1,6 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @rendermode RenderMode.InteractiveWebAssembly
 @inject AuthenticationStateProvider AuthenticationStateProvider
-<link href="css/NewConversationsList.css" rel="stylesheet" />
 
 <div class="new-conversations-list">
     <h4>New Conversations</h4>
@@ -29,6 +28,14 @@
             ? Conversations
             : Conversations.Where(c => c.AssignedTeamId == TeamId); // 🔹 Filter by team
 
+
+    protected override void OnParametersSet()
+    {
+        if (HubConnection != null)
+        {
+            RegisterHandlers();
+        }
+    }
 
     public void RegisterHandlers()
     {

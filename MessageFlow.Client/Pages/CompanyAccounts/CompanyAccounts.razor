@@ -1,7 +1,7 @@
 ﻿@page "/Accounts/CompanyAccounts"
 @attribute [Authorize(Roles = "SuperAdmin")]
 @rendermode RenderMode.InteractiveWebAssembly
-
+@layout Pages.Shared.Layout.PrivateSubLayout
 @inject CompanyManagementService CompanyManagementService
 @inject TeamsManagementService TeamsManagementService
 @inject NavigationManager NavigationManager

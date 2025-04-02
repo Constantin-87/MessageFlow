@@ -7,7 +7,6 @@
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
 	 <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="Properties\launchSettings.json" />
   </ItemGroup>
@@ -23,22 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\css\AgentWorkspace.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\images\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\MessageFlow.Shared\MessageFlow.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Update="wwwroot\css\app.css">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
   </ItemGroup>
 
 </Project>
