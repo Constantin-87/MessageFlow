@@ -1,5 +1,5 @@
 ﻿using MessageFlow.DataAccess.Services;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
 

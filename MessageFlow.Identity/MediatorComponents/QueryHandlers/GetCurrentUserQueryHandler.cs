@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Identity.MediatorComponents.Queries;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.MediatorComponents.QueryHandlers
 {

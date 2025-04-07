@@ -3,7 +3,7 @@ using MessageFlow.DataAccess.Services;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.Authorization;
 using Microsoft.Extensions.Logging;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.QueryHandlers

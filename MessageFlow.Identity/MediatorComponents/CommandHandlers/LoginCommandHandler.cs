@@ -5,7 +5,7 @@ using MessageFlow.DataAccess.Models;
 using MessageFlow.Identity.MediatorComponents.Commands;
 using MessageFlow.Identity.Services.Interfaces;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.MediatorComponents.CommandHandlers
 {

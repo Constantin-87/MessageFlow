@@ -13,13 +13,16 @@
     <ProjectReference Include="..\MessageFlow.Shared\MessageFlow.Shared.csproj" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
+    <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="MediatorComponents\Chat\QueryHandlers\" />
-    <Folder Include="MediatorComponents\Chat\Queries\" />
+    <Folder Include="MediatorComponents\Chat\AiBotProcessing\Queries\" />
+    <Folder Include="MediatorComponents\Chat\AiBotProcessing\QueryHandlers\" />
+    <Folder Include="MediatorComponents\Chat\GeneralProcessing\QueryHandlers\" />
+    <Folder Include="MediatorComponents\Chat\GeneralProcessing\Queries\" />
   </ItemGroup>
 
 </Project>

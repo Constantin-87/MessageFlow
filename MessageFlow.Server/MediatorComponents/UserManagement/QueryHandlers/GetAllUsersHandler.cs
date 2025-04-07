@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers

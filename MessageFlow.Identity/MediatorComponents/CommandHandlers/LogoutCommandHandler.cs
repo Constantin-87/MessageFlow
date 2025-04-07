@@ -2,7 +2,7 @@
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Identity.MediatorComponents.Commands;
 using System.Security.Claims;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.MediatorComponents.CommandHandlers
 {

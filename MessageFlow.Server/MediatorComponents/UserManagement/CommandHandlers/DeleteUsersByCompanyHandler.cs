@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
 {

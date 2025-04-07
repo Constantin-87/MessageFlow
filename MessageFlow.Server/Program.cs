@@ -6,6 +6,7 @@ using MessageFlow.Server.Middleware;
 using MessageFlow.DataAccess.Configurations;
 using MessageFlow.DataAccess.Models;
 using Microsoft.AspNetCore.Identity;
+using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
@@ -68,6 +69,13 @@ builder.Services.AddControllers();
 builder.Services.AddApplicationServices();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+
+// Register MediatR itself
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ProcessMessageHandler).Assembly);
+});
 
 // Query + Command Handlers
 builder.Services.AddMediatorHandlers();

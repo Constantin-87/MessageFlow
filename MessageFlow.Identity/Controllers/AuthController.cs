@@ -3,7 +3,7 @@ using System.Security.Claims;
 using MessageFlow.Identity.Models;
 using Microsoft.AspNetCore.Authorization;
 using MessageFlow.Identity.MediatorComponents.Commands;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Identity.MediatorComponents.Queries;
 
 [Route("api/auth")]

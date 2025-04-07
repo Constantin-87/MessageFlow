@@ -1,12 +1,7 @@
-﻿using Azure.Core;
-using Azure.Identity;
-using MessageFlow.AzureServices.Interfaces;
+﻿using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.AzureServices.Services;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.Authorization;
-using MessageFlow.Server.Chat.Services;
-using MessageFlow.Server.MediatorComponents.Chat.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.Commands;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
@@ -19,9 +14,21 @@ using MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers;
 using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
 using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
 using MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers;
-using MessageFlow.Server.Services;
-using MessageFlow.Server.Services.Interfaces;
 using MessageFlow.Shared.DTOs;
+using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers;
+using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.CommandHandlers;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Queries;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.QueryHandlers;
+using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Handlers;
+using MessageFlow.Server.MediatorComponents.Chat.Handlers;
+using MessageFlow.Server.MediatorComponents.Chat.Messaging.Handlers;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.CommandHandlers;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.QueryHandlers;
+using MessageFlow.Server.Services;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -29,11 +36,7 @@ namespace MessageFlow.Server.Configuration
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            //services.AddScoped<CompanyManagementService>();
             services.AddScoped<ChatArchivingService>();
-            services.AddScoped<IMessageProcessingService, MessageProcessingService>();
-            services.AddScoped<IFacebookService, FacebookService>();
-            services.AddScoped<IWhatsAppService, WhatsAppService>();
             services.AddScoped<IDocumentProcessingService, DocumentProcessingService>();
             services.AddScoped<AIChatBotService>();
             services.AddScoped<AzureSearchQueryService>();
@@ -46,8 +49,6 @@ namespace MessageFlow.Server.Configuration
 
         public static IServiceCollection AddMediatorHandlers(this IServiceCollection services)
         {
-            services.AddScoped<IMediator, Infrastructure.Mediator.Mediator>();
-
             // TeamManagement Queries
             services.AddScoped<IRequestHandler<GetTeamsForCompanyQuery, List<TeamDTO>>, GetTeamsForCompanyHandler>();
             services.AddScoped<IRequestHandler<GetUsersForTeamQuery, List<ApplicationUserDTO>>, GetUsersForTeamHandler>();
@@ -57,12 +58,6 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IRequestHandler<UpdateTeamCommand, (bool, string)>, UpdateTeamHandler>();
             services.AddScoped<IRequestHandler<DeleteTeamByIdCommand, (bool, string)>, DeleteTeamByIdHandler>();
             services.AddScoped<IRequestHandler<DeleteTeamsByCompanyCommand, bool>, DeleteTeamsByCompanyHandler>();
-
-            // Chat Commands
-            services.AddScoped<IRequestHandler<SendFacebookMessageCommand, bool>, SendFacebookMessageHandler>();
-            services.AddScoped<IRequestHandler<SendWhatsAppMessageCommand, bool>, SendWhatsAppMessageHandler>();
-            services.AddScoped<IRequestHandler<ProcessMessageCommand, bool>, ProcessMessageHandler>();
-            services.AddScoped<IRequestHandler<ProcessMessageStatusUpdateCommand, bool>, ProcessMessageStatusUpdateHandler>();
 
             // CompanyManagement Queries
             services.AddScoped<IRequestHandler<GetAllCompaniesQuery, List<CompanyDTO>>, GetAllCompaniesQueryHandler>();
@@ -95,6 +90,40 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IRequestHandler<UpdateUserCommand, (bool, string)>, UpdateUserHandler>();
             services.AddScoped<IRequestHandler<DeleteUserCommand, bool>, DeleteUserHandler>();
             services.AddScoped<IRequestHandler<DeleteUsersByCompanyCommand, bool>, DeleteUsersByCompanyHandler>();
+
+            // Chat.GeneralProcessing Commands
+            services.AddScoped<IRequestHandler<ProcessMessageCommand, Unit>, ProcessMessageHandler>();
+            services.AddScoped<IRequestHandler<ProcessMessageStatusUpdateCommand, bool>, ProcessMessageStatusUpdateHandler>();
+            services.AddScoped<IRequestHandler<AddMessageToConversationCommand, Unit>, AddMessageToConversationHandler>();
+            services.AddScoped<IRequestHandler<CreateAndAssignToAICommand, Unit>, CreateAndAssignToAIHandler>();
+            services.AddScoped<IRequestHandler<HandleAIConversationCommand, Unit>, HandleAIConversationHandler>();
+            services.AddScoped<IRequestHandler<EscalateCompanyTeamCommand, Unit>, EscalateCompanyTeamHandler>();
+            services.AddScoped<IRequestHandler<SendAIResponseCommand, Unit>, SendAIResponseHandler>();
+            services.AddScoped<IRequestHandler<AddUserToGroupsCommand, Unit>, AddUserToGroupsHandler>();
+            services.AddScoped<IRequestHandler<LoadUserConversationsCommand, Unit>, LoadUserConversationsHandler>();
+            services.AddScoped<IRequestHandler<BroadcastTeamMembersCommand, Unit>, BroadcastTeamMembersHandler>();
+            services.AddScoped<IRequestHandler<BroadcastUserDisconnectedCommand, Unit>, BroadcastUserDisconnectedHandler>();
+            services.AddScoped<IRequestHandler<AssignConversationToUserCommand, (bool, string)>, AssignConversationToUserHandler>();
+            services.AddScoped<IRequestHandler<SendMessageToCustomerCommand, (bool, string)>, SendMessageToCustomerHandler>();
+            services.AddScoped<IRequestHandler<CloseAndAnonymizeChatCommand, (bool, string)>, CloseAndAnonymizeChatHandler>();
+
+            // Chat.FacebookProcessing Commands
+            services.AddScoped<IRequestHandler<SendMessageToFacebookCommand, bool>, SendMessageToFacebookHandler>();
+            services.AddScoped<IRequestHandler<SaveFacebookSettingsCommand, bool>, SaveFacebookSettingsHandler>();
+            services.AddScoped<IRequestHandler<ProcessFacebookWebhookEventCommand, Unit>, ProcessFacebookWebhookEventHandler>();
+            services.AddScoped<IRequestHandler<HandleFacebookReadEventCommand, Unit>, HandleFacebookReadEventHandler>();
+
+            // Chat.FacebookProcessing Queries
+            services.AddScoped<IRequestHandler<GetFacebookSettingsQuery, FacebookSettingsDTO?>, GetFacebookSettingsHandler>();
+
+            // Chat.WhatsAppProcessing Commands
+            services.AddScoped<IRequestHandler<SaveWhatsAppSettingsCommand, bool>, SaveWhatsAppSettingsHandler>();
+            services.AddScoped<IRequestHandler<ProcessIncomingWAMessageCommand, Unit>, ProcessIncomingWAMessageHandler>();
+            services.AddScoped<IRequestHandler<SendMessageToWhatsAppCommand, Unit>, SendMessageToWhatsAppHandler>();
+
+            // Chat.WhatsAppProcessing Queries
+            services.AddScoped<IRequestHandler<GetWhatsAppSettingsQuery, WhatsAppSettingsDTO?>, GetWhatsAppSettingsHandler>();
+
 
             return services;
         }

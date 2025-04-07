@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using MessageFlow.DataAccess.Services;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 using MessageFlow.Shared.DTOs;

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Identity.MediatorComponents.Commands;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.MediatorComponents.CommandHandlers
 {

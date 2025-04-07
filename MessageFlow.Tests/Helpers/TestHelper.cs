@@ -11,7 +11,6 @@ using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using MessageFlow.Server.Authorization;
-using MessageFlow.Server.Services;
 using MessageFlow.Tests.Helpers.Stubs;
 
 namespace MessageFlow.Tests.Helpers

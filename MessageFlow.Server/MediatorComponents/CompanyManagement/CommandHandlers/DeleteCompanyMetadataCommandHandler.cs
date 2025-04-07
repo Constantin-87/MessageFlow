@@ -3,7 +3,7 @@ using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.Authorization;
 using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Logging;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers

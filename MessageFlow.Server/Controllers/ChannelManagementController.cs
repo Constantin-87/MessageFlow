@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using System.Threading.Tasks;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Server.Services.Interfaces;
+using MediatR;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Queries;
+using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
 
 namespace MessageFlow.Server.Controllers
 {
@@ -11,20 +14,19 @@ namespace MessageFlow.Server.Controllers
     [Authorize(Roles = "Admin, SuperAdmin")]
     public class ChannelManagementController : ControllerBase
     {
-        private readonly IFacebookService _facebookService;
-        private readonly IWhatsAppService _whatsAppService;
 
-        public ChannelManagementController(IFacebookService facebookService, IWhatsAppService whatsAppService)
+        private readonly IMediator _mediator;
+
+        public ChannelManagementController(IMediator mediator)
         {
-            _facebookService = facebookService;
-            _whatsAppService = whatsAppService;
+            _mediator = mediator;
         }
 
         // GET: api/channels/facebook/{companyId}
         [HttpGet("facebook/{companyId}")]
         public async Task<IActionResult> GetFacebookSettings(string companyId)
         {
-            var settings = await _facebookService.GetFacebookSettingsAsync(companyId);
+            var settings = await _mediator.Send(new GetFacebookSettingsQuery(companyId));
             if (settings == null)
                 return NotFound();
 
@@ -35,7 +37,7 @@ namespace MessageFlow.Server.Controllers
         [HttpPost("facebook/{companyId}")]
         public async Task<IActionResult> SaveFacebookSettings(string companyId, [FromBody] FacebookSettingsDTO settings)
         {
-            var success = await _facebookService.SaveFacebookSettingsAsync(companyId, settings);
+            var success = await _mediator.Send(new SaveFacebookSettingsCommand(companyId, settings));
             if (!success)
                 return BadRequest("Failed to save Facebook settings");
 
@@ -46,7 +48,7 @@ namespace MessageFlow.Server.Controllers
         [HttpGet("whatsapp/{companyId}")]
         public async Task<IActionResult> GetWhatsAppSettings(string companyId)
         {
-            var settings = await _whatsAppService.GetWhatsAppSettingsAsync(companyId);
+            var settings = await _mediator.Send(new GetWhatsAppSettingsQuery(companyId));
             if (settings == null)
                 return NotFound();
 
@@ -55,9 +57,9 @@ namespace MessageFlow.Server.Controllers
 
         // POST: api/channels/whatsapp/{companyId}
         [HttpPost("whatsapp/{companyId}")]
-        public async Task<IActionResult> SaveWhatsAppSettings(string companyId, [FromBody] WhatsAppSettingsDTO settings)
+        public async Task<IActionResult> SaveWhatsAppSettings(string companyId, [FromBody] WhatsAppSettingsDTO whatsAppSettingsDTO)
         {
-            var success = await _whatsAppService.SaveWhatsAppSettingsAsync(companyId, settings);
+            var success = await _mediator.Send(new SaveWhatsAppSettingsCommand(companyId, whatsAppSettingsDTO));
             if (!success)
                 return BadRequest("Failed to save WhatsApp settings");
 

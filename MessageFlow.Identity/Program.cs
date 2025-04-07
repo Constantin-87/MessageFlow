@@ -9,6 +9,7 @@ using MessageFlow.DataAccess.Repositories;
 using Azure.Core;
 using Azure.Identity;
 using MessageFlow.Identity.Configuration;
+using MessageFlow.Identity.MediatorComponents.CommandHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
@@ -58,68 +59,24 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddIdentityServices();
 
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly);
+});
+
 builder.Services.AddMediatorHandlers();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-//// Configure JWT Authentication
-//var jwtSecretFromVault = builder.Configuration["JsonWebToken-Key"];
-//if (string.IsNullOrEmpty(jwtSecretFromVault))
-//    throw new InvalidOperationException("JWT key is missing from Azure Key Vault.");
-
-//var key = Encoding.UTF8.GetBytes(jwtSecretFromVault);
-
-//builder.Services.AddAuthentication(options =>
-//{
-//    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//})
-//.AddJwtBearer(options =>
-//{
-//    options.RequireHttpsMetadata = true;
-//    options.SaveToken = true;
-//    options.TokenValidationParameters = new TokenValidationParameters
-//    {
-//        ValidateIssuerSigningKey = true,
-//        IssuerSigningKey = new SymmetricSecurityKey(key),
-//        ValidateIssuer = false,
-//        ValidateAudience = false,
-//        RoleClaimType = ClaimTypes.Role,
-//        NameClaimType = ClaimTypes.NameIdentifier
-//    };
-//});
 
 builder.Services.AddCorsPolicy();
 
-//// Define allowed origins
-//var allowedOrigins = new[] { "https://localhost:5003", "http://localhost:5004", "https://localhost:7164", "http://localhost:5002" };
-
-//builder.Services.AddCors(options =>
-//{
-//    options.AddPolicy("AllowBlazorWasm", builder =>
-//    {
-//        builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost") // Allows local development
-//               .WithOrigins(allowedOrigins) // Explicitly allow Blazor WebAssembly
-//               .WithHeaders("Content-Type", "Authorization")
-//                .WithMethods("GET", "POST", "PUT", "DELETE"); 
-//    });
-//});
-
-// Prevents Json searlization null errors == To be removed when we adjust the DTO's 
-//builder.Services.AddControllers()
-//    .AddJsonOptions(options =>
-//    {
-//        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-//    });
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-//builder.Services.AddScoped<AuthService>();
-
-//builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 
 var app = builder.Build();
 

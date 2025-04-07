@@ -3,7 +3,7 @@ using MessageFlow.Server.Authorization;
 using Microsoft.Extensions.Logging;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
 using System.Net.Http.Headers;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers

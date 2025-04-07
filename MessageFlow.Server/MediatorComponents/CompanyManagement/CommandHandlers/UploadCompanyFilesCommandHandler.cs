@@ -7,7 +7,7 @@ using MessageFlow.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using MessageFlow.AzureServices.Helpers;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers

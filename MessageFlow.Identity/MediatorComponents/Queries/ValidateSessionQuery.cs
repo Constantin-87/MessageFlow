@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using MessageFlow.DataAccess.Models;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.MediatorComponents.Queries
 {

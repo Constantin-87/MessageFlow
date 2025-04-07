@@ -72,7 +72,7 @@ namespace MessageFlow.Infrastructure.Mappings
                 .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.PhoneNumber))
                 .ForMember(dest => dest.PhoneNumberId, opt => opt.MapFrom(src => src.PhoneNumberId))
                 .ForMember(dest => dest.PhoneNumberDesc, opt => opt.MapFrom(src => src.PhoneNumberDesc))
-                .ForMember(dest => dest.WhatsAppSettingsModelId, opt => opt.MapFrom(src => src.WhatsAppSettingsModelId))
+                .ForMember(dest => dest.WhatsAppSettingsModelId, opt => opt.MapFrom(src => src.WhatsAppSettingsId))
                 .ReverseMap(); // Enables reverse mapping
 
             // ✅ Mapping between WhatsAppSettingsDTO and WhatsAppSettingsModel

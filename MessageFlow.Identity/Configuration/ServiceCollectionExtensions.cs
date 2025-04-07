@@ -7,7 +7,7 @@ using MessageFlow.Identity.MediatorComponents.Queries;
 using MessageFlow.Identity.MediatorComponents.QueryHandlers;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Identity.Configuration
 {
@@ -21,8 +21,6 @@ namespace MessageFlow.Identity.Configuration
 
         public static IServiceCollection AddMediatorHandlers(this IServiceCollection services)
         {
-            services.AddScoped<IMediator, Infrastructure.Mediator.Mediator>();
-
             // Login
             services.AddScoped<IRequestHandler<LoginCommand, (bool, string, string, string, ApplicationUserDTO?)>, LoginCommandHandler>();
 

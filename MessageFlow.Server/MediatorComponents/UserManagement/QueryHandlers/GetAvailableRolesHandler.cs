@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
 {

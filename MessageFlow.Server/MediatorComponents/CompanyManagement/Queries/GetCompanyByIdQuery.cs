@@ -1,5 +1,5 @@
 ﻿using MessageFlow.Shared.DTOs;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.Queries
 {

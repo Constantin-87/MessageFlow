@@ -1,7 +1,7 @@
 ﻿using MessageFlow.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Queries;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
 

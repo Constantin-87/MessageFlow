@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.DataAccess.Services;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 using MessageFlow.Shared.DTOs;
 using Microsoft.Extensions.Logging;

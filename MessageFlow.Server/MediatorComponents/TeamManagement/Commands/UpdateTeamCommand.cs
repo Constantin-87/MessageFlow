@@ -1,4 +1,4 @@
-﻿using MessageFlow.Infrastructure.Mediator.Interfaces;
+﻿using MediatR;
 using MessageFlow.Shared.DTOs;
 
 namespace MessageFlow.Server.MediatorComponents.TeamManagement.Commands

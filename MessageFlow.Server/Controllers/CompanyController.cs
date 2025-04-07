@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MessageFlow.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using MessageFlow.Server.Services;
-using MessageFlow.Infrastructure.Mediator.Interfaces;
-using MessageFlow.Infrastructure.Mediator;
+using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
@@ -14,18 +12,16 @@ namespace MessageFlow.Server.Controllers
     [Authorize(Roles = "Admin, SuperAdmin")]
     public class CompanyController : ControllerBase
     {
-        //private readonly CompanyManagementService _companyService;
         private readonly ILogger<CompanyController> _logger;
         private readonly IMediator _mediator;
 
-        public CompanyController(IMediator mediator/*, CompanyManagementService companyService*/, ILogger<CompanyController> logger)
+        public CompanyController(IMediator mediator, ILogger<CompanyController> logger)
         {
-            //_companyService = companyService;
             _mediator = mediator;
             _logger = logger;
         }
 
-        // ✅ Get all companies (SuperAdmin sees all, Admin sees only their own)
+        // Get all companies (SuperAdmin sees all, Admin sees only their own)
         [HttpGet("all")]
         public async Task<ActionResult<List<CompanyDTO>>> GetAllCompanies()
         {
@@ -33,7 +29,7 @@ namespace MessageFlow.Server.Controllers
             return Ok(companies);
         }
 
-        // ✅ Get company details by ID
+        // Get company details by ID
         [HttpGet("{companyId}")]
         public async Task<ActionResult<CompanyDTO>> GetCompanyById(string companyId)
         {
@@ -42,7 +38,7 @@ namespace MessageFlow.Server.Controllers
             return Ok(company);
         }
 
-        // ✅ Create a new company (SuperAdmins only)
+        // Create a new company (SuperAdmins only)
         [HttpPost("create")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult> CreateCompany([FromBody] CompanyDTO companyDto)
@@ -52,7 +48,7 @@ namespace MessageFlow.Server.Controllers
             return Ok(message);
         }
 
-        // ✅ Update company details
+        // Update company details
         [HttpPut("update")]
         public async Task<ActionResult> UpdateCompany([FromBody] CompanyDTO companyDto)
         {
@@ -61,7 +57,7 @@ namespace MessageFlow.Server.Controllers
             return Ok(message);
         }
 
-        // ✅ Delete company (SuperAdmins only)
+        // Delete company (SuperAdmins only)
         [HttpDelete("delete/{companyId}")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<ActionResult> DeleteCompany(string companyId)

@@ -1,4 +1,4 @@
-﻿using MessageFlow.Infrastructure.Mediator.Interfaces;
+﻿using MediatR;
 using System.Security.Claims;
 
 namespace MessageFlow.Identity.MediatorComponents.Commands

@@ -8,7 +8,6 @@
         public string PhoneNumberDesc { get; set; } = string.Empty;
 
         // Foreign key to WhatsAppSettingsModel
-        public string WhatsAppSettingsModelId { get; set; }
-        public WhatsAppSettingsDTO WhatsAppSettings { get; set; }
+        public string WhatsAppSettingsId { get; set; }
     }
 }
