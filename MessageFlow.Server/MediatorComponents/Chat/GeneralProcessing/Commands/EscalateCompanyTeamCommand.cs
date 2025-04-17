@@ -7,6 +7,7 @@ namespace MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands
         Conversation Conversation,
         string SenderId,
         string ProviderMessageId,
-        string TargetTeamId
+        string TargetTeamId,
+        string TargetTeamName
     ) : IRequest<Unit>;
 }

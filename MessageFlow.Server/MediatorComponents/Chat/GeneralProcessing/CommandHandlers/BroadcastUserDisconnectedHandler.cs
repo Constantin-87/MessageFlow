@@ -29,7 +29,7 @@ public class BroadcastUserDisconnectedHandler : IRequestHandler<BroadcastUserDis
                 CompanyId = userInfo.CompanyId,
                 Role = userInfo.Role,
                 LockoutEnabled = userInfo.LockoutEnabled,
-                TeamIds = userInfo.TeamIds,
+                TeamsDTO = userInfo.TeamsDTO,
                 LastActivity = DateTime.UtcNow
             };
 

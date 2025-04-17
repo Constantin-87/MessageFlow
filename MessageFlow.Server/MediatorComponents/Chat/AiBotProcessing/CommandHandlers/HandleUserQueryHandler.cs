@@ -9,10 +9,11 @@ using OpenAI.Chat;
 using System.Text.Json;
 using System.Text;
 using MessageFlow.DataAccess.Models;
+using MessageFlow.Server.DataTransferObjects.Internal;
 
 namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHandlers
 {
-    public class HandleUserQueryHandler : IRequestHandler<HandleUserQueryCommand, (bool, string, string?)>
+    public class HandleUserQueryHandler : IRequestHandler<HandleUserQueryCommand, UserQueryResponseDTO>
     {
         private readonly AzureSearchQueryService _searchService;
         private readonly AzureOpenAIClient _openAiClient;
@@ -34,7 +35,7 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHand
             _openAiClient = new AzureOpenAIClient(new Uri(endpoint!), new AzureKeyCredential(key!));
         }
 
-        public async Task<(bool, string, string?)> Handle(HandleUserQueryCommand req, CancellationToken ct)
+        public async Task<UserQueryResponseDTO> Handle(HandleUserQueryCommand req, CancellationToken ct)
         {
             var searchResults = await _searchService.QueryIndexAsync(req.UserQuery, req.CompanyId);
             var hasResults = searchResults.Any();
@@ -50,10 +51,10 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHand
 
             var chatClient = _openAiClient.GetChatClient(_deployment);
             var messages = new List<ChatMessage>
-        {
-            new SystemChatMessage(sysPrompt),
-            new UserChatMessage($"User Query: {req.UserQuery}")
-        };
+            {
+                new SystemChatMessage(sysPrompt),
+                new UserChatMessage($"User Query: {req.UserQuery}")
+            };
 
             try
             {
@@ -64,26 +65,42 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHand
                 });
 
                 var content = completion.Content?.FirstOrDefault()?.Text ?? "";
-                var (redirect, teamId) = TryExtractRedirect(content);
-                return (true, content, redirect ? teamId : null);
+                var (redirect, teamId, teamName) = TryExtractRedirect(content);
+                return new UserQueryResponseDTO
+                {
+                    Answered = true,
+                    RawResponse = content,
+                    TargetTeamId = redirect ? teamId : null,
+                    TargetTeamName = redirect ? teamName : null
+                };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"GPT Error: {ex.Message}");
-                return (false, "", null);
+                return new UserQueryResponseDTO
+                {
+                    Answered = false,
+                    RawResponse = "",
+                    TargetTeamId = null,
+                    TargetTeamName = null
+                };
             }
         }
 
-        private static (bool Redirect, string? TeamId) TryExtractRedirect(string json)
+        private static (bool Redirect, string? TeamId, string? TeamName) TryExtractRedirect(string json)
         {
             try
             {
                 var parsed = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
                 if (parsed?["redirect"].GetBoolean() == true)
-                    return (true, parsed["teamId"].GetString());
+                {
+                    var id = parsed["teamId"].GetString();
+                    var name = parsed.TryGetValue("teamName", out var nameElement) ? nameElement.GetString() : null;
+                    return (true, id, name);
+                }
             }
             catch { }
-            return (false, null);
+            return (false, null, null);
         }
 
         private static string FormatChatHistory(IEnumerable<Message> msgs)
@@ -115,7 +132,8 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHand
                 - Respond strictly in the following JSON format if redirection is needed:
                   {
                     "redirect": true,
-                    "teamId": "<team_id_string>"
+                    "teamId": "<team_id_string>",
+                    "teamName": "<team_name>"
                   }
                 - **Ensure `teamId` is always returned as a string (even if it's a number).** Convert numeric values to strings.
 
@@ -152,7 +170,8 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.CommandHand
                 - Always respond in this JSON format if redirection is needed:
                   {
                     "redirect": true,
-                    "teamId": "<team_id_string>"
+                    "teamId": "<team_id_string>",
+                    "teamName": "<team_name>"
                   }
                 - **Ensure `teamId` is always returned as a string.**
 

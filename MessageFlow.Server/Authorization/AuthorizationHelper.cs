@@ -1,6 +1,4 @@
-﻿using MessageFlow.DataAccess.Services;
-using MessageFlow.Shared.DTOs;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace MessageFlow.Server.Authorization
 {
@@ -83,6 +81,7 @@ namespace MessageFlow.Server.Authorization
             return Task.FromResult((false, "Unauthorized: Cannot manage Teams for other Companies."));
         }
 
+        // NOT USED !!!!
         public string? GetBearerToken()
         {
             var authHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();

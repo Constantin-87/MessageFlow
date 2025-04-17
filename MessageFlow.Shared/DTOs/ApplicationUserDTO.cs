@@ -24,12 +24,10 @@ namespace MessageFlow.Shared.DTOs
         [Required(ErrorMessage = "Please select a role.")]
         public string Role { get; set; }
 
-        public bool LockoutEnabled { get; set; }
-
-        public List<string> TeamIds { get; set; } = new();
+        public bool LockoutEnabled { get; set; }        
 
         // Navigation property for many-to-many relationship
-        //public ICollection<TeamDTO>? TeamsDTO { get; set; } = null;
+        public ICollection<TeamDTO>? TeamsDTO { get; set; } = null;
 
         // Navigation property for the related Company
         public CompanyDTO? CompanyDTO { get; set; } = null;

@@ -53,7 +53,8 @@ namespace MessageFlow.Infrastructure.Mappings
                 .ForMember(dest => dest.CompanyId, opt => opt.MapFrom(src => src.CompanyId))
                 .ForMember(dest => dest.LockoutEnabled, opt => opt.MapFrom(src => src.LockoutEnabled))
                 .ForMember(dest => dest.CompanyDTO, opt => opt.MapFrom(src => src.Company))
-                .ForMember(dest => dest.TeamIds, opt => opt.MapFrom(src => src.Teams.Select(t => t.Id)))
+                .ForMember(dest => dest.TeamsDTO, opt => opt.MapFrom(src => src.Teams))
+                //.ForMember(dest => dest.TeamIds, opt => opt.MapFrom(src => src.Teams.Select(t => t.Id)))
                 .ForMember(dest => dest.Role, opt => opt.Ignore()) // Role will be set manually after mapping
                 .ReverseMap()
                 .ForMember(dest => dest.Company, opt => opt.Ignore());

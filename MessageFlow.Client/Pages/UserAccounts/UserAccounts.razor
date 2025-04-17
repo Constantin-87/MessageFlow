@@ -41,11 +41,11 @@ else
                     <td>@user.UserEmail</td>
                     <td>@user.PhoneNumber</td>
                     <td>@(user.CompanyDTO?.CompanyName ?? "N/A")</td>
-                    <td>@user.Role</td> <!-- Display the role of the user -->
-                    <td>@string.Join(", ", user.TeamIds)</td> <!-- 🔧 Display Team IDs (or names if you resolve them) -->
+                    <td>@user.Role</td>
+                    <td>@string.Join(", ", user.TeamsDTO?.Select(t => t.TeamName) ?? new List<string>())</td>
                     <td>
-                        <button class="btn btn-sm btn-primary" @onclick="() => NavigateToEditUser(user.Id)">Edit</button> <!-- Edit button -->
-                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(user.Id, user.UserName)">Delete</button> <!-- Delete button -->
+                        <button class="btn btn-sm btn-primary" @onclick="() => NavigateToEditUser(user.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(user.Id, user.UserName)">Delete</button>
                     </td>
                 </tr>
             }

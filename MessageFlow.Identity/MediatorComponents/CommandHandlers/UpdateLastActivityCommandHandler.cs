@@ -20,7 +20,7 @@ namespace MessageFlow.Identity.MediatorComponents.CommandHandlers
             if (user == null)
                 return false;
 
-            user.LastActivity = DateTime.Now;
+            user.LastActivity = DateTime.UtcNow;
             var result = await _userManager.UpdateAsync(user);
 
             return result.Succeeded;

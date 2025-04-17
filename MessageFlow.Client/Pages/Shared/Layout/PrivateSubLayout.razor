@@ -20,13 +20,13 @@
         </div>
     </header>
 
-    <div class="container-fluid">
+    <div class="private-layout container-fluid">
         <div class="row">
             <!-- Sidebar -->
             <SideBar />
 
             <!-- Main content -->
-            <main class="offset-md-3 offset-lg-2 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <main class="main-content offset-md-3 offset-lg-2 col-md-9 ms-sm-auto col-lg-10 px-md-4">
                 <article class="content">
                     @Body
                 </article>
@@ -43,14 +43,6 @@
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
     }
-
-    // private void OnAfterRender()
-    // {
-    //     if (CurrentUser.IsLoggedIn)
-    //     {
-    //         Heartbeat.Start();
-    //     }
-    // }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {

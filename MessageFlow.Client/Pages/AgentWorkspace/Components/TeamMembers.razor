@@ -15,7 +15,13 @@
                     <ul>
                         @foreach (var member in GroupedTeamMembers[team])
                         {
-                            <li>@member.UserName (@GetActivityStatus(member.LastActivity))</li>
+                            <li>
+                                @member.UserName
+                                <img class="status-icon"
+                                     src="images/@(IsActive(member.LastActivity) ? "activeClock.svg" : "inactiveClock.svg")"
+                                     title="@GetActivityStatus(member.LastActivity)"
+                                     alt="Status" />
+                            </li>
                         }
                     </ul>
                 }
@@ -58,22 +64,20 @@
     {
         if (member.UserName == CurrentUserName) return; // Exclude the current user
 
-        var teamNames = member.TeamIds.Any()
-            ? member.TeamIds
+        var teamNames = member.TeamsDTO != null && member.TeamsDTO.Any()
+            ? member.TeamsDTO.Select(t => t.TeamName ?? "Unnamed").ToList()
             : new List<string> { "Unassigned" };
 
         foreach (var teamName in teamNames)
         {
-            var displayTeam = string.IsNullOrEmpty(teamName) ? "Unassigned" : teamName;
-
-            if (!GroupedTeamMembers.ContainsKey(displayTeam))
+            if (!GroupedTeamMembers.ContainsKey(teamName))
             {
-                GroupedTeamMembers[displayTeam] = new List<ApplicationUserDTO>();
+                GroupedTeamMembers[teamName] = new List<ApplicationUserDTO>();
             }
 
-            if (!GroupedTeamMembers[displayTeam].Any(m => m.Id == member.Id))
+            if (!GroupedTeamMembers[teamName].Any(m => m.Id == member.Id))
             {
-                GroupedTeamMembers[displayTeam].Add(member);
+                GroupedTeamMembers[teamName].Add(member);
             }
         }
 
@@ -83,20 +87,18 @@
     // Remove a team member
     public void RemoveTeamMember(ApplicationUserDTO member)
     {
-        var teamNames = member.TeamIds.Any()
-            ? member.TeamIds
+        var teamNames = member.TeamsDTO != null && member.TeamsDTO.Any()
+            ? member.TeamsDTO.Select(t => t.TeamName ?? "Unnamed").ToList()
             : new List<string> { "Unassigned" };
 
         foreach (var teamName in teamNames)
         {
-            var displayTeam = string.IsNullOrEmpty(teamName) ? "Unassigned" : teamName;
-
-            if (GroupedTeamMembers.ContainsKey(displayTeam))
+            if (GroupedTeamMembers.ContainsKey(teamName))
             {
-                GroupedTeamMembers[displayTeam].RemoveAll(m => m.Id == member.Id);
-                if (GroupedTeamMembers[displayTeam].Count == 0)
+                GroupedTeamMembers[teamName].RemoveAll(m => m.Id == member.Id);
+                if (GroupedTeamMembers[teamName].Count == 0)
                 {
-                    GroupedTeamMembers.Remove(displayTeam);
+                    GroupedTeamMembers.Remove(teamName);
                 }
             }
         }
@@ -116,6 +118,11 @@
         }
     }
 
+    private bool IsActive(DateTime lastActivity)
+    {
+        return (DateTime.UtcNow - lastActivity).TotalMinutes < 1;
+    }
+
     private string GetActivityStatus(DateTime lastActivity)
     {
         var now = DateTime.UtcNow;
@@ -131,13 +138,4 @@
             return $"Last seen {minutesAgo} minute{(minutesAgo != 1 ? "s" : "")} ago";
         }
     }
-
-
-    // public class TeamMember
-    // {
-    //     public string Name { get; set; } = string.Empty;
-    //     public string Status { get; set; } = "Offline";
-    //     public string Team { get; set; } = string.Empty;
-    // }
-
 }

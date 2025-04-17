@@ -21,7 +21,11 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
 
         public async Task<List<ApplicationUserDTO>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
-            var users = await _userManager.Users.Include(u => u.Company).ToListAsync(cancellationToken);
+            var users = await _userManager.Users
+                .Include(u => u.Company)
+                .Include(u => u.Teams)
+                .ToListAsync(cancellationToken);
+
             var userDtos = _mapper.Map<List<ApplicationUserDTO>>(users);
 
             foreach (var userDto in userDtos)

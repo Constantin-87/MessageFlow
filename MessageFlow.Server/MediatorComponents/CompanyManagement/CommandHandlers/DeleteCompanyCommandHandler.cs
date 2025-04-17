@@ -1,10 +1,10 @@
 ﻿using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.Authorization;
-using Microsoft.Extensions.Logging;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
 using System.Net.Http.Headers;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
+using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
@@ -42,17 +42,24 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                 if (company == null)
                     return (false, "Company not found.");
 
-                var token = _authorizationHelper.GetBearerToken();
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
-                }
+                //var token = _authorizationHelper.GetBearerToken();
+                //if (!string.IsNullOrEmpty(token))
+                //{
+                //    _httpClient.DefaultRequestHeaders.Authorization =
+                //        new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
+                //}
 
-                var response = await _httpClient.DeleteAsync($"api/user-management/delete-company-users/{request.CompanyId}");
-                if (!response.IsSuccessStatusCode)
+                //var response = await _httpClient.DeleteAsync($"api/user-management/delete-company-users/{request.CompanyId}");
+                //if (!response.IsSuccessStatusCode)
+                //{
+                //    _logger.LogError($"Failed to delete users for company {request.CompanyId} via Identity API.");
+                //    return (false, "Failed to delete users for this company.");
+                //}
+
+                var deleteUsersResult = await _mediator.Send(new DeleteUsersByCompanyCommand(request.CompanyId));
+                if (!deleteUsersResult)
                 {
-                    _logger.LogError($"Failed to delete users for company {request.CompanyId} via Identity API.");
+                    _logger.LogError($"Failed to delete users for company {request.CompanyId} via internal command.");
                     return (false, "Failed to delete users for this company.");
                 }
 

@@ -1,14 +1,13 @@
 ﻿@attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveWebAssembly
-
 @using System.ComponentModel.DataAnnotations
-
 @inject UserManagementService UserManagementService
 @inject CompanyManagementService CompanyManagementService
 @inject NavigationManager NavigationManager
 @inject ILogger<UserAddEditForm> Logger
 
-@if(ApplicationUser is not null){
+@if (ApplicationUser is not null)
+{
     <EditForm Model="ApplicationUser" OnValidSubmit="HandleSubmit" FormName="AddEditUserForm">
         <h3>
             @Title
@@ -27,11 +26,13 @@
         }
 
         <DataAnnotationsValidator />
-        <ValidationSummary />
 
         <div class="form-floating mb-3">
-            <InputSelect @bind-Value="SelectedCompanyId" class="form-control"
-                         disabled="@(companies.Count == 1 )">
+            <InputSelect Value="@ApplicationUser.CompanyId"
+                         ValueChanged="@((string value) => OnCompanyChanged(value))"
+                         ValueExpression="() => ApplicationUser.CompanyId"
+                         class="form-control"
+                         disabled="@(companies.Count == 1)">
                 <option value="">Select a Company</option>
                 @foreach (var company in companies)
                 {
@@ -39,7 +40,7 @@
                 }
             </InputSelect>
             <label for="company">Company</label>
-            <ValidationMessage For="() => ApplicationUser.CompanyDTO" class="text-danger" />
+            <ValidationMessage For="() => ApplicationUser.CompanyId" class="text-danger" />
         </div>
 
 
@@ -67,9 +68,10 @@
         <!-- Password -->
         <div class="form-floating mb-3">
             <InputText @bind-Value="ApplicationUser.NewPassword"
-            type="password"
-            class="form-control"
-            placeholder="Enter Password" />
+                       type="password"
+                       class="form-control"
+                       placeholder="Enter Password"
+                       autocomplete="new-password" />
             <label for="password">Password</label>
             <ValidationMessage For="() => ApplicationUser.NewPassword" class="text-danger" />
         </div>
@@ -80,20 +82,19 @@
                 <option value="">Select a Role</option>
                 @foreach (var role in displayedRoles)
                 {
-                    <option value="@role">@role</option>                    
+                    <option value="@role">@role</option>
                 }
             </InputSelect>
             <label for="role">Role</label>
             <ValidationMessage For="() => ApplicationUser.Role" class="text-danger" />
         </div>
 
-        <!-- Lockout Enabled Checkbox -->
+        <!-- Lockout Checkbox -->
         <div class="form-check mb-3">
             <InputCheckbox @bind-Value="ApplicationUser.LockoutEnabled" class="form-check-input" id="lockoutEnabled" />
             <label class="form-check-label" for="lockoutEnabled">Lockout Enabled</label>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" class="w-100 btn btn-lg btn-primary">Submit</button>
     </EditForm>
 }
@@ -111,12 +112,11 @@
     public EventCallback<ApplicationUserDTO> OnValidSubmit { get; set; }
 
     private string Title => IsEditMode ? $"Edit User {ApplicationUser.UserName}" : "Create New User";
-  
+
     private ApplicationUserDTO ApplicationUser = new();
     private List<CompanyDTO> companies = new();
     private List<string> availableRoles = new();
     private List<string> displayedRoles = new();
-    [Required(ErrorMessage = "Please select a role.")]
     private string? messageFromCookie;
     private string? DisplayMessage => Message ?? messageFromCookie;
 
@@ -127,24 +127,28 @@
         // When in edit mode, fetch the user data and prepopulate fields
         if (IsEditMode && !string.IsNullOrEmpty(UserId))
         {
-            // Load the user's details by their Document_id
             ApplicationUser = await UserManagementService.GetUserByIdAsync(UserId);
             if (ApplicationUser == null)
             {
                 SetErrorMessage(new List<string> { "User not found" });
                 return;
             }
-            // ✅ Preselect the user's company after loading the companies
-            SelectedCompanyId = ApplicationUser.CompanyId ?? companies.FirstOrDefault()?.Id;
         }
         else if (companies.Count == 1)
         {
-            // ✅ Auto-select the single available company in create mode
-            SelectedCompanyId = companies.First().Id;
+            // Auto-select the single available company in create mode
+            ApplicationUser.CompanyId = companies.First().Id;
+            ApplicationUser.CompanyDTO = companies.First();
+        }
+
+        if (!string.IsNullOrEmpty(ApplicationUser.CompanyId))
+        {
+            ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == ApplicationUser.CompanyId);
+            UpdateSuperAdminRole();
         }
 
         availableRoles = await UserManagementService.GetAvailableRolesAsync();
-        // Remove SuperAdmin role if logged-in user is not a SuperAdmin or selected company is not company 00000
+        // Remove SuperAdmin role if logged-in user is not a SuperAdmin or selected company is not MessageFlow
         UpdateSuperAdminRole();
     }
 
@@ -194,12 +198,12 @@
 
         if (ApplicationUser.CompanyId != superAdminCompanyId)
         {
-            // ❌ Remove "SuperAdmin" if company doesn't match
+            // Remove "SuperAdmin" if company doesn't match
             displayedRoles.Remove("SuperAdmin");
         }
         else
         {
-            // ✅ Add the original roles returned from the server
+            // Add the original roles returned from the server
             if (!displayedRoles.Contains("SuperAdmin"))
             {
                 displayedRoles = new List<string>(availableRoles);
@@ -208,22 +212,14 @@
         StateHasChanged();
     }
 
-    private string SelectedCompanyId
+    private void OnCompanyChanged(string value)
     {
-        get => ApplicationUser.CompanyId;
-        set
-        {
-            if (ApplicationUser.CompanyId != value)
-            {
-                ApplicationUser.CompanyId = value;
-                ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == value);
-                UpdateSuperAdminRole();
-            }
-        }
+        ApplicationUser.CompanyId = value;
+        ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == value);
+        UpdateSuperAdminRole();
     }
 
 
-    
     private void SetErrorMessage(IEnumerable<string> errors)
     {
         Message = $"Error: {string.Join(", ", errors)}";

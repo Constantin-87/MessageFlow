@@ -34,7 +34,7 @@ namespace MessageFlow.Identity.MediatorComponents.CommandHandlers
             if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
                 return (false, "", "", "Invalid username or password.", null);
 
-            user.LastActivity = DateTime.Now;
+            user.LastActivity = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
             var jwt = await _tokenService.GenerateJwtTokenAsync(user);

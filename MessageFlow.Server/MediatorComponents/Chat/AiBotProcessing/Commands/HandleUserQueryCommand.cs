@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MessageFlow.Server.DataTransferObjects.Internal;
 
 namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.Commands
 {
@@ -6,6 +7,5 @@ namespace MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.Commands
         string UserQuery,
         string CompanyId,
         string ConversationId
-    ) : IRequest<(bool Answered, string Response, string? TargetTeamId)>;
-
+    ) : IRequest<UserQueryResponseDTO>;
 }

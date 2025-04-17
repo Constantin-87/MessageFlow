@@ -37,7 +37,7 @@ namespace MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHa
 
             _logger.LogInformation($"Escalated conversation {request.Conversation.Id} to team {request.TargetTeamId}.");
 
-            var escalationMessage = $"Your request is being redirected to the **{request.TargetTeamId}** team. Please wait for an available agent.";
+            var escalationMessage = $"Your request is being redirected to the {request.TargetTeamName} team. Please wait for an available agent.";
 
             // Send escalation message using AI response logic
             var aiMessage = new Message

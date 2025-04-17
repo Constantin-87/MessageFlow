@@ -32,6 +32,7 @@
     private ChatWindow? ChatWindowRef;
 
     private string? UserId;
+    private string? CompanyId;
     private string? UserName;
 
     protected override async Task OnInitializedAsync()
@@ -46,12 +47,13 @@
                 Console.WriteLine("User is not authenticated.");
                 return;
             }
-
+            
             UserId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            CompanyId = user?.FindFirst(c => c.Type == "CompanyId")?.Value ?? "";
             UserName = user?.Identity?.Name;
           
             hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub", options =>
+                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub?companyId={CompanyId}", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {

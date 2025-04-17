@@ -1,0 +1,119 @@
+﻿/* Section Header */
+.card-header {
+    background-color: #2d3748;
+    color: #d1d5db;
+    cursor: pointer;
+}
+
+    /* Section Title */
+    .card-header h5 {
+        margin: 0;
+        font-weight: bold;
+    }
+
+/* Card Body */
+.card-body {
+    background-color: #1f2937;
+    color: #d1d5db;
+}
+
+/* Form Controls */
+.form-control {
+    background-color: #2d3748;
+    border: 1px solid #3a4756;
+    color: #d1d5db;
+}
+
+    .form-control:focus {
+        background-color: #2d3748;
+        border-color: #1abc9c;
+        color: #fff;
+        box-shadow: none;
+    }
+
+/* Floating labels */
+.form-floating > label {
+    color: #a0aec0;
+}
+
+/* Buttons */
+button.btn-primary {
+    background-color: #11545F;
+    border-color: #166976;
+    color: #d1d5db;
+    font-weight: bold;
+}
+
+    button.btn-primary:hover {
+        background-color: #166976;
+        border-color: #2BA2B5;
+    }
+
+button.btn-secondary {
+    background-color: #4a5568;
+    border-color: #4a5568;
+    color: #d1d5db;
+}
+
+    button.btn-secondary:hover {
+        background-color: #5c667a;
+    }
+
+button.btn-danger {
+    background-color: #9b2c2c;
+    border-color: #9b2c2c;
+    color: #fff;
+}
+
+    button.btn-danger:hover {
+        background-color: #c53030;
+    }
+
+button.btn-info {
+    background-color: #3182ce;
+    border-color: #3182ce;
+    color: #fff;
+}
+
+button.btn-warning {
+    background-color: #d69e2e;
+    border-color: #d69e2e;
+    color: #1a202c;
+}
+
+/* Tables */
+table {
+    color: #d1d5db;
+    background-color: #1f2937;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #3a4756;
+}
+
+.table th {
+    background-color: #2d3748;
+    color: #a0aec0;
+}
+
+/* File input */
+input[type="file"].form-control {
+    background-color: #2d3748;
+    border-color: #3a4756;
+    color: #d1d5db;
+}
+
+/* List group */
+.list-group-item {
+    background-color: #2d3748;
+    border: 1px solid #3a4756;
+    color: #d1d5db;
+}
+
+/* Text area */
+textarea.form-control {
+    background-color: #2d3748;
+    color: #d1d5db;
+    border: 1px solid #3a4756;
+}

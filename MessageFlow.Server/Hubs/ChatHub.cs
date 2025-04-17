@@ -97,12 +97,12 @@ public class ChatHub : Hub
                 await _mediator.Send(new BroadcastUserDisconnectedCommand(companyId, Context.ConnectionId));
             }
 
-            if (OnlineUsers.TryRemove(Context.ConnectionId, out var userInfo) && userInfo != null)
+            if (OnlineUsers.TryRemove(Context.ConnectionId, out var userInfo) && userInfo?.TeamsDTO != null)
             {
                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Company_{userInfo.CompanyId}");
-                foreach (var teamId in userInfo.TeamIds)
+                foreach (var team in userInfo.TeamsDTO)
                 {
-                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Team_{teamId}");
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Team_{team.Id}");
                 }
             }
 
@@ -134,7 +134,7 @@ public class ChatHub : Hub
    
     public async Task CloseAndAnonymizeChat(string customerId)
     {
-        var result = await _mediator.Send(new CloseAndAnonymizeChatCommand(customerId));
+        var result = await _mediator.Send(new ArchiveConversationCommand(customerId));
 
         if (!result.Success)
             Console.WriteLine(result.ErrorMessage);

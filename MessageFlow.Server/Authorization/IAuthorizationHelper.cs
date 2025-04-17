@@ -1,6 +1,4 @@
 ﻿
-using MessageFlow.Shared.DTOs;
-
 namespace MessageFlow.Server.Authorization
 {
     public interface IAuthorizationHelper
@@ -9,6 +7,7 @@ namespace MessageFlow.Server.Authorization
 
         Task<(bool isAuthorized, string errorMessage)> CanManageTeam(string companyId);
 
+        // NOT USED !!!!
         string? GetBearerToken();
 
     }

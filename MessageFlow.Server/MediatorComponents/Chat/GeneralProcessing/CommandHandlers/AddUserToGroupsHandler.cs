@@ -25,9 +25,12 @@ public class AddUserToGroupsHandler : IRequestHandler<AddUserToGroupsCommand, Un
 
         await _hubContext.Groups.AddToGroupAsync(connectionId, $"Company_{user.CompanyId}", cancellationToken);
 
-        foreach (var teamId in user.TeamIds)
+        if (user.TeamsDTO != null)
         {
-            await _hubContext.Groups.AddToGroupAsync(connectionId, $"Team_{teamId}", cancellationToken);
+            foreach (var team in user.TeamsDTO)
+            {
+                await _hubContext.Groups.AddToGroupAsync(connectionId, $"Team_{team.Id}", cancellationToken);
+            }
         }
 
         OnlineUsers[connectionId] = user;

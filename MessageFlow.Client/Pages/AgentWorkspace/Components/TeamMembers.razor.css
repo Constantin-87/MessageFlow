@@ -1,21 +1,41 @@
-﻿/* TeamMembers.css */
-
-.team-members {
-    flex: 0 0 20%;
-    background-color: #2c3e50; /* Dark blue-gray background */
-    color: #ecf0f1; /* Light text color */
+﻿.team-members {
+    flex: 0 0 30%;
+    background-color: #2c3e50;
+    color: #ecf0f1;
     padding: 1rem;
-    border: 1px solid #34495e; /* Slightly darker border */
+    border: 1px solid #34495e;
     border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
     font-family: Arial, sans-serif;
+    height: 60%;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #1abc9c #2c3e50;
 }
+
+    /* Chrome, Edge, Safari */
+    .team-members::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .team-members::-webkit-scrollbar-track {
+        background: #2c3e50;
+        border-radius: 5px;
+    }
+
+    .team-members::-webkit-scrollbar-thumb {
+        background-color: #1abc9c;
+        border-radius: 5px;
+        border: 2px solid #2c3e50;
+    }
 
     .team-members h4 {
         text-align: center;
         font-size: 1.4rem;
-        margin-bottom: 1rem;
-        color: #1abc9c; /* Green color for headings */
+        color: #1abc9c;
+        border-bottom: 1px solid #444455;
+        padding-bottom: 8px;
+        margin-bottom: 12px;
     }
 
 .team-group {
@@ -24,8 +44,8 @@
 
     .team-group button {
         width: 100%;
-        background-color: #2980b9; /* Blue button */
-        color: #ecf0f1; /* Light text */
+        background-color: #11545F;
+        color: #ecf0f1;
         border: none;
         border-radius: 5px;
         padding: 0.5rem;
@@ -35,35 +55,35 @@
     }
 
         .team-group button:hover {
-            background-color: #3498db; /* Lighter blue on hover */
+            background-color: #166976;
         }
 
     .team-group ul {
         list-style: none;
         padding: 0;
         margin: 0.5rem 0;
-        border-left: 2px solid #1abc9c; /* Green left border */
+        border-left: 2px solid #1abc9c;
         padding-left: 0.5rem;
     }
 
     .team-group li {
         margin-bottom: 0.5rem;
         font-size: 0.9rem;
-        color: #bdc3c7; /* Muted light gray text */
+        color: #bdc3c7;
     }
 
         .team-group li::before {
-            content: "\2022"; /* Bullet point */
-            color: #1abc9c; /* Green */
+            content: "\2022";
+            color: #1abc9c;
             font-weight: bold;
             display: inline-block;
             width: 1rem;
         }
 
-    .team-group .offline {
-        color: #e74c3c; /* Red for offline */
-    }
-
-    .team-group .online {
-        color: #2ecc71; /* Green for online */
-    }
+.status-icon {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    cursor: default;
+    padding-bottom: 2px;
+}

@@ -4,7 +4,14 @@
 {
     <div class="text-white text-end">
         <div>@CurrentUser.CompanyName</div>
-        <small>@CurrentUser.Username - <span>@GetActivityStatus()</span></small>
+        <small>
+            @CurrentUser.Username
+            <img class="status-icon"
+                 src="images/@(IsActive ? "activeClock.svg" : "inactiveClock.svg")"
+                 title="@GetActivityStatus()"
+                 alt="Status" />
+        </small>
+
     </div>
 }
 
@@ -21,13 +28,21 @@
 
     private string GetActivityStatus()
     {
-        var last = CurrentUser.LastActivity?.ToUniversalTime();
-        if (last == null) return "Status unknown";
+        if (CurrentUser.LastActivity == null) return "Status unknown";
 
+        var lastUtc = DateTime.SpecifyKind(CurrentUser.LastActivity.Value, DateTimeKind.Utc);
         var now = DateTime.UtcNow;
-        var diff = now - last.Value;
-        return diff.TotalMinutes < 1 ? "Active" : $"Last seen {(int)diff.TotalMinutes} minute{(diff.TotalMinutes >= 2 ? "s" : "")} ago";
+        var diff = now - lastUtc;
+
+        var minutes = (int)Math.Floor(diff.TotalMinutes);
+        return minutes < 1
+            ? "Active"
+            : $"Last seen {minutes} minute{(minutes != 1 ? "s" : "")} ago";
     }
+
+    private bool IsActive =>
+        CurrentUser.LastActivity.HasValue &&
+        (DateTime.UtcNow - DateTime.SpecifyKind(CurrentUser.LastActivity.Value, DateTimeKind.Utc)).TotalMinutes < 1;
 
     public void Dispose()
     {

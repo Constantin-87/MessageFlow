@@ -28,7 +28,7 @@
             Console.WriteLine($"Logout request error: {ex.Message}");
         }
 
-        // ✅ Redirect to home or login page after logout
-        NavigationManager.NavigateTo("/", forceLoad: true);
+        // Redirect to home or login page after logout
+        NavigationManager.NavigateTo("/"/* , forceLoad: true */);
     }
 }

@@ -28,7 +28,6 @@ using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.CommandHandl
 using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
 using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
 using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.QueryHandlers;
-using MessageFlow.Server.Services;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -36,9 +35,7 @@ namespace MessageFlow.Server.Configuration
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            services.AddScoped<ChatArchivingService>();
             services.AddScoped<IDocumentProcessingService, DocumentProcessingService>();
-            services.AddScoped<AIChatBotService>();
             services.AddScoped<AzureSearchQueryService>();
             services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
             services.AddScoped<IAuthorizationHelper, AuthorizationHelper>();
@@ -105,7 +102,7 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IRequestHandler<BroadcastUserDisconnectedCommand, Unit>, BroadcastUserDisconnectedHandler>();
             services.AddScoped<IRequestHandler<AssignConversationToUserCommand, (bool, string)>, AssignConversationToUserHandler>();
             services.AddScoped<IRequestHandler<SendMessageToCustomerCommand, (bool, string)>, SendMessageToCustomerHandler>();
-            services.AddScoped<IRequestHandler<CloseAndAnonymizeChatCommand, (bool, string)>, CloseAndAnonymizeChatHandler>();
+            services.AddScoped<IRequestHandler<ArchiveConversationCommand, (bool, string)>, ArchiveConversationHandler>();
 
             // Chat.FacebookProcessing Commands
             services.AddScoped<IRequestHandler<SendMessageToFacebookCommand, bool>, SendMessageToFacebookHandler>();

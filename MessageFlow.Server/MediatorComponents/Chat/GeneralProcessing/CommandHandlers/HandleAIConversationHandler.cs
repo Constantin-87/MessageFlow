@@ -1,8 +1,8 @@
 ﻿using MediatR;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
+using MessageFlow.Server.MediatorComponents.Chat.AiBotProcessing.Commands;
 using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands;
-using MessageFlow.Server.Services;
 
 namespace MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers
 {
@@ -10,16 +10,13 @@ namespace MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHa
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMediator _mediator;
-        private readonly AIChatBotService _aiChatBotService;
 
         public HandleAIConversationHandler(
             IUnitOfWork unitOfWork,
-            IMediator mediator,
-            AIChatBotService aiChatBotService)
+            IMediator mediator)
         {
             _unitOfWork = unitOfWork;
             _mediator = mediator;
-            _aiChatBotService = aiChatBotService;
         }
 
         public async Task<Unit> Handle(HandleAIConversationCommand request, CancellationToken cancellationToken)
@@ -39,22 +36,26 @@ namespace MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHa
             await _unitOfWork.Messages.AddEntityAsync(message);
             await _unitOfWork.SaveChangesAsync();
 
-            var (answered, response, targetTeamId) = await _aiChatBotService.HandleUserQueryAsync(
-                request.MessageText, request.Conversation.CompanyId, request.Conversation.Id);
+            var result = await _mediator.Send(new HandleUserQueryCommand(
+                request.MessageText,
+                request.Conversation.CompanyId,
+                request.Conversation.Id
+            ), cancellationToken);
 
-            if (answered && !string.IsNullOrEmpty(targetTeamId))
+            if (result.Answered && !string.IsNullOrEmpty(result.TargetTeamId))
             {
                 await _mediator.Send(new EscalateCompanyTeamCommand(
                     request.Conversation,
                     request.Conversation.SenderId,
                     request.ProviderMessageId,
-                    targetTeamId), cancellationToken);
+                    result.TargetTeamId,
+                    result.TargetTeamName), cancellationToken);
             }
             else
             {
                 await _mediator.Send(new SendAIResponseCommand(
                     request.Conversation,
-                    response,
+                    result.RawResponse,
                     request.ProviderMessageId), cancellationToken);
             }
 

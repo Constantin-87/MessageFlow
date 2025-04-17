@@ -3,8 +3,6 @@ using MessageFlow.DataAccess.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
