@@ -13,7 +13,7 @@
 <!-- Table to display the user accounts -->
 @if (users == null)
 {
-    <p>Loading...</p>
+    <LoadingIndicator Message="Fetching user data..." IsDark="false" />
 }
 else if (users.Count == 0)
 {

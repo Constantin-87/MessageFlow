@@ -3,20 +3,17 @@
 @rendermode RenderMode.InteractiveWebAssembly
 @layout Pages.Shared.Layout.PrivateSubLayout
 @inject CompanyManagementService CompanyManagementService
-@inject TeamsManagementService TeamsManagementService
 @inject NavigationManager NavigationManager
 
 <h3>Company Accounts</h3>
+
+<Notification Result="@Notification" />
 
 <button class="btn btn-primary mb-3" @onclick="NavigateToCreateCompany">Create New Company Account</button>
 
 @if (!isDataLoaded)
 {
-    <p>Loading...</p>
-}
-else if (companies.Count == 0)
-{
-    <p>No company accounts available.</p>
+    <LoadingIndicator Message="Fetching company data..." IsDark="false" />
 }
 else
 {
@@ -75,6 +72,7 @@ else
     private string? companyToDeleteId;
     private string? companyToDeleteName;
     private bool isDataLoaded = false;
+    private NotificationResult? Notification;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,11 +102,12 @@ else
 
         if (success)
         {
-            companies = companies.Where(c => c.Id != companyToDeleteId).ToList(); // Update UI after deletion
+            companies = companies.Where(c => c.Id != companyToDeleteId).ToList();
+            Notification = new NotificationResult { Message = "Company deleted successfully.", IsSuccess = true };
         }
         else
         {
-            Console.WriteLine($"Failed to delete company: {errorMessage}");
+            Notification = new NotificationResult { Message = $"Failed to delete company: {errorMessage}", IsSuccess = false };
         }
     }
 

@@ -1,0 +1,24 @@
+﻿@if (!string.IsNullOrWhiteSpace(Result?.Message) && isVisible)
+{
+    <div class="notification-overlay @GetAlertClass()" role="alert">
+        <span>@Result.Message</span>
+        <button class="close-btn" @onclick="() => isVisible = false">×</button>
+    </div>
+}
+
+@code {
+    [Parameter] public NotificationResult? Result { get; set; }
+
+    private bool isVisible = true;
+
+    protected override void OnParametersSet()
+    {
+        // Show notification whenever a new result is passed
+        if (!string.IsNullOrWhiteSpace(Result?.Message))
+            isVisible = true;
+    }
+
+    private string GetAlertClass() => Result?.IsSuccess == false
+        ? "alert-danger"
+        : "alert-success";
+}

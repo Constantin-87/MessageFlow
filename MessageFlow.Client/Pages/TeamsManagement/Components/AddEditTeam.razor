@@ -39,7 +39,7 @@
 
             <!-- Add/Remove Buttons -->
             <div class="col-2 d-flex flex-column justify-content-center align-items-center">
-                <button class="btn btn-success mb-2" @onclick="AddUserToTeam">Add User</button>
+                <button class="btn btn-primary mb-2" @onclick="AddUserToTeam">Add User</button>
                 <button class="btn btn-danger" @onclick="RemoveUserFromTeam">Remove User</button>
             </div>
 
@@ -96,20 +96,6 @@
         }
 
         var allCompanyUsers = await UserManagementService.GetUsersForCompanyAsync(CompanyId);
-        // Exclude users who are already assigned to the team using a custom comparer
-
-        // Logger.LogInformation("📄 All Company Users:");
-        // foreach (var user in allCompanyUsers)
-        // {
-        //     Logger.LogInformation($"➡️ User: {user.UserName}, Id: {user.Id}");
-        // }
-
-        // Logger.LogInformation("📄 Assigned Users:");
-        // foreach (var user in assignedUsers)
-        // {
-        //     Logger.LogInformation($"➡️ Assigned User: {user.UserName}, Id: {user.Id}");
-        // }
-
 
         availableUsers = allCompanyUsers
             .Where(u => !assignedUsers.Any(au => au.Id == u.Id))
@@ -176,7 +162,7 @@
             // Update existing team
             Team.TeamName = teamName;
             Team.TeamDescription = teamDescription;
-            Team.AssignedUserIds = assignedUsers.Select(u => u.Id).ToList();
+            Team.AssignedUsersDTO = assignedUsers;
 
             var (updateSuccess, updateMessage) = await TeamsManagementService.UpdateTeamAsync(Team);
             success = updateSuccess;

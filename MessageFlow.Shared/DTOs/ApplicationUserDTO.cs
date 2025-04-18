@@ -1,5 +1,6 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace MessageFlow.Shared.DTOs
 {
@@ -24,15 +25,13 @@ namespace MessageFlow.Shared.DTOs
         [Required(ErrorMessage = "Please select a role.")]
         public string Role { get; set; }
 
-        public bool LockoutEnabled { get; set; }        
+        public bool LockoutEnabled { get; set; }
+        public DateTime LastActivity { get; set; } = DateTime.UtcNow;
 
-        // Navigation property for many-to-many relationship
+        // Navigation properties
         public ICollection<TeamDTO>? TeamsDTO { get; set; } = null;
 
-        // Navigation property for the related Company
         public CompanyDTO? CompanyDTO { get; set; } = null;
 
-        // Activity timestamp
-        public DateTime LastActivity { get; set; } = DateTime.UtcNow;
     }
 }

@@ -38,9 +38,10 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers
                 team.TeamDescription = dto.TeamDescription;
                 team.Users.Clear();
 
-                if (dto.AssignedUserIds?.Any() == true)
+                if (dto.AssignedUsersDTO?.Any() == true)
                 {
-                    var users = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(dto.AssignedUserIds);
+                    var userIds = dto.AssignedUsersDTO.Select(u => u.Id).ToList();
+                    var users = await _unitOfWork.ApplicationUsers.GetListOfEntitiesByIdStringAsync(userIds);
                     if (users == null || !users.Any())
                     {
                         _logger.LogError("No valid users found for the provided IDs.");

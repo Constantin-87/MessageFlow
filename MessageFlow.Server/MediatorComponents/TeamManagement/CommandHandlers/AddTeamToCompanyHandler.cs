@@ -42,10 +42,11 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers
             }
 
             List<ApplicationUser> mappedUsers = new();
-            if (teamDto.AssignedUserIds != null && teamDto.AssignedUserIds.Any())
+            if (teamDto.AssignedUsersDTO != null && teamDto.AssignedUsersDTO.Any())
             {
+                var userIds = teamDto.AssignedUsersDTO.Select(u => u.Id).ToList();
                 var client = _httpClientFactory.CreateClient("IdentityAPI");
-                var response = await client.PostAsJsonAsync("api/user-management/get-users-by-ids", teamDto.AssignedUserIds);
+                var response = await client.PostAsJsonAsync("api/user-management/get-users-by-ids", userIds);
 
                 if (!response.IsSuccessStatusCode)
                 {

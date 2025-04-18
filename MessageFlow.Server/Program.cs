@@ -29,7 +29,7 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
 }
 
-// ✅ Load secrets securely from Azure Key Vault
+// Load secrets securely from Azure Key Vault
 var globalSettings = new GlobalChannelSettings
 {
     AppId = builder.Configuration["meta-app-id"],
@@ -38,7 +38,7 @@ var globalSettings = new GlobalChannelSettings
     WhatsAppWebhookVerifyToken = builder.Configuration["whatsapp-webhook-verify-token"]
 };
 
-// ✅ Validate Secrets Before Starting
+// Validate Secrets Before Starting
 void ValidateConfig(GlobalChannelSettings settings)
 {
     if (string.IsNullOrEmpty(settings.AppId) ||
@@ -46,7 +46,7 @@ void ValidateConfig(GlobalChannelSettings settings)
         string.IsNullOrEmpty(settings.FacebookWebhookVerifyToken) ||
         string.IsNullOrEmpty(settings.WhatsAppWebhookVerifyToken))
     {
-        throw new InvalidOperationException("Critical configuration values are missing. Application startup aborted.");
+        throw new InvalidOperationException("Configuration values are missing. Application startup aborted.");
     }
 }
 
@@ -64,14 +64,18 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(opts =>
+{
+    opts.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    opts.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+});
 
 builder.Services.AddApplicationServices();
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 
-// Register MediatR itself
+// Register MediatR
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(ProcessMessageHandler).Assembly);
@@ -83,11 +87,6 @@ builder.Services.AddMediatorHandlers();
 builder.Services.AddCorsPolicy();
 
 builder.Services.AddAzureServices(builder.Configuration);
-
-//builder.Services.AddControllersWithViews(options =>
-//{
-//    options.Filters.Add<UpdateLastActivityFilter>();
-//});
 
 builder.Services.AddRepositoriesAndDataAccess(builder.Configuration);
 
@@ -106,8 +105,7 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-
-// ✅ Instead, register HttpClient to call .Identity APIs
+// Register HttpClient to call .Identity APIs
 builder.Services.AddHttpClient("IdentityAPI", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["MessageFlow-Identity-Uri"]);
@@ -115,7 +113,7 @@ builder.Services.AddHttpClient("IdentityAPI", client =>
 
 builder.Logging.AddDebug();
 
-// Get the configured URLs from appsettings.json
+// Get the configured URLs from appsettings
 var urls = builder.Configuration.GetSection("WebHostUrls").Get<string[]>();
 
 if (urls != null && urls.Length > 0)

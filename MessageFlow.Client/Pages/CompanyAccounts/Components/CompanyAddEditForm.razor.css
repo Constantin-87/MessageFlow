@@ -1,23 +1,46 @@
-﻿/* Section Header */
+﻿h3 {
+    color: #d1d5db;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card {
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+}
+    .card.collapsed {
+        width: 300px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+        .card.collapsed:hover {
+            background-color: #2d3748;
+            box-shadow: 0 0 0 2px #1abc9c;
+            border: 1px solid #1abc9c;
+            cursor: pointer;
+        }
+
 .card-header {
     background-color: #2d3748;
     color: #d1d5db;
     cursor: pointer;
 }
-
-    /* Section Title */
     .card-header h5 {
         margin: 0;
         font-weight: bold;
     }
 
-/* Card Body */
 .card-body {
     background-color: #1f2937;
     color: #d1d5db;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
-/* Form Controls */
 .form-control {
     background-color: #2d3748;
     border: 1px solid #3a4756;
@@ -31,10 +54,26 @@
         box-shadow: none;
     }
 
-/* Floating labels */
+.form-floating {
+    width: 300px;
+}
+
 .form-floating > label {
     color: #a0aec0;
 }
+
+button[type="submit"] {
+    background-color: #11545F;
+    border-color: #166976;
+    color: #d1d5db;
+    font-weight: bold;
+    max-width: 200px;
+}
+
+    button[type="submit"]:hover {
+        background-color: #166976;
+        border-color: #2BA2B5;
+    }
 
 /* Buttons */
 button.btn-primary {
@@ -69,19 +108,12 @@ button.btn-danger {
         background-color: #c53030;
     }
 
-button.btn-info {
-    background-color: #3182ce;
-    border-color: #3182ce;
-    color: #fff;
-}
-
 button.btn-warning {
     background-color: #d69e2e;
     border-color: #d69e2e;
     color: #1a202c;
 }
 
-/* Tables */
 table {
     color: #d1d5db;
     background-color: #1f2937;
@@ -97,21 +129,41 @@ table {
     color: #a0aec0;
 }
 
-/* File input */
+.table th,
+.table td {
+    width: 200px;
+    max-width: 300px;
+    min-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+}
+
+.table tbody tr:hover {
+    background-color: #3a4756;
+    cursor: pointer;
+}
+
+.table td[title],
+.table th[title] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 input[type="file"].form-control {
     background-color: #2d3748;
     border-color: #3a4756;
     color: #d1d5db;
 }
 
-/* List group */
 .list-group-item {
     background-color: #2d3748;
     border: 1px solid #3a4756;
     color: #d1d5db;
 }
 
-/* Text area */
 textarea.form-control {
     background-color: #2d3748;
     color: #d1d5db;

@@ -44,6 +44,11 @@ table.table {
     color: #d1d5db !important;
 }
 
+.table tbody tr:hover {
+    background-color: #3a4756;
+    cursor: pointer;
+}
+
 button.btn-danger {
     background-color: #5F1111;
     border-color: #531010;

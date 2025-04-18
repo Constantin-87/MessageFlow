@@ -4,15 +4,22 @@
 
 <div class="new-conversations-list">
     <h4>New Conversations</h4>
-    <ul>
-        @foreach (var conversation in Conversations)
-        {
-            <li>
-                <span>Chat with @conversation.SenderUsername from: @conversation.SourceLabel</span>
-                <button @onclick="async () => await AssignToSelf(conversation)">Assign to Myself</button>
-            </li>
-        }
-    </ul>
+    @if (isLoading)
+    {
+        <LoadingIndicator Message="Loading conversations..." IsDark="false" />
+    }
+    else
+    {
+        <ul>
+            @foreach (var conversation in Conversations)
+            {
+                <li>
+                    <span>Chat with @conversation.SenderUsername from: @conversation.SourceLabel</span>
+                    <button @onclick="async () => await AssignToSelf(conversation)">Assign to Myself</button>
+                </li>
+            }
+        </ul>
+    }
 </div>
 
 @code {
@@ -22,11 +29,11 @@
     [Parameter, Required] public ChatWindow ChatWindowRef { get; set; }
 
     private List<Conversation> Conversations = new();
-
+    private bool isLoading = true;
     private IEnumerable<Conversation> FilteredConversations =>
         string.IsNullOrEmpty(TeamId)
             ? Conversations
-            : Conversations.Where(c => c.AssignedTeamId == TeamId); // 🔹 Filter by team
+            : Conversations.Where(c => c.AssignedTeamId == TeamId);
 
 
     protected override void OnParametersSet()
@@ -43,19 +50,16 @@
         {
             HubConnection.On<Conversation>("NewConversationAdded", (conversation) =>
             {
-                Console.WriteLine($"📥 Received 'NewConversationAdded' event for conversation ID: {conversation.Id}");
                 AddConversation(conversation);
             });
 
             HubConnection.On<Conversation>("RemoveNewConversation", (conversation) =>
             {
-                Console.WriteLine($"🗑️ Received 'RemoveNewConversation' event for conversation ID: {conversation.Id}");
                 RemoveConversation(conversation);
             });
 
             HubConnection.On<List<Conversation>>("LoadNewConversations", (newConversations) =>
            {
-               Console.WriteLine($"🔄 Received 'LoadNewConversations' event with {newConversations.Count} conversations.");
                LoadNewConversations(newConversations);
            });
         }
@@ -63,18 +67,19 @@
 
     public void LoadNewConversations(List<Conversation> newConversations)
     {
+        isLoading = true;
         Conversations.Clear();
 
         foreach (var conversation in newConversations)
         {
             AddConversation(conversation);
         }
+        isLoading = false;
+        StateHasChanged();
     }
 
     public void AddConversation(Conversation conversation)
     {
-        Console.WriteLine($"➕ Attempting to add conversation ID: {conversation.Id}");
-
         if (!Conversations.Any(c => c.Id == conversation.Id))
         {
             Conversations.Add(conversation);

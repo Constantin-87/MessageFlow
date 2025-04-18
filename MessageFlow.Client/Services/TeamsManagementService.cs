@@ -22,7 +22,7 @@ namespace MessageFlow.Client.Services
             return await _httpClient.GetFromJsonAsync<List<ApplicationUserDTO>>($"api/TeamsManagement/{teamId}") ?? new List<ApplicationUserDTO>();
         }
 
-        // ✅ Add a new team to a company
+        // Add a new team to a company
         public async Task<(bool success, string message)> AddTeamToCompanyAsync(string companyId, string teamName, string teamDescription, List<ApplicationUserDTO> assignedUsers)
         {
             var teamDto = new TeamDTO
@@ -30,7 +30,7 @@ namespace MessageFlow.Client.Services
                 CompanyId = companyId,
                 TeamName = teamName,
                 TeamDescription = teamDescription,
-                AssignedUserIds = assignedUsers.Select(u => u.Id).ToList()
+                AssignedUsersDTO = assignedUsers
             };
 
             var response = await _httpClient.PostAsJsonAsync("api/TeamsManagement", teamDto);
