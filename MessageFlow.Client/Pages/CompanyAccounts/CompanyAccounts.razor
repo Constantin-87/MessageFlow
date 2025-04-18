@@ -20,9 +20,10 @@ else
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Company Id</th>
+                <th>Company</th>
                 <th>Account Number</th>
-                <th>Company Name</th>
+                <th>Industry</th>
+                <th>Description</th>
                 <th>Total Users</th>
                 <th>Actions</th>
             </tr>
@@ -31,9 +32,10 @@ else
             @foreach (var company in companies)
             {
                 <tr>
-                    <td>@company.Id</td>
-                    <td>@company.AccountNumber</td>
                     <td>@company.CompanyName</td>
+                    <td>@company.AccountNumber</td>
+                    <td>@company.IndustryType</td>
+                    <td>@company.Description</td>
                     <td>@company.TotalUsers</td>
                     <td>
                         <button class="btn btn-primary" @onclick="() => NavigateToEditCompany(company.Id)">Edit</button>

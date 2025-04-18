@@ -17,6 +17,7 @@
     <thead>
         <tr>
             <th>Team Name</th>
+            <th>Description</th>
             <th>Current Users</th>
             <th>Actions</th>
         </tr>
@@ -26,6 +27,7 @@
         {
             <tr class="@GetRowClass(team)" @onclick="@(() => ShowAddEditTeam(team, false))">
                 <td>@team.TeamName</td>
+                <td title="@team.TeamDescription">@team.TeamDescription</td>
                 <td>
                     @if (team?.AssignedUsersDTO != null && team.AssignedUsersDTO.Any())
                     {

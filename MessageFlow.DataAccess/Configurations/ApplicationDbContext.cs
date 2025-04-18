@@ -1,10 +1,9 @@
-﻿namespace MessageFlow.DataAccess.Configurations
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using MessageFlow.DataAccess.Models;
+
+namespace MessageFlow.DataAccess.Configurations
 {
-    using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-    using Microsoft.EntityFrameworkCore;
-    using MessageFlow.DataAccess.Models;
-
-
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -26,16 +25,13 @@
         public DbSet<CompanyPhoneNumber> CompanyPhoneNumbers { get; set; }
         public DbSet<ProcessedPretrainData> ProcessedPretrainData { get; set; }
 
-
-
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Team>()
                 .HasOne(t => t.Company)
-                .WithMany(c => c.Teams)  // ✅ Points to Company.Teams
+                .WithMany(c => c.Teams)
                 .HasForeignKey(t => t.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -81,8 +77,6 @@
                 .WithMany(c => c.Users)
                 .HasForeignKey(u => u.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
-
         }
     }
-
 }

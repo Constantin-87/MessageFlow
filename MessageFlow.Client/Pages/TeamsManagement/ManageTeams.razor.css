@@ -57,3 +57,10 @@ table.table-hover {
     background-color: #1abc9c33;
     border-left: 3px solid #1abc9c;
 }
+
+.table td[title],
+.table th[title] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

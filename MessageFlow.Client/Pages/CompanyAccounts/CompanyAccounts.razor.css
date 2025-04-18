@@ -42,6 +42,9 @@ table.table {
 
 .table td, .table th {
     color: #d1d5db !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .table tbody tr:hover {
