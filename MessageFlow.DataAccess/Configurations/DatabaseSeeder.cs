@@ -1,11 +1,6 @@
 ﻿using MessageFlow.DataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MessageFlow.DataAccess.Configurations
 {
@@ -17,7 +12,7 @@ namespace MessageFlow.DataAccess.Configurations
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
-            // 1️⃣ Seed Default Company if it doesn't exist
+            // Seed Default Company if it doesn't exist
             var defaultCompanyId = "MessageFlow-company-id";
             var existingCompany = await dbContext.Companies.FindAsync(defaultCompanyId);
             if (existingCompany == null)
@@ -33,10 +28,10 @@ namespace MessageFlow.DataAccess.Configurations
                 };
 
                 dbContext.Companies.Add(defaultCompany);
-                await dbContext.SaveChangesAsync();  // Save the company first
+                await dbContext.SaveChangesAsync();
             }
 
-            // 2️⃣ Seed Roles
+            // Seed Roles
             var roles = new[] { "SuperAdmin", "Admin", "Agent", "AgentManager" };
             foreach (var role in roles)
             {
@@ -46,7 +41,7 @@ namespace MessageFlow.DataAccess.Configurations
                 }
             }
 
-            // 3️⃣ Seed SuperAdmin
+            // Seed SuperAdmin
             var superAdminEmail = "superadmin@example.com";
             var existingUser = await userManager.FindByEmailAsync(superAdminEmail);
 
@@ -57,11 +52,11 @@ namespace MessageFlow.DataAccess.Configurations
                     UserName = "superadmin",
                     Email = superAdminEmail,
                     EmailConfirmed = true,
-                    CompanyId = defaultCompanyId, // ✅ Now this ID exists
+                    CompanyId = defaultCompanyId,
                     LastActivity = DateTime.UtcNow
                 };
 
-                var result = await userManager.CreateAsync(superAdmin, "SuperAdmin@123"); // Default password
+                var result = await userManager.CreateAsync(superAdmin, "SuperAdmin@123");
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(superAdmin, "SuperAdmin");
@@ -73,6 +68,5 @@ namespace MessageFlow.DataAccess.Configurations
                 }
             }
         }
-
     }
 }

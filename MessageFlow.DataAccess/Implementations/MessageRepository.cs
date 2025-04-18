@@ -2,26 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Configurations;
-using MessageFlow.DataAccess.Services;
 
 namespace MessageFlow.DataAccess.Implementations
 {
     public class MessageRepository : GenericRepository<Message>, IMessageRepository
     {
         private readonly ApplicationDbContext? _context;
-        private readonly IDbContextFactoryService? _dbContextFactory;
 
-        // ✅ Constructor for direct context usage (single-context scenarios with UnitOfWork)
         public MessageRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
-
-        // ✅ Constructor for factory usage (parallel-safe operations)
-        //public MessageRepository(IDbContextFactoryService dbContextFactory) : base(dbContextFactory)
-        //{
-        //    _dbContextFactory = dbContextFactory;
-        //}
 
         public async Task<Message?> GetMessageByIdAsync(string messageId)
         {
@@ -41,7 +32,7 @@ namespace MessageFlow.DataAccess.Implementations
         {
             return await _context.Messages
                 .Where(m => m.ConversationId == conversationId)
-                .OrderByDescending(m => m.SentAt) // Get the most recent messages first
+                .OrderByDescending(m => m.SentAt)
                 .Take(limit)
                 .ToListAsync();
         }
@@ -53,11 +44,10 @@ namespace MessageFlow.DataAccess.Implementations
                 .ToListAsync();
         }
 
-        public async Task<Message?> GetMessageByProviderIdAsync(string providerMessageId) // ✅ Implemented missing method
+        public async Task<Message?> GetMessageByProviderIdAsync(string providerMessageId)
         {
             return await _context.Messages
                 .FirstOrDefaultAsync(m => m.ProviderMessageId == providerMessageId);
         }
-
     }
 }

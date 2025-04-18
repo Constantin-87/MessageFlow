@@ -9,14 +9,11 @@ namespace MessageFlow.DataAccess.Implementations
     {
         private readonly ApplicationDbContext? _context;
 
-        // ✅ Constructor for ApplicationDbContext usage (for UnitOfWork)
         public ApplicationUserRepository(ApplicationDbContext context)
             : base(context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
-
-
 
         public async Task<ApplicationUser?> GetUserByIdAsync(string userId)
         {
@@ -52,7 +49,7 @@ namespace MessageFlow.DataAccess.Implementations
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
             {
-                return false; // User not found
+                return false;
             }
 
             _context.Users.Remove(user);
@@ -60,7 +57,7 @@ namespace MessageFlow.DataAccess.Implementations
             return true;
         }
 
-        // DataAccess Layer: Fetch roles for multiple users in one query
+        // Get roles for multiple users in one query
         public async Task<Dictionary<string, List<string>>> GetRolesForUsersAsync(List<string> userIds)
         {
             return await _context.UserRoles
@@ -75,7 +72,7 @@ namespace MessageFlow.DataAccess.Implementations
         {
             return await _context.Users
                 .Where(u => u.Id == userId)
-                .Select(u => u.CompanyId) // Nullable to handle cases where user might not exist
+                .Select(u => u.CompanyId)
                 .FirstOrDefaultAsync();
         }
 
@@ -91,7 +88,5 @@ namespace MessageFlow.DataAccess.Implementations
         {
             return await _context.Users.CountAsync(u => u.CompanyId == companyId);
         }
-
-
     }
 }

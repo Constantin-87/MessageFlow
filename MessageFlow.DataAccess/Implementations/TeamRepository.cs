@@ -2,32 +2,23 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Configurations;
-using MessageFlow.DataAccess.Services;
 
 namespace MessageFlow.DataAccess.Implementations
 {
     public class TeamRepository : GenericRepository<Team>, ITeamRepository
     {
         private readonly ApplicationDbContext? _context;
-        private readonly IDbContextFactoryService? _dbContextFactory;
 
-        // ✅ Constructor for direct context usage (single-context scenarios with UnitOfWork)
         public TeamRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
 
-        // ✅ Constructor for factory usage (parallel-safe operations)
-        //public TeamRepository(IDbContextFactoryService dbContextFactory) : base(dbContextFactory)
-        //{
-        //    _dbContextFactory = dbContextFactory;
-        //}
-
         public async Task<List<Team>> GetAllTeamsAsync()
         {
             return await _context.Teams
                 .Include(t => t.Company)
-                .Include(t => t.Users) // Include Users directly
+                .Include(t => t.Users)
                 .ToListAsync();
         }
 
@@ -47,7 +38,7 @@ namespace MessageFlow.DataAccess.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<Team>> GetTeamsByUserIdAsync(string userId) // ✅ Get teams for a user
+        public async Task<List<Team>> GetTeamsByUserIdAsync(string userId)
         {
             return await _context.Teams
                 .Where(t => t.Users.Any(u => u.Id == userId))
@@ -55,7 +46,7 @@ namespace MessageFlow.DataAccess.Implementations
                 .ToListAsync();
         }
 
-        public async Task<List<ApplicationUser>> GetUsersByTeamIdAsync(string teamId) // ✅ Get users in a team
+        public async Task<List<ApplicationUser>> GetUsersByTeamIdAsync(string teamId)
         {
             var team = await _context.Teams
                .Include(t => t.Users)
@@ -64,7 +55,7 @@ namespace MessageFlow.DataAccess.Implementations
             return team?.Users.ToList() ?? new List<ApplicationUser>();
         }
 
-        public void DeleteTeams(List<Team> teams) // ✅ Bulk delete teams
+        public void DeleteTeams(List<Team> teams)
         {
             _context.Teams.RemoveRange(teams);
         }

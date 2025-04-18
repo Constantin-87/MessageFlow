@@ -9,19 +9,11 @@ namespace MessageFlow.DataAccess.Implementations
     public class CompanyPhoneNumberRepository : GenericRepository<CompanyPhoneNumber>, ICompanyPhoneNumberRepository
     {
         private readonly ApplicationDbContext? _context;
-        private readonly IDbContextFactoryService? _dbContextFactory;
 
-        // ✅ Constructor for direct context usage (single-context scenarios with UnitOfWork)
         public CompanyPhoneNumberRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
-
-        // ✅ Constructor for factory usage (parallel-safe operations)
-        //public CompanyPhoneNumberRepository(IDbContextFactoryService dbContextFactory) : base(dbContextFactory)
-        //{
-        //    _dbContextFactory = dbContextFactory;
-        //}
 
         public async Task<List<CompanyPhoneNumber>> GetPhoneNumbersByCompanyAsync(string companyId)
         {
@@ -32,7 +24,7 @@ namespace MessageFlow.DataAccess.Implementations
 
         public async Task UpdatePhoneNumbersAsync(string companyId, List<CompanyPhoneNumber> companyPhoneNumbers)
         {
-            // Retrieve existing phone numbers for the company
+            // Get existing phone numbers
             var existingPhoneNumbers = await _context.CompanyPhoneNumbers
                 .Where(p => p.CompanyId == companyId)
                 .ToListAsync();
@@ -57,6 +49,5 @@ namespace MessageFlow.DataAccess.Implementations
                 }
             }
         }
-
     }
 }

@@ -24,7 +24,7 @@ namespace MessageFlow.DataAccess.Implementations
                     .Include(c => c.CompanyPhoneNumbers)
                     .FirstOrDefaultAsync(c => c.Id == companyId);
             }
-            throw new InvalidOperationException("No available context. Ensure either ApplicationDbContext or IDbContextFactoryService is provided.");
+            throw new InvalidOperationException("No available context.");
         }
 
         public async Task<List<Company>> GetAllCompaniesWithUserCountAsync()
@@ -45,7 +45,7 @@ namespace MessageFlow.DataAccess.Implementations
                     })
                     .ToListAsync();
             }
-            throw new InvalidOperationException("No available context. Ensure either ApplicationDbContext or IDbContextFactoryService is provided.");
+            throw new InvalidOperationException("No available context.");
         }
     }
 }

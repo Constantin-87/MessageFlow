@@ -10,7 +10,7 @@ namespace MessageFlow.DataAccess.Configurations
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            // ✅ Load Configuration from appsettings & environment variables
+            // Load Configuration from appsettings & environment variables
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -18,7 +18,7 @@ namespace MessageFlow.DataAccess.Configurations
                 .AddEnvironmentVariables()
                 .Build();
 
-            // ✅ Retrieve Azure Key Vault URL
+            // Retrieve Azure Key Vault URL
             string keyVaultUrl = configuration["AzureKeyVaultURL"];
             string connectionString = configuration.GetConnectionString("DBConnectionString");
 
@@ -28,31 +28,25 @@ namespace MessageFlow.DataAccess.Configurations
                 {
                     try
                     {
-                        Console.WriteLine("🔑 Fetching connection string from Azure Key Vault...");
-
                         var client = new SecretClient(new Uri(keyVaultUrl), new DefaultAzureCredential());
-
-                        // ✅ Adjusted secret name based on your Key Vault structure
                         var secret = client.GetSecret("azure-database-connection-string");
                         connectionString = secret.Value.Value;
                     }
                     catch (Exception ex)
                     {
-                        throw new InvalidOperationException("❌ Failed to retrieve connection string from Azure Key Vault.", ex);
+                        throw new InvalidOperationException("Failed to retrieve connection string from Azure Key Vault.", ex);
                     }
                 }
                 else
                 {
-                    throw new InvalidOperationException("❌ Azure Key Vault URL is not configured. Ensure `AzureKeyVaultURL` is set in appsettings or environment variables.");
+                    throw new InvalidOperationException("Azure Key Vault URL is not configured.");
                 }
             }
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("❌ Database connection string is missing. Ensure it is stored in Azure Key Vault or appsettings.");
+                throw new InvalidOperationException("Database connection string is missing.");
             }
-
-            Console.WriteLine($"✅ Using Connection String: {connectionString}");
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseSqlServer(connectionString);

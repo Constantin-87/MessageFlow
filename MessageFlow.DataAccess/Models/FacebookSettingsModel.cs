@@ -12,6 +12,7 @@ namespace MessageFlow.DataAccess.Models
         [Required(ErrorMessage = "Access Token is required.")]
         public string AccessToken { get; set; }
 
-        public string CompanyId { get; set; } // Foreign key to link the settings to the company
+        [Required(ErrorMessage = "CompanyId is required.")]
+        public string CompanyId { get; set; }
     }
 }

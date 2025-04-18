@@ -2,26 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Configurations;
-using MessageFlow.DataAccess.Services;
 
 namespace MessageFlow.DataAccess.Implementations
 {
     public class CompanyEmailRepository : GenericRepository<CompanyEmail>, ICompanyEmailRepository
     {
         private readonly ApplicationDbContext? _context;
-        private readonly IDbContextFactoryService? _dbContextFactory;
 
-        // ✅ Constructor for direct context usage (single-context scenarios with UnitOfWork)
         public CompanyEmailRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
-
-        // ✅ Constructor for factory usage (parallel-safe operations)
-        //public CompanyEmailRepository(IDbContextFactoryService dbContextFactory) : base(dbContextFactory)
-        //{
-        //    _dbContextFactory = dbContextFactory;
-        //}
 
         public async Task<List<CompanyEmail>> GetCompanyEmailsByCompanyIdAsync(string companyId)
         {
@@ -30,10 +21,9 @@ namespace MessageFlow.DataAccess.Implementations
                 .ToListAsync();
         }
 
-
         public async Task UpdateEmailsAsync(string companyId, List<CompanyEmail> companyEmails)
         {
-            // Retrieve existing emails for the company
+            // Get existing emails for the company
             var existingEmails = await _context.CompanyEmails
                 .Where(e => e.CompanyId == companyId)
                 .ToListAsync();

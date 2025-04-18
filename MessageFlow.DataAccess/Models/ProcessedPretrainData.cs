@@ -7,11 +7,10 @@ namespace MessageFlow.DataAccess.Models
     {
         [Key]
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string CompanyId { get; set; }  // Associated company
+        public string CompanyId { get; set; }
         public string FileDescription { get; set; }
         public FileType FileType { get; set; }
         public string FileUrl { get; set; }
         public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
     }
-
 }

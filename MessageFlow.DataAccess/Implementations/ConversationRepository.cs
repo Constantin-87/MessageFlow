@@ -2,26 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Configurations;
-using MessageFlow.DataAccess.Services;
 
 namespace MessageFlow.DataAccess.Implementations
 {
     public class ConversationRepository : GenericRepository<Conversation>, IConversationRepository
     {
         private readonly ApplicationDbContext? _context;
-        private readonly IDbContextFactoryService? _dbContextFactory;
 
-        // ✅ Constructor for direct context usage (single-context scenarios with UnitOfWork)
         public ConversationRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
-
-        // ✅ Constructor for factory usage (parallel-safe operations)
-        //public ConversationRepository(IDbContextFactoryService dbContextFactory) : base(dbContextFactory)
-        //{
-        //    _dbContextFactory = dbContextFactory;
-        //}
 
         public async Task<List<Conversation>> GetAllConversationsAsync()
         {
@@ -80,8 +71,5 @@ namespace MessageFlow.DataAccess.Implementations
                 .Include(c => c.Messages)
                 .FirstOrDefaultAsync(c => c.SenderId == senderId && c.CompanyId == companyId);
         }
-
-
     }
-
 }

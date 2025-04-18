@@ -20,35 +20,30 @@ namespace MessageFlow.Client.Services
             {
                 var response = await _httpClient.GetAsync("api/company/all");
 
-                Console.WriteLine($"📡 API Call: GET /api/company/all - Status: {response.StatusCode}");
-
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorMessage = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"❌ Error Fetching Companies: {errorMessage}");
                     throw new HttpRequestException($"Failed to fetch companies. Status: {response.StatusCode}, Error: {errorMessage}");
                 }
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"✅ Raw API Response: {jsonResponse}"); // Debug output
 
                 return await response.Content.ReadFromJsonAsync<List<CompanyDTO>>() ?? new List<CompanyDTO>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Exception in GetAllCompaniesAsync: {ex.Message}");
                 return new List<CompanyDTO>(); // Prevents app from crashing
             }
         }
 
 
-        // ✅ Fetch company details by ID
+        // Get company details by ID
         public async Task<CompanyDTO?> GetCompanyByIdAsync(string companyId)
         {
             return await _httpClient.GetFromJsonAsync<CompanyDTO>($"api/company/{companyId}");
         }
 
-        // ✅ Create a new company
+        // Create a new company
         public async Task<(bool success, string message)> CreateCompanyAsync(CompanyDTO companyDto)
         {
             var response = await _httpClient.PostAsJsonAsync("api/company/create", companyDto);
@@ -57,7 +52,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Update company details
+        // Update company details
         public async Task<(bool success, string message)> UpdateCompanyAsync(CompanyDTO companyDto)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update", companyDto);
@@ -66,7 +61,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Delete a company
+        // Delete a company
         public async Task<(bool success, string message)> DeleteCompanyAsync(string companyId)
         {
             var response = await _httpClient.DeleteAsync($"api/company/delete/{companyId}");
@@ -75,13 +70,13 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Get the logged-in user's company
+        // Get the logged-in user's company
         public async Task<CompanyDTO?> GetCompanyForUserAsync(string userId)
         {
             return await _httpClient.GetFromJsonAsync<CompanyDTO>("api/company/user-company");
         }        
 
-        // ✅ Update company emails
+        // Update company emails
         public async Task<(bool success, string message)> UpdateCompanyEmailsAsync(List<CompanyEmailDTO> emails)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update-emails", emails);
@@ -90,7 +85,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Update company phone numbers
+        // Update company phone numbers
         public async Task<(bool success, string message)> UpdateCompanyPhoneNumbersAsync(List<CompanyPhoneNumberDTO> phoneNumbers)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update-phone-numbers", phoneNumbers);
@@ -99,7 +94,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Fetch company metadata
+        // Fetch company metadata
         public async Task<(bool success, string metadata, string message)> GetCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.GetAsync($"api/company/{companyId}/metadata");
@@ -108,7 +103,7 @@ namespace MessageFlow.Client.Services
                 : (false, string.Empty, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Generate and upload metadata
+        // Generate and upload metadata
         public async Task<(bool success, string message)> GenerateAndUploadCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.PostAsync($"api/company/{companyId}/generate-metadata", null);
@@ -117,7 +112,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Delete metadata
+        // Delete metadata
         public async Task<(bool success, string message)> DeleteCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.DeleteAsync($"api/company/{companyId}/delete-metadata");
@@ -126,7 +121,7 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Fetch pretraining files
+        // Fetch pretraining files
         public async Task<(bool success, List<ProcessedPretrainDataDTO> files, string message)> GetCompanyPretrainingFilesAsync(string companyId)
         {
             var response = await _httpClient.GetAsync($"api/company/{companyId}/pretraining-files");
@@ -135,7 +130,7 @@ namespace MessageFlow.Client.Services
                 : (false, new List<ProcessedPretrainDataDTO>(), await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Upload pretraining files
+        // Upload pretraining files
         public async Task<(bool success, string message)> UploadCompanyFilesAsync(List<PretrainDataFileDTO> files)
         {
             var response = await _httpClient.PostAsJsonAsync("api/company/upload-files", files);
@@ -144,14 +139,14 @@ namespace MessageFlow.Client.Services
                 : (false, await response.Content.ReadAsStringAsync());
         }
 
-        // ✅ Delete a specific file
+        // Delete a specific file
         public async Task<bool> DeleteCompanyFileAsync(ProcessedPretrainDataDTO file)
         {
             var response = await _httpClient.DeleteAsync($"api/company/delete-file");
             return response.IsSuccessStatusCode;
         }
 
-        // ✅ Create Azure AI Search Index
+        // Create Azure AI Search Index
         public async Task<(bool success, string message)> CreateAzureAiSearchIndexAndUploadFilesAsync(string companyId)
         {
             var response = await _httpClient.PostAsync($"api/company/{companyId}/create-search-index", null);
