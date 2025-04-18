@@ -21,13 +21,6 @@ namespace MessageFlow.DataAccess.Implementations
                 .FirstOrDefaultAsync(m => m.Id == messageId);
         }
 
-        public async Task<List<Message>> GetMessagesByConversationAsync(string conversationId)
-        {
-            return await _context.Messages
-                .Where(m => m.ConversationId == conversationId)
-                .ToListAsync();
-        }
-
         public async Task<List<Message>> GetMessagesByConversationIdAsync(string conversationId, int limit)
         {
             return await _context.Messages

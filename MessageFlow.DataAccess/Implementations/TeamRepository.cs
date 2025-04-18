@@ -14,14 +14,6 @@ namespace MessageFlow.DataAccess.Implementations
             _context = context;
         }
 
-        public async Task<List<Team>> GetAllTeamsAsync()
-        {
-            return await _context.Teams
-                .Include(t => t.Company)
-                .Include(t => t.Users)
-                .ToListAsync();
-        }
-
         public async Task<Team?> GetTeamByIdAsync(string teamId)
         {
             return await _context.Teams
@@ -75,30 +67,6 @@ namespace MessageFlow.DataAccess.Implementations
                     }
                 }
 
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task AddUserToTeamAsync(string teamId, string userId)
-        {
-            var team = await GetTeamByIdAsync(teamId);
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-
-            if (team != null && user != null && !team.Users.Contains(user))
-            {
-                team.Users.Add(user);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task RemoveUserFromTeamAsync(string teamId, string userId)
-        {
-            var team = await GetTeamByIdAsync(teamId);
-            var userToRemove = team?.Users.FirstOrDefault(u => u.Id == userId);
-
-            if (userToRemove != null)
-            {
-                team.Users.Remove(userToRemove);
                 await _context.SaveChangesAsync();
             }
         }

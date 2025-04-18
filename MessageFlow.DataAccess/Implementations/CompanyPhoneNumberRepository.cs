@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Configurations;
-using MessageFlow.DataAccess.Services;
 
 namespace MessageFlow.DataAccess.Implementations
 {
@@ -13,13 +12,6 @@ namespace MessageFlow.DataAccess.Implementations
         public CompanyPhoneNumberRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
-        }
-
-        public async Task<List<CompanyPhoneNumber>> GetPhoneNumbersByCompanyAsync(string companyId)
-        {
-            return await _context.CompanyPhoneNumbers
-                .Where(p => p.CompanyId == companyId)
-                .ToListAsync();
         }
 
         public async Task UpdatePhoneNumbersAsync(string companyId, List<CompanyPhoneNumber> companyPhoneNumbers)

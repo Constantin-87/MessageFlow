@@ -4,7 +4,6 @@ namespace MessageFlow.DataAccess.Repositories
 {
     public interface ICompanyRepository
     {
-        Task<List<Company>> GetAllAsync();
         Task<List<Company>> GetAllCompaniesWithUserCountAsync();
         Task<Company?> GetByIdStringAsync(string companyId);
         Task<Company?> GetCompanyWithDetailsByIdAsync(string companyId);

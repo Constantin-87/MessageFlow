@@ -43,7 +43,7 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while fetching users by IDs.");
+                _logger.LogError(ex, "Error occurred while getting users.");
                 return new List<ApplicationUserDTO>();
             }
         }

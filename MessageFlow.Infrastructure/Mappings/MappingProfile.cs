@@ -40,9 +40,6 @@ namespace MessageFlow.Infrastructure.Mappings
                 .ForMember(dest => dest.CompanyId, opt => opt.MapFrom(src => src.CompanyId))
                 .ReverseMap();
 
-            // Map PretrainDataFile <> PretrainDataFileDTO
-            CreateMap<PretrainDataFile, PretrainDataFileDTO>().ReverseMap();
-
             // Map ProcessedPretrainData <> ProcessedPretrainDataDTO
             CreateMap<ProcessedPretrainDataDTO, ProcessedPretrainData>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.Id) ? Guid.NewGuid().ToString() : src.Id)).ReverseMap();

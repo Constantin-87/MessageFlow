@@ -4,8 +4,6 @@ using MessageFlow.DataAccess.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
@@ -44,12 +42,10 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                 company.CompanyPhoneNumbers = null;
                 company.Users = null;
                 company.Teams = null;
-                company.PretrainDataFiles = null;
 
                 await _unitOfWork.Companies.AddEntityAsync(company);
                 await _unitOfWork.SaveChangesAsync();
 
-                //_logger.LogInformation($"Company {company.CompanyName} created successfully.");
                 return (true, "Company created successfully");
             }
             catch (Exception ex)

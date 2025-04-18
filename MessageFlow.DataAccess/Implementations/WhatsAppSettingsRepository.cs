@@ -22,11 +22,6 @@ namespace MessageFlow.DataAccess.Implementations
                 .FirstOrDefaultAsync(ws => ws.CompanyId == companyId);
         }
 
-        public async Task<List<WhatsAppSettingsModel>> GetAllSettingsAsync()
-        {
-            return await _context.WhatsAppSettingsModels.Include(ws => ws.PhoneNumbers).ToListAsync();
-        }
-
         public async Task<WhatsAppSettingsModel?> GetSettingsByBusinessAccountIdAsync(string businessAccountId)
         {
             return await _context.WhatsAppSettingsModels

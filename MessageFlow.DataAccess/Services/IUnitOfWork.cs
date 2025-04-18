@@ -12,17 +12,12 @@ namespace MessageFlow.DataAccess.Services
         ITeamRepository Teams { get; }
         IApplicationUserRepository ApplicationUsers { get; }
         IArchivedConversationRepository ArchivedConversations { get; }
-        IArchivedMessageRepository ArchivedMessages { get; }
         IConversationRepository Conversations { get; }
         IMessageRepository Messages { get; }
         IFacebookSettingsRepository FacebookSettings { get; }
         IWhatsAppSettingsRepository WhatsAppSettings { get; }
-        IPhoneNumberInfoRepository PhoneNumbers { get; }
-        IPretrainDataFileRepository PretrainDataFiles { get; }
         IProcessedPretrainDataRepository ProcessedPretrainData { get; }
 
-
         Task SaveChangesAsync();
-        //Task ExecuteInTransactionAsync(Func<ApplicationDbContext, Task> action);
     }
 }

@@ -14,34 +14,11 @@ namespace MessageFlow.DataAccess.Implementations
             _context = context;
         }
 
-        public async Task<List<Conversation>> GetAllConversationsAsync()
-        {
-            return await _context.Conversations
-                .Include(c => c.Messages)
-                .ToListAsync();
-        }
-
         public async Task<Conversation?> GetConversationByIdAsync(string conversationId)
         {
             return await _context.Conversations
                 .Include(c => c.Messages)
                 .FirstOrDefaultAsync(c => c.Id == conversationId);
-        }
-
-        public async Task<List<Conversation>> GetConversationsByCompanyAsync(string companyId)
-        {
-            return await _context.Conversations
-                .Where(c => c.CompanyId == companyId)
-                .Include(c => c.Messages)
-                .ToListAsync();
-        }
-
-        public async Task<List<Conversation>> GetActiveConversationsAsync()
-        {
-            return await _context.Conversations
-                .Where(c => c.IsActive)
-                .Include(c => c.Messages)
-                .ToListAsync();
         }
 
         public async Task<List<Conversation>> GetAssignedConversationsAsync(string userId, string companyId)

@@ -15,12 +15,7 @@ public static class TestDbContextFactory
     {
         context ??= CreateDbContext();
 
-        var dbContextFactoryMock = new Mock<IDbContextFactoryService>();
-        dbContextFactoryMock
-            .Setup(f => f.ExecuteScopedAsync(It.IsAny<Func<ApplicationDbContext, Task>>()))
-            .Returns<Func<ApplicationDbContext, Task>>(async action => await action(context));
-
-        // ✅ Mock UserManager if not provided
+        // Mock UserManager if not provided
         userStore ??= new Mock<IUserStore<ApplicationUser>>().Object;
         userManager ??= MockUserManager(userStore);
 

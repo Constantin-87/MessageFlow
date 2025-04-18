@@ -5,7 +5,7 @@ namespace MessageFlow.Shared.DTOs
 {
     public class TeamDTO
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         public string TeamName { get; set; }
 

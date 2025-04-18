@@ -26,7 +26,6 @@ namespace MessageFlow.DataAccess.Models
         public ICollection<ApplicationUser>? Users { get; set; } = new List<ApplicationUser>();
         public ICollection<CompanyEmail>? CompanyEmails { get; set; } = new List<CompanyEmail>();
         public ICollection<CompanyPhoneNumber>? CompanyPhoneNumbers { get; set; } = new List<CompanyPhoneNumber>();
-        public ICollection<PretrainDataFile>? PretrainDataFiles { get; set; } = new List<PretrainDataFile>();
         public ICollection<Team>? Teams { get; set; } = new List<Team>();
 
         // Not stored property to hold the total users count

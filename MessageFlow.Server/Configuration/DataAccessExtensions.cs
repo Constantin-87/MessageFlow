@@ -24,17 +24,13 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IMessageRepository, MessageRepository>();
             services.AddScoped<IArchivedConversationRepository, ArchivedConversationRepository>();
-            services.AddScoped<IArchivedMessageRepository, ArchivedMessageRepository>();
             services.AddScoped<IFacebookSettingsRepository, FacebookSettingsRepository>();
             services.AddScoped<IWhatsAppSettingsRepository, WhatsAppSettingsRepository>();
-            services.AddScoped<IPhoneNumberInfoRepository, PhoneNumberInfoRepository>();
             services.AddScoped<IProcessedPretrainDataRepository, ProcessedPretrainDataRepository>();
-            services.AddScoped<IPretrainDataFileRepository, PretrainDataFileRepository>();
             services.AddScoped(typeof(GenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             return services;
         }
     }
-
 }

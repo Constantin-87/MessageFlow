@@ -14,13 +14,6 @@ namespace MessageFlow.DataAccess.Implementations
             _context = context;
         }
 
-        public async Task<List<CompanyEmail>> GetCompanyEmailsByCompanyIdAsync(string companyId)
-        {
-            return await _context.CompanyEmails
-                .Where(e => e.CompanyId == companyId)
-                .ToListAsync();
-        }
-
         public async Task UpdateEmailsAsync(string companyId, List<CompanyEmail> companyEmails)
         {
             // Get existing emails for the company

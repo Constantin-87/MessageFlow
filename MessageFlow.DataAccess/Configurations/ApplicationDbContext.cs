@@ -20,7 +20,6 @@ namespace MessageFlow.DataAccess.Configurations
         public DbSet<ArchivedMessage> ArchivedMessages { get; set; }
         public DbSet<WhatsAppSettingsModel> WhatsAppSettingsModels { get; set; }
         public DbSet<PhoneNumberInfo> PhoneNumberInfo { get; set; }
-        public DbSet<PretrainDataFile> PretrainDataFiles { get; set; }
         public DbSet<CompanyEmail> CompanyEmails { get; set; }
         public DbSet<CompanyPhoneNumber> CompanyPhoneNumbers { get; set; }
         public DbSet<ProcessedPretrainData> ProcessedPretrainData { get; set; }
@@ -44,13 +43,6 @@ namespace MessageFlow.DataAccess.Configurations
             modelBuilder.Entity<WhatsAppSettingsModel>()
                 .HasMany(ws => ws.PhoneNumbers)
                 .WithOne()
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<PretrainDataFile>()
-                .HasOne(pf => pf.Company)
-                .WithMany(c => c.PretrainDataFiles)
-                .HasForeignKey(pf => pf.CompanyId)
-                .HasPrincipalKey(c => c.Id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<CompanyEmail>()

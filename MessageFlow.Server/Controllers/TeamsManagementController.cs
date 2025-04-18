@@ -12,7 +12,6 @@ namespace MessageFlow.Server.Controllers
     [Authorize(Roles = "SuperAdmin,Admin")]
     public class TeamsManagementController : ControllerBase
     {
-        //private readonly TeamsManagementService _teamsManagementService;
         private readonly IMediator _mediator;
 
         public TeamsManagementController(IMediator mediator)
