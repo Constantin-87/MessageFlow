@@ -1,14 +1,12 @@
 ﻿using AutoMapper;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
-using MessageFlow.Server.Authorization;
 using MessageFlow.AzureServices.Interfaces;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 using System.Text;
-using MessageFlow.AzureServices.Helpers;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
+using MessageFlow.AzureServices.Helpers.Interfaces;
+using MessageFlow.Server.Authorization;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
@@ -19,19 +17,25 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
         private readonly IDocumentProcessingService _documentProcessingService;
         private readonly IAzureBlobStorageService _blobStorageService;
         private readonly ILogger<UploadCompanyFilesCommandHandler> _logger;
+        private readonly ICompanyDataHelper _companyDataHelper;
+        private readonly IAuthorizationHelper _authorizationHelper;
 
         public UploadCompanyFilesCommandHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IDocumentProcessingService documentProcessingService,
             IAzureBlobStorageService blobStorageService,
-            ILogger<UploadCompanyFilesCommandHandler> logger)
+            ILogger<UploadCompanyFilesCommandHandler> logger,
+            ICompanyDataHelper companyDataHelper,
+            IAuthorizationHelper authorizationHelper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _documentProcessingService = documentProcessingService;
             _blobStorageService = blobStorageService;
             _logger = logger;
+            _companyDataHelper = companyDataHelper;
+            _authorizationHelper = authorizationHelper;
         }
 
         public async Task<(bool success, string errorMessage)> Handle(UploadCompanyFilesCommand request, CancellationToken cancellationToken)
@@ -43,9 +47,16 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
             {
                 var company = await _unitOfWork.Companies.GetByIdStringAsync(companyId);
                 if (company == null)
-                    return (false, "Company not found.");               
+                    return (false, "Company not found.");
 
-                var (processedFilesDTO, jsonContents) = await CompanyDataHelper.ProcessUploadedFilesAsync(request.Files, _documentProcessingService);
+                var (isAuthorized, userCompanyId, isSuperAdmin, errorMessage) = await _authorizationHelper.CompanyAccess(companyId);
+                if (!isAuthorized)
+                {
+                    _logger.LogWarning("Unauthorized attempt to upload files for company {CompanyId}. Reason: {Error}", companyId, errorMessage);
+                    return (false, errorMessage);
+                }
+
+                var (processedFilesDTO, jsonContents) = await _companyDataHelper.ProcessUploadedFilesAsync(request.Files, _documentProcessingService);
                 var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);
 
                 if (processedFiles.Count != jsonContents.Count)

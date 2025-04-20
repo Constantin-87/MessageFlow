@@ -2,7 +2,6 @@
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.Authorization;
-using Microsoft.Extensions.Logging;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
 

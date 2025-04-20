@@ -24,7 +24,7 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.QueryHandlers
 
         public async Task<List<TeamDTO>> Handle(GetTeamsForCompanyQuery request, CancellationToken cancellationToken)
         {
-            var (isAuthorized, errorMessage) = await _auth.CanManageTeam(request.CompanyId);
+            var (isAuthorized, errorMessage) = await _auth.TeamAccess(request.CompanyId);
             if (!isAuthorized)
             {
                 _logger.LogWarning($"Unauthorized access to company teams: {errorMessage}");

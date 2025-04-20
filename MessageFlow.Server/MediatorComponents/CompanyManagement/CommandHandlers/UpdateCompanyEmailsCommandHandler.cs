@@ -4,8 +4,6 @@ using MessageFlow.DataAccess.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
@@ -39,9 +37,12 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                 if (string.IsNullOrEmpty(companyId))
                     return (false, "Invalid CompanyId provided.");
 
-                var (isAuthorized, _, _, errorMessage) = await _authorizationHelper.CompanyAccess(companyId);
+                var (isAuthorized, userCompanyId, isSuperAdmin, errorMessage) = await _authorizationHelper.CompanyAccess(companyId);
                 if (!isAuthorized)
                     return (false, errorMessage);
+
+                if (!isSuperAdmin && userCompanyId != companyId)
+                    return (false, "Admins can only update their own company's emails.");
 
                 var existingCompany = await _unitOfWork.Companies.GetByIdStringAsync(companyId);
                 if (existingCompany == null)

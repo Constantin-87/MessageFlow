@@ -1,8 +1,6 @@
 ﻿using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.Authorization;
 using MessageFlow.AzureServices.Interfaces;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
@@ -13,22 +11,34 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAzureBlobStorageService _blobStorageService;
         private readonly ILogger<DeleteCompanyFileCommandHandler> _logger;
+        private readonly IAuthorizationHelper _authorizationHelper;
 
         public DeleteCompanyFileCommandHandler(
             IUnitOfWork unitOfWork,
             IAzureBlobStorageService blobStorageService,
-            ILogger<DeleteCompanyFileCommandHandler> logger)
+            ILogger<DeleteCompanyFileCommandHandler> logger,
+            IAuthorizationHelper authorizationHelper)
         {
             _unitOfWork = unitOfWork;
             _blobStorageService = blobStorageService;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
         public async Task<bool> Handle(DeleteCompanyFileCommand request, CancellationToken cancellationToken)
         {
+            var file = request.File;
+            var companyId = file.CompanyId;
             try
             {
-                var file = request.File;
+                var (isAuthorized, userCompanyId, isSuperAdmin, errorMessage) =
+                    await _authorizationHelper.CompanyAccess(companyId);
+
+                if (!isAuthorized || (!isSuperAdmin && userCompanyId != companyId))
+                {
+                    _logger.LogWarning("Unauthorized file delete attempt by user on company {CompanyId}", companyId);
+                    return false;
+                }
                 var fileRecord = await _unitOfWork.ProcessedPretrainData.GetByIdStringAsync(file.Id);
                 if (fileRecord == null) return false;
 

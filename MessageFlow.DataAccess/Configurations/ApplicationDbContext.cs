@@ -40,9 +40,27 @@ namespace MessageFlow.DataAccess.Configurations
                 .HasForeignKey(m => m.ConversationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<FacebookSettingsModel>()
+                .HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(f => f.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WhatsAppSettingsModel>()
+                .HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(ws => ws.CompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<WhatsAppSettingsModel>()
                 .HasMany(ws => ws.PhoneNumbers)
                 .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProcessedPretrainData>()
+                .HasOne<Company>()
+                .WithMany()
+                .HasForeignKey(p => p.CompanyId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<CompanyEmail>()

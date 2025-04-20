@@ -46,8 +46,8 @@ namespace MessageFlow.Tests
             Assert.True(context.Companies.Any(c => c.CompanyName == "Company B"));
             Assert.True(context.Companies.Any(c => c.CompanyName == "HeadCompany"));
 
-            Assert.True(context.Teams.Any(t => t.TeamName == "Development Team"));
-            Assert.True(context.Teams.Any(t => t.TeamName == "Support Team"));
+            Assert.True(context.Teams.Any(t => t.TeamName == "HQ Dev Team"));
+            Assert.True(context.Teams.Any(t => t.TeamName == "A Support Team"));
 
         }
     }

@@ -12,20 +12,17 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
     {
         private readonly IAuthorizationHelper _authorizationHelper;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly HttpClient _httpClient;
         private readonly ILogger<DeleteCompanyCommandHandler> _logger;
         private readonly IMediator _mediator;
 
         public DeleteCompanyCommandHandler(
             IAuthorizationHelper authorizationHelper,
-            IHttpClientFactory httpClientFactory,
             IUnitOfWork unitOfWork,
             ILogger<DeleteCompanyCommandHandler> logger,
             IMediator mediator)
         {
             _authorizationHelper = authorizationHelper;
             _unitOfWork = unitOfWork;
-            _httpClient = httpClientFactory.CreateClient("IdentityAPI");
             _logger = logger;
             _mediator = mediator;
         }
@@ -42,20 +39,6 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                 if (company == null)
                     return (false, "Company not found.");
 
-                //var token = _authorizationHelper.GetBearerToken();
-                //if (!string.IsNullOrEmpty(token))
-                //{
-                //    _httpClient.DefaultRequestHeaders.Authorization =
-                //        new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ", ""));
-                //}
-
-                //var response = await _httpClient.DeleteAsync($"api/user-management/delete-company-users/{request.CompanyId}");
-                //if (!response.IsSuccessStatusCode)
-                //{
-                //    _logger.LogError($"Failed to delete users for company {request.CompanyId} via Identity API.");
-                //    return (false, "Failed to delete users for this company.");
-                //}
-
                 var deleteUsersResult = await _mediator.Send(new DeleteUsersByCompanyCommand(request.CompanyId));
                 if (!deleteUsersResult)
                 {
@@ -63,12 +46,23 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                     return (false, "Failed to delete users for this company.");
                 }
 
-                await _mediator.Send(new DeleteTeamsByCompanyCommand(request.CompanyId));
+                var deleteTeamsResult = await _mediator.Send(new DeleteTeamsByCompanyCommand(request.CompanyId));
+                if (!deleteTeamsResult)
+                {
+                    _logger.LogError("Failed to delete teams for company {CompanyId}", request.CompanyId);
+                    return (false, "Failed to delete teams for this company.");
+                }
+
+                var deleteMetadataResult = await _mediator.Send(new DeleteCompanyMetadataCommand(request.CompanyId));
+                if (!deleteMetadataResult.success)
+                {
+                    _logger.LogError("Failed to delete metadata for company {CompanyId}. Reason: {Error}", request.CompanyId, deleteMetadataResult.errorMessage);
+                    return (false, "Failed to delete metadata for this company.");
+                }
 
                 await _unitOfWork.Companies.RemoveEntityAsync(company);
                 await _unitOfWork.SaveChangesAsync();
 
-                //_logger.LogInformation($"Company {company.CompanyName} and all associated data deleted successfully.");
                 return (true, "Company and all associated data deleted successfully.");
             }
             catch (Exception ex)

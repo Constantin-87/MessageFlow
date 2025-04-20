@@ -31,7 +31,7 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.QueryHandlers
                 return new();
             }
 
-            var (isAuthorized, errorMessage) = await _auth.CanManageTeam(team.CompanyId);
+            var (isAuthorized, errorMessage) = await _auth.TeamAccess(team.CompanyId);
             if (!isAuthorized)
             {
                 _logger.LogWarning($"Unauthorized access to team users: {errorMessage}");

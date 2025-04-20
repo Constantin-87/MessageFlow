@@ -9,6 +9,7 @@ using System.Text;
 using MessageFlow.AzureServices.Helpers;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
+using MessageFlow.AzureServices.Helpers.Interfaces;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers
 {
@@ -19,19 +20,22 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
         private readonly IMapper _mapper;
         private readonly IAzureBlobStorageService _blobStorageService;
         private readonly ILogger<GenerateCompanyMetadataCommandHandler> _logger;
+        private readonly ICompanyDataHelper _companyDataHelper;
 
         public GenerateCompanyMetadataCommandHandler(
             IAuthorizationHelper authorizationHelper,
             IUnitOfWork unitOfWork,
             IMapper mapper,
             IAzureBlobStorageService blobStorageService,
-            ILogger<GenerateCompanyMetadataCommandHandler> logger)
+            ILogger<GenerateCompanyMetadataCommandHandler> logger,
+            ICompanyDataHelper companyDataHelper)
         {
             _authorizationHelper = authorizationHelper;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _blobStorageService = blobStorageService;
             _logger = logger;
+            _companyDataHelper = companyDataHelper;
         }
 
         public async Task<(bool success, string errorMessage)> Handle(GenerateCompanyMetadataCommand request, CancellationToken cancellationToken)
@@ -65,7 +69,7 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                 _unitOfWork.ProcessedPretrainData.RemoveProcessedFiles(existingFiles);
                 await _unitOfWork.SaveChangesAsync();
 
-                var (processedFilesDTO, jsonContents) = CompanyDataHelper.GenerateStructuredCompanyMetadata(companyDto);
+                var (processedFilesDTO, jsonContents) = _companyDataHelper.GenerateStructuredCompanyMetadata(companyDto);
                 if (processedFilesDTO.Count != jsonContents.Count)
                     return (false, "Mismatch between processed metadata files and JSON contents.");
 

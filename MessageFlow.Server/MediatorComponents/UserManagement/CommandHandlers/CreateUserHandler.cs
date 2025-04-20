@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using MessageFlow.DataAccess.Models;
-using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
 using MediatR;
+using MessageFlow.Server.Authorization;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
 {
@@ -12,19 +12,38 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<CreateUserHandler> _logger;
+        private readonly IAuthorizationHelper _authorizationHelper;
 
-        public CreateUserHandler(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<CreateUserHandler> logger)
+        public CreateUserHandler(
+            UserManager<ApplicationUser> userManager,
+            IMapper mapper, 
+            ILogger<CreateUserHandler> logger,
+            IAuthorizationHelper authorizationHelper)
         {
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
         public async Task<(bool success, string errorMessage)> Handle(CreateUserCommand request, CancellationToken cancellationToken)
         {
             try
             {
-                var applicationUser = _mapper.Map<ApplicationUser>(request.UserDto);
+                var userDto = request.UserDto;
+
+                var (isAuthorized, errorMessage) = await _authorizationHelper.UserManagementAccess(
+                    userDto.CompanyId,
+                    new List<string> { userDto.Role }
+                );
+
+                if (!isAuthorized)
+                {
+                    _logger.LogWarning("Unauthorized user creation attempt: {Message}", errorMessage);
+                    return (false, errorMessage);
+                }
+
+                var applicationUser = _mapper.Map<ApplicationUser>(userDto);
                 applicationUser.Id = Guid.NewGuid().ToString();
 
                 var result = await _userManager.CreateAsync(applicationUser, request.UserDto.NewPassword);

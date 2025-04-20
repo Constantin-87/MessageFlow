@@ -1,11 +1,8 @@
-﻿using AutoMapper;
-using MessageFlow.DataAccess.Models;
+﻿using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
-using MessageFlow.Shared.DTOs;
-using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
 
 namespace MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers
 {
@@ -14,28 +11,22 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAuthorizationHelper _auth;
         private readonly ILogger<AddTeamToCompanyHandler> _logger;
-        private readonly IMediator _mediator;
-        private readonly IMapper _mapper;
 
         public AddTeamToCompanyHandler(
             IUnitOfWork unitOfWork,
             IAuthorizationHelper auth,
-            ILogger<AddTeamToCompanyHandler> logger,
-            IMediator mediator,
-            IMapper mapper)
+            ILogger<AddTeamToCompanyHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _auth = auth;
             _logger = logger;
-            _mediator = mediator;
-            _mapper = mapper;
         }
 
         public async Task<(bool success, string errorMessage)> Handle(AddTeamToCompanyCommand request, CancellationToken cancellationToken)
         {
             var teamDto = request.TeamDto;
 
-            var (isAuthorized, errorMessage) = await _auth.CanManageTeam(teamDto.CompanyId);
+            var (isAuthorized, errorMessage) = await _auth.TeamAccess(teamDto.CompanyId);
             if (!isAuthorized)
             {
                 _logger.LogWarning($"Unauthorized access to company teams: {errorMessage}");

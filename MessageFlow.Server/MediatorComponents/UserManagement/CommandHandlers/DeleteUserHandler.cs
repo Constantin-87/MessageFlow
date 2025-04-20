@@ -2,8 +2,8 @@
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
 using MediatR;
-using MessageFlow.DataAccess.Implementations;
 using MessageFlow.DataAccess.Repositories;
+using MessageFlow.Server.Authorization;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
 {
@@ -11,15 +11,18 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITeamRepository _teamRepository;
+        private readonly IAuthorizationHelper _authHelper;
         private readonly ILogger<DeleteUserHandler> _logger;
 
         public DeleteUserHandler(
             UserManager<ApplicationUser> userManager,
             ITeamRepository teamRepository,
+            IAuthorizationHelper authHelper,
             ILogger<DeleteUserHandler> logger)
         {
             _userManager = userManager;
             _teamRepository = teamRepository;
+            _authHelper = authHelper;
             _logger = logger;
         }
 
@@ -28,7 +31,21 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
             try
             {
                 var user = await _userManager.FindByIdAsync(request.UserId);
-                if (user == null) return false;
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found: {UserId}", request.UserId);
+                    return false;
+                }
+                var roles = (await _userManager.GetRolesAsync(user)).ToList();
+
+                var (isAuthorized, errorMessage) =
+                    await _authHelper.UserManagementAccess(user.CompanyId, roles);
+
+                if (!isAuthorized)
+                {
+                    _logger.LogWarning("Unauthorized user delete attempt: {Error}", errorMessage);
+                    return false;
+                }
 
                 await _teamRepository.RemoveUserFromAllTeamsAsync(user.Id);
 

@@ -1,23 +1,26 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using MessageFlow.DataAccess.Models;
-using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
 using MediatR;
+using MessageFlow.Server.Authorization;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
 {
     public class UpdateUserHandler : IRequestHandler<UpdateUserCommand, (bool success, string errorMessage)>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IMapper _mapper;
         private readonly ILogger<UpdateUserHandler> _logger;
+        private readonly IAuthorizationHelper _auth;
 
-        public UpdateUserHandler(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<UpdateUserHandler> logger)
+        public UpdateUserHandler(
+            UserManager<ApplicationUser> userManager,
+            ILogger<UpdateUserHandler> logger,
+            IAuthorizationHelper auth)
         {
             _userManager = userManager;
-            _mapper = mapper;
             _logger = logger;
+            _auth = auth;
         }
 
         public async Task<(bool success, string errorMessage)> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -27,6 +30,13 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers
                 var dto = request.UserDto;
                 var targetUser = await _userManager.FindByIdAsync(dto.Id);
                 if (targetUser == null) return (false, "Target user not found.");
+
+                var (isAuthorized, errorMessage) = await _auth.UserManagementAccess(dto.CompanyId, new List<string> { dto.Role });
+                if (!isAuthorized)
+                {
+                    _logger.LogWarning("Unauthorized user update attempt: {Error}", errorMessage);
+                    return (false, errorMessage);
+                }
 
                 targetUser.UserName = dto.UserName;
                 targetUser.Email = dto.UserEmail;

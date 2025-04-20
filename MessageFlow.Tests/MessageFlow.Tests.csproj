@@ -26,6 +26,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MockQueryable.Moq" Version="7.0.3" />
     <PackageReference Include="Moq.EntityFrameworkCore" Version="8.0.1.2" />
     <PackageReference Include="System.Formats.Asn1" Version="9.0.2" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -46,6 +47,17 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Tests\Server\Chat\AIBotProcessing\Commands\" />
+    <Folder Include="Tests\Server\Chat\AIBotProcessing\Queries\" />
+    <Folder Include="Tests\Server\Chat\FacebookProcessing\Commands\" />
+    <Folder Include="Tests\Server\Chat\FacebookProcessing\Queries\" />
+    <Folder Include="Tests\Server\Chat\WhatsappProcessing\Commands\" />
+    <Folder Include="Tests\Server\Chat\WhatsappProcessing\Queries\" />
+    <Folder Include="Tests\Server\Chat\GeneralProcessing\Commands\" />
+    <Folder Include="Tests\Server\Chat\GeneralProcessing\Queries\" />
   </ItemGroup>
 
 </Project>

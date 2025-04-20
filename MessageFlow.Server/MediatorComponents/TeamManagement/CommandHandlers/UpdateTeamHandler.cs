@@ -23,7 +23,7 @@ namespace MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers
             try
             {
                 var dto = request.TeamDto;
-                var (isAuthorized, errorMessage) = await _auth.CanManageTeam(dto.CompanyId);
+                var (isAuthorized, errorMessage) = await _auth.TeamAccess(dto.CompanyId);
                 if (!isAuthorized)
                 {
                     _logger.LogWarning("Unauthorized team update attempt: " + errorMessage);

@@ -2,7 +2,6 @@
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.QueryHandlers
 {

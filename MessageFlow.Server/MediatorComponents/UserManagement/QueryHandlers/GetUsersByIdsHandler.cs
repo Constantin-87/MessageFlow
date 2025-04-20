@@ -5,6 +5,7 @@ using MessageFlow.DataAccess.Models;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
 using MediatR;
+using MessageFlow.Server.Authorization;
 
 namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
 {
@@ -13,11 +14,17 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<GetUsersByIdsHandler> _logger;
+        private readonly IAuthorizationHelper _auth;
 
-        public GetUsersByIdsHandler(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<GetUsersByIdsHandler> logger)
+        public GetUsersByIdsHandler(
+            UserManager<ApplicationUser> userManager,
+            IMapper mapper,
+            IAuthorizationHelper auth,
+            ILogger<GetUsersByIdsHandler> logger)
         {
             _userManager = userManager;
             _mapper = mapper;
+            _auth = auth;
             _logger = logger;
         }
 
@@ -30,16 +37,25 @@ namespace MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers
                     .Where(u => request.UserIds.Contains(u.Id))
                     .ToListAsync(cancellationToken);
 
-                var userDtos = _mapper.Map<List<ApplicationUserDTO>>(users);
+                var authorizedUserDtos = new List<ApplicationUserDTO>();
 
-                foreach (var userDto in userDtos)
+                foreach (var user in users)
                 {
-                    var user = await _userManager.FindByIdAsync(userDto.Id);
                     var roles = await _userManager.GetRolesAsync(user);
-                    userDto.Role = roles.FirstOrDefault() ?? "N/A";
+                    var (isAuthorized, _) = await _auth.UserManagementAccess(user.CompanyId, roles.ToList());
+
+                    if (!isAuthorized)
+                    {
+                        _logger.LogWarning("Skipping unauthorized access to user {UserId}", user.Id);
+                        continue;
+                    }
+
+                    var dto = _mapper.Map<ApplicationUserDTO>(user);
+                    dto.Role = roles.FirstOrDefault() ?? "N/A";
+                    authorizedUserDtos.Add(dto);
                 }
 
-                return userDtos;
+                return authorizedUserDtos;
             }
             catch (Exception ex)
             {

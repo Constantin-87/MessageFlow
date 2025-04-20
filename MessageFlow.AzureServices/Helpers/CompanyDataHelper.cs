@@ -1,5 +1,6 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
+using MessageFlow.AzureServices.Helpers.Interfaces;
 using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Shared.Enums;
@@ -9,13 +10,13 @@ using System.Text.Json;
 
 namespace MessageFlow.AzureServices.Helpers
 {
-    public static class CompanyDataHelper
+    public class CompanyDataHelper : ICompanyDataHelper
     {
 
         /// <summary>
         /// Processes a list of uploaded files and extracts structured data into separate documents.
         /// </summary>
-        public static async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
+        public async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
             List<PretrainDataFileDTO> uploadedFiles,
             IDocumentProcessingService documentProcessingService)
         {
@@ -233,7 +234,7 @@ namespace MessageFlow.AzureServices.Helpers
         /// <summary>
         /// Generates structured metadata documents for a company.
         /// </summary>
-        public static (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company)
+        public (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company)
         {
             var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();

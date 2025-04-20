@@ -5,10 +5,12 @@ namespace MessageFlow.Server.Authorization
     public class AuthorizationHelper : IAuthorizationHelper
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string _superAdminCompanyId;
 
-        public AuthorizationHelper(IHttpContextAccessor httpContextAccessor)
+        public AuthorizationHelper(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
+            _superAdminCompanyId = configuration["SuperAdminCompanyId"] ?? "";
         }
 
         public Task<(bool isAuthorized, string? userCompanyId, bool isSuperAdmin, string errorMessage)> CompanyAccess(string companyId)
@@ -21,7 +23,6 @@ namespace MessageFlow.Server.Authorization
                 );
             }
 
-            //var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
             var role = user.FindFirstValue(ClaimTypes.Role);
             var companyIdClaim = user.FindFirstValue("CompanyId");
 
@@ -50,7 +51,6 @@ namespace MessageFlow.Server.Authorization
                     );
             }
 
-            // Compare accessed companyId with user's companyID from claim
             if (companyIdClaim == null || companyIdClaim != companyId)
             {
                 return Task.FromResult<(bool, string?, bool, string)>(
@@ -63,7 +63,7 @@ namespace MessageFlow.Server.Authorization
             );
         }
 
-        public Task<(bool isAuthorized, string errorMessage)> CanManageTeam(string companyId)
+        public Task<(bool isAuthorized, string errorMessage)> TeamAccess(string companyId)
         {
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null)
@@ -79,6 +79,40 @@ namespace MessageFlow.Server.Authorization
             }
 
             return Task.FromResult((false, "Unauthorized: Cannot manage Teams for other Companies."));
+        }
+
+        public Task<(bool isAuthorized, string errorMessage)> UserManagementAccess(string targetCompanyId, List<string> requestedRoles)
+        {
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null)
+                return Task.FromResult((false, "User context not available."));
+
+            var role = user.FindFirstValue(ClaimTypes.Role);
+            var currentCompanyId = user.FindFirstValue("CompanyId");
+
+            bool isSuperAdmin = role?.Contains("SuperAdmin") == true;
+            bool isAdmin = role?.Contains("Admin") == true;
+            bool isTryingToAssignSuperAdmin = requestedRoles.Any(r => r == "SuperAdmin");
+
+            // SuperAdmin can manage any user, but SuperAdmin role can only be assigned to users in company MessageFlow
+            if (isSuperAdmin)
+            {
+                if (isTryingToAssignSuperAdmin && targetCompanyId != _superAdminCompanyId)
+                    return Task.FromResult((false, "SuperAdmin role can only be assigned to the MessageFlow users."));
+
+                return Task.FromResult((true, string.Empty));
+            }
+
+            // Admins can only manage users in their company
+            if (isAdmin && currentCompanyId == targetCompanyId)
+            {
+                if (isTryingToAssignSuperAdmin)
+                    return Task.FromResult((false, "Admins cannot assign the SuperAdmin role."));
+
+                return Task.FromResult((true, string.Empty));
+            }
+
+            return Task.FromResult((false, "Unauthorized to manage users for this company."));
         }
 
         // NOT USED !!!!

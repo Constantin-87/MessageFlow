@@ -4,7 +4,6 @@ using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
 using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.CompanyManagement.QueryHandlers
 {
@@ -13,21 +12,28 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.QueryHandlers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ILogger<GetCompanyPretrainingFilesQueryHandler> _logger;
+        private readonly IAuthorizationHelper _authorizationHelper;
 
         public GetCompanyPretrainingFilesQueryHandler(
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ILogger<GetCompanyPretrainingFilesQueryHandler> logger)
+            ILogger<GetCompanyPretrainingFilesQueryHandler> logger,
+            IAuthorizationHelper authorizationHelper)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _logger = logger;
+            _authorizationHelper = authorizationHelper;
         }
 
         public async Task<(bool success, List<ProcessedPretrainDataDTO> files, string errorMessage)> Handle(GetCompanyPretrainingFilesQuery request, CancellationToken cancellationToken)
         {
             try
             {
+                var (isAuthorized, _, _, errorMessage) = await _authorizationHelper.CompanyAccess(request.CompanyId);
+                if (!isAuthorized)
+                    return (false, new List<ProcessedPretrainDataDTO>(), errorMessage);
+
                 var files = await _unitOfWork.ProcessedPretrainData.GetProcessedFilesByCompanyIdAsync(request.CompanyId);
 
                 if (!files.Any())
