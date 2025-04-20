@@ -1,8 +1,6 @@
-﻿using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
+﻿using System.Net.Http.Json;
+using MessageFlow.Client.Models;
+using MessageFlow.Client.Models.DTOs;
 
 namespace MessageFlow.Client.Services
 {
@@ -33,11 +31,32 @@ namespace MessageFlow.Client.Services
             return await _httpClient.GetFromJsonAsync<WhatsAppSettingsDTO>($"api/channels/whatsapp/{companyId}");
         }
 
-        public async Task<bool> SaveWhatsAppSettingsAsync(string companyId, WhatsAppSettingsDTO settings)
+        public async Task<NotificationResult> SaveWhatsCoreAppSettingsAsync(WhatsAppCoreSettingsDTO coreSettings)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/channels/whatsapp/{companyId}", settings);
-            return response.IsSuccessStatusCode;
+            var response = await _httpClient.PostAsJsonAsync("api/channels/whatsapp/settings", coreSettings);
+            var message = await response.Content.ReadAsStringAsync();
+            return new NotificationResult
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Message = message
+            };
         }
-    }
 
+        public async Task<NotificationResult> SavePhoneNumbersAsync(List<PhoneNumberInfoDTO> numbers)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/channels/whatsapp/numbers", numbers);
+
+
+            var message = await response.Content.ReadAsStringAsync();
+
+            return new NotificationResult
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Message = message
+            };
+        }
+
+
+
+    }
 }

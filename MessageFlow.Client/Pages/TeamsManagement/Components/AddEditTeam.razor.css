@@ -1,4 +1,8 @@
-﻿.border {
+﻿.max-300 {
+    width: 300px;
+}
+
+.border {
     border: 1px solid #3a4756;
     background-color: #1f2937;
     color: #d1d5db;
@@ -30,14 +34,14 @@ textarea.form-control {
         box-shadow: none;
     }
 
-.btn-primary {
+button.btn-primary {
     background-color: #11545F;
     border-color: #166976;
     font-weight: bold;
     color: #d1d5db;
 }
 
-    .btn-primary:hover {
+    button.btn-primary:hover {
         background-color: #166976;
         border-color: #2BA2B5;
     }
@@ -52,33 +56,22 @@ textarea.form-control {
         background-color: #5c667a;
     }
 
-.btn-success {
-    background-color: #1abc9c;
-    border-color: #16a085;
-    color: #1f2937;
+button.btn-danger {
+    background-color: #5F1111;
+    border-color: #531010;
     font-weight: bold;
+    color: #d1d5db;
 }
 
-    .btn-success:hover {
-        background-color: #17c2a4;
-    }
-
-.btn-danger {
-    background-color: #9b2c2c;
-    border-color: #9b2c2c;
-    color: #fff;
-}
-
-    .btn-danger:hover {
-        background-color: #c53030;
+    button.btn-danger:hover {
+        background-color: #771515;
+        border-color: #c0392b;
     }
 
 ul.list-group {
     background-color: #2d3748;
-    border: 1px solid #3a4756;
+    border: 0.2px solid #3a4756;
     color: #d1d5db;
-    padding: 0;
-    margin: 0;
     max-height: 300px;
     overflow-y: auto;
 }
@@ -88,6 +81,7 @@ ul.list-group {
     border: 1px solid #3a4756;
     color: #d1d5db;
     cursor: pointer;
+    text-align: center;
 }
 
     .list-group-item.active {
@@ -98,10 +92,28 @@ ul.list-group {
 
     .list-group-item:hover {
         background-color: #3a4756;
-        cursor: pointer;
     }
+
+.scrollable-list-container {
+    min-height: 200px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
 
 .text-danger {
     color: #f56565;
     margin-top: 0.5rem;
 }
+
+.add-remove-usr-btn {
+    width: 130px;
+}
+
+.border {
+    border: 3px solid #3a4756 !important; /* reduced from 1px to 0.5px */
+    background-color: #1f2937;
+    color: #d1d5db;
+    border-radius: 6px;
+}
+

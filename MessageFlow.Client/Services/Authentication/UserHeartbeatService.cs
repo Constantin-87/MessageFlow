@@ -1,4 +1,4 @@
-﻿using MessageFlow.Shared.DTOs;
+﻿using MessageFlow.Client.Models.DTOs;
 using System.Net.Http.Json;
 
 namespace MessageFlow.Client.Services.Authentication

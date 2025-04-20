@@ -16,11 +16,13 @@
     border: 1px solid #34495e;
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-top: none;
 }
 
 .chat-history {
     flex-grow: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -42,6 +44,7 @@
         font-size: 1rem;
         background-color: #454545;
         color: #e0e0e0;
+        outline: none;           
     }
 
     .chat-input-area button {
@@ -53,6 +56,11 @@
         border-radius: 5px;
         cursor: pointer;
         font-weight: bold;
+    }
+
+    .chat-input-area input:focus {
+        border-color: #11545F;
+        border-width: 0.1px;
     }
 
         .chat-input-area button:hover {
@@ -72,13 +80,13 @@
 }
 
 .customer-message {
-    background-color: #3c3c3c;
+    background-color: #454545;
     align-self: flex-start;
     text-align: left;
 }
 
 .app-message {
-    background-color: #265A3E;
+    background-color: #255F54;
     align-self: flex-end;
     text-align: right;
 }
@@ -87,7 +95,6 @@
     width: 16px;
     height: 16px;
     margin-left: 8px;
-    cursor: pointer;
     vertical-align: middle;
 }
 
@@ -111,7 +118,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: #3a4d3f;
+    background-color: #434D5F;
     color: #e0e0e0;
     padding: 10px 15px;
     border: 1px solid #444;
@@ -121,7 +128,7 @@
 }
 
     .chat-tab.active-tab {
-        background-color: #256C46;
+        background-color: #12625E;
         color: white;
         font-weight: bold;
         border-bottom: none;
@@ -147,5 +154,9 @@
     }
 
 .chat-tab:hover {
-    background-color: #2C8355;
+    background-color: #16716D;
+}
+
+.ai-message {
+    font-style: italic !important;
 }

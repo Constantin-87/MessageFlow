@@ -45,12 +45,16 @@ button.btn-danger {
         vertical-align: middle;
     }
 
+    .table td {
+        color: #d1d5db !important;
+    }
+
+    .table th {
+        color: #1abc9c !important;
+    }
+
 .table-striped tbody tr:nth-of-type(odd) {
     background-color: #273140;
-}
-
-.table td, .table th {
-    color: #d1d5db !important;
 }
 
 .table tbody tr:hover {

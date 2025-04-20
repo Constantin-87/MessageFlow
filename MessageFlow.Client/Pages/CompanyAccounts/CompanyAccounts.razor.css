@@ -41,10 +41,17 @@ table.table {
 }
 
 .table td, .table th {
-    color: #d1d5db !important;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.table td {
+    color: #d1d5db !important;
+}
+
+.table th {
+    color: #1abc9c !important;
 }
 
 .table tbody tr:hover {

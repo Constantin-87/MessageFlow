@@ -2,20 +2,28 @@
 {
     <div class="notification-overlay @GetAlertClass()" role="alert">
         <span>@Result.Message</span>
-        <button class="close-btn" @onclick="() => isVisible = false">×</button>
+        <button class="close-btn" @onclick="ClearNotification">×</button>
     </div>
 }
 
 @code {
     [Parameter] public NotificationResult? Result { get; set; }
 
+    [Parameter] public EventCallback OnClear { get; set; }
+
     private bool isVisible = true;
 
     protected override void OnParametersSet()
     {
-        // Show notification whenever a new result is passed
         if (!string.IsNullOrWhiteSpace(Result?.Message))
             isVisible = true;
+    }
+
+    private async Task ClearNotification()
+    {
+        isVisible = false;
+        if (OnClear.HasDelegate)
+            await OnClear.InvokeAsync();
     }
 
     private string GetAlertClass() => Result?.IsSuccess == false

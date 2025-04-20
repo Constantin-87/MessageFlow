@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MessageFlow.Shared.DTOs;
+using MessageFlow.Server.DataTransferObjects.Client;
 using MediatR;
 using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Queries;
 using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
 using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
+using System.ComponentModel.DataAnnotations;
+using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.Controllers
 {
@@ -22,7 +24,6 @@ namespace MessageFlow.Server.Controllers
             _mediator = mediator;
         }
 
-        // GET: api/channels/facebook/{companyId}
         [HttpGet("facebook/{companyId}")]
         public async Task<IActionResult> GetFacebookSettings(string companyId)
         {
@@ -33,18 +34,13 @@ namespace MessageFlow.Server.Controllers
             return Ok(settings);
         }
 
-        // POST: api/channels/facebook/{companyId}
         [HttpPost("facebook/{companyId}")]
         public async Task<IActionResult> SaveFacebookSettings(string companyId, [FromBody] FacebookSettingsDTO settings)
         {
-            var success = await _mediator.Send(new SaveFacebookSettingsCommand(companyId, settings));
-            if (!success)
-                return BadRequest("Failed to save Facebook settings");
-
-            return Ok();
+            var (success, message) = await _mediator.Send(new SaveFacebookSettingsCommand(companyId, settings));
+            return success ? Ok(message) : BadRequest(message);
         }
 
-        // GET: api/channels/whatsapp/{companyId}
         [HttpGet("whatsapp/{companyId}")]
         public async Task<IActionResult> GetWhatsAppSettings(string companyId)
         {
@@ -55,15 +51,23 @@ namespace MessageFlow.Server.Controllers
             return Ok(settings);
         }
 
-        // POST: api/channels/whatsapp/{companyId}
-        [HttpPost("whatsapp/{companyId}")]
-        public async Task<IActionResult> SaveWhatsAppSettings(string companyId, [FromBody] WhatsAppSettingsDTO whatsAppSettingsDTO)
+        [HttpPost("whatsapp/settings")]
+        public async Task<IActionResult> SaveCoreSettings([FromBody] WhatsAppCoreSettingsDTO settings)
         {
-            var success = await _mediator.Send(new SaveWhatsAppSettingsCommand(companyId, whatsAppSettingsDTO));
-            if (!success)
-                return BadRequest("Failed to save WhatsApp settings");
+            var (success, message) = await _mediator.Send(new SaveWhatsAppCoreSettingsCommand
+            {
+                CompanyId = settings.CompanyId,
+                AccessToken = settings.AccessToken,
+                BusinessAccountId = settings.BusinessAccountId
+            });
+            return success ? Ok(message) : BadRequest(message);
+        }
 
-            return Ok();
+        [HttpPost("whatsapp/numbers")]
+        public async Task<IActionResult> SavePhoneNumbers([FromBody] List<PhoneNumberInfoDTO> phoneNumbers)
+        {
+            var (success, message) = await _mediator.Send(new SaveWhatsAppPhoneNumbersCommand(phoneNumbers));
+            return success ? Ok(message) : BadRequest(message);
         }
     }
 }

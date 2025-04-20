@@ -1,5 +1,5 @@
 ﻿using System.Net.Http.Json;
-using MessageFlow.Shared.DTOs;
+using MessageFlow.Client.Models.DTOs;
 
 namespace MessageFlow.Client.Services
 {    
@@ -130,10 +130,22 @@ namespace MessageFlow.Client.Services
                 : (false, new List<ProcessedPretrainDataDTO>(), await response.Content.ReadAsStringAsync());
         }
 
-        // Upload pretraining files
         public async Task<(bool success, string message)> UploadCompanyFilesAsync(List<PretrainDataFileDTO> files)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/company/upload-files", files);
+            using var content = new MultipartFormDataContent();
+
+            foreach (var file in files)
+            {
+                var streamContent = new StreamContent(file.FileContent);
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+                content.Add(streamContent, "files", file.FileName);
+                content.Add(new StringContent(file.CompanyId), "companyId");
+                content.Add(new StringContent(file.FileDescription ?? ""), "descriptions");
+            }
+
+            var response = await _httpClient.PostAsync("api/company/upload-files", content);
+
             return response.IsSuccessStatusCode
                 ? (true, await response.Content.ReadAsStringAsync())
                 : (false, await response.Content.ReadAsStringAsync());
@@ -142,7 +154,12 @@ namespace MessageFlow.Client.Services
         // Delete a specific file
         public async Task<bool> DeleteCompanyFileAsync(ProcessedPretrainDataDTO file)
         {
-            var response = await _httpClient.DeleteAsync($"api/company/delete-file");
+            var request = new HttpRequestMessage(HttpMethod.Delete, "api/company/delete-file")
+            {
+                Content = JsonContent.Create(file)
+            };
+
+            var response = await _httpClient.SendAsync(request);
             return response.IsSuccessStatusCode;
         }
 

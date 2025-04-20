@@ -5,7 +5,6 @@ using MessageFlow.Server.Authorization;
 using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Shared.Enums;
-using Microsoft.Extensions.Logging;
 using System.Text;
 using MessageFlow.AzureServices.Helpers;
 using MediatR;
@@ -78,7 +77,7 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
                     var jsonContent = jsonContents[i];
 
                     using var jsonStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonContent));
-                    string jsonFileName = $"{baseFolderPath}company_{request.CompanyId}_pretrain_{processedFile.Id}.json";
+                    string jsonFileName = $"{baseFolderPath}metadata_{processedFile.Id}.json";
                     string jsonFileUrl = await _blobStorageService.UploadFileAsync(jsonStream, jsonFileName, "application/json", request.CompanyId);
 
                     processedFile.FileUrl = jsonFileUrl;

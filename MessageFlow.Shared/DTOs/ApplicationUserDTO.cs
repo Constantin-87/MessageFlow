@@ -22,8 +22,7 @@ namespace MessageFlow.Shared.DTOs
         [Required(ErrorMessage = "Please select a company.")]
         public string CompanyId { get; set; }
 
-        [Required(ErrorMessage = "Please select a role.")]
-        public string Role { get; set; }
+        public string? Role { get; set; }
 
         public bool LockoutEnabled { get; set; }
         public DateTime LastActivity { get; set; } = DateTime.UtcNow;

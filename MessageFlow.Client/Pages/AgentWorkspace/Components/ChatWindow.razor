@@ -1,6 +1,6 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
 @inject IJSRuntime JSRuntime
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CurrentUserService CurrentUser
 
 <div class="chat-window-container">
     <!-- Tabs Navigation -->
@@ -23,7 +23,7 @@
             <div class="chat-history" @ref="ChatHistoryDiv">
                 @foreach (var message in activeChat.Conversation.Messages)
                 {
-                    <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message")">
+                    <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message") @(message.UserId == "AI" ? "ai-message" : "")">
                         <span>@message.Content</span>
                         @if (message.UserId != activeChat.Conversation.SenderId)
                         {
@@ -47,9 +47,6 @@
 </div>
 
 @code {
-
-    [Parameter] public string UserId { get; set; }
-    [Parameter] public string CurrentUserName { get; set; }
     [Parameter] public HubConnection HubConnection { get; set; }
 
     private ElementReference ChatHistoryDiv;
@@ -69,13 +66,11 @@
     {
         if (HubConnection == null)
         {
-            Console.WriteLine("OnParametersSetAsync: HubConnection is NULL");
             return;
         }
 
         if (!_handlersRegistered)
         {
-            Console.WriteLine("Registering handlers...");
             RegisterHandlers();
             _handlersRegistered = true;
         }
@@ -88,26 +83,22 @@
 
     public void RegisterHandlers()
     {
-        Console.WriteLine($"RegisterHandlers called HubConnection is " + HubConnection.State);
         if (HubConnection != null)
         {
             HubConnection.On<ConversationDTO>("AssignConversation", (conversation) =>
             {
-                Console.WriteLine($"AssignConversation {conversation.Id}");
                 AddNewChat(conversation);
                 _ = ScrollToBottom();
             });
 
             HubConnection.On<ConversationDTO, MessageDTO>("SendMessageToAssignedUser", (conversation, message) =>
             {
-                Console.WriteLine($"Received message from {conversation.SenderId}: {message.Content}");
                 AddMessageToChat(conversation, message);
                 _ = ScrollToBottom();
             });
 
             HubConnection.On<List<ConversationDTO>>("LoadAssignedConversations", (assignedConversations) =>
             {
-                Console.WriteLine("Assigned conversations loaded.");
                 LoadAssignedConversations(assignedConversations);
             });
 
@@ -127,27 +118,20 @@
             {
                 message.Status = status;
                 StateHasChanged();
-                Console.WriteLine($"Message {messageId} status updated to '{status}'.");
                 return;
             }
         }
-
-        Console.WriteLine($"Message with ID {messageId} not found in any active chat.");
     }
-
-
 
     public void LoadAssignedConversations(List<ConversationDTO> assignedConversations)
     {
         ActiveChats.Clear();
         foreach (var conversation in assignedConversations)
         {
-            // Messages are sorted by SentAt for each conversation
             conversation.Messages = conversation.Messages.OrderBy(m => m.SentAt).ToList();
             ActiveChats.Add(new ConversationViewModel(conversation));
         }
 
-        // Set the first tab as active, if available
         if (ActiveChats.Any())
         {
             SwitchTab(ActiveChats.First());
@@ -165,7 +149,6 @@
             }
         }
     }
-
 
     private async Task ConfirmCloseTab(ConversationViewModel tab)
     {
@@ -188,7 +171,6 @@
             StateHasChanged();
         }
 
-        // Send a request to the server to close and anonymize the chat
         await HubConnection.SendAsync("CloseAndAnonymizeChat", tab.Conversation.SenderId);
     }
 
@@ -196,23 +178,17 @@
     {
         if (incomingConversation == null || message == null)
         {
-            Console.WriteLine($"Invalid conversation or message. Message ID: {message?.Id}");
             return;
         }
 
-        // Find the existing ConversationViewModel in ActiveChats by ID
         var existingConversationVm = ActiveChats.FirstOrDefault(vm => vm.Conversation.Id == incomingConversation.Id);
 
         if (existingConversationVm != null)
         {
-            // Add the message to the conversation's Messages collection
             existingConversationVm.Conversation.Messages.Add(message);
-            Console.WriteLine($"Message added to conversation {existingConversationVm.Conversation.Id}: {message.Content}");
         }
         else
         {
-            Console.WriteLine($"Conversation not found for ID: {incomingConversation.Id}. Adding it as a new chat.");
-
             // If the conversation does not exist in ActiveChats, add it
             incomingConversation.Messages.Add(message);
             var newConversationVm = new ConversationViewModel(incomingConversation);
@@ -255,23 +231,17 @@
     private async Task SendMessage(ConversationViewModel chatVm)
     {
         var chat = chatVm.Conversation;
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userName = user?.Identity?.Name;
+        var userId = CurrentUser.UserId;
+        var userName = CurrentUser.Username;
 
-        Console.WriteLine($"UserId: {userId}");
         if (!string.IsNullOrWhiteSpace(MessageText))
         {
-            // Generate a unique local message ID
-            var localMessageId = Guid.NewGuid().ToString();
-
             var newMessage = new MessageDTO
                 {
-                    Id = localMessageId,
+                    Id = Guid.NewGuid().ToString(),
                     ConversationId = chat.Id,
-                    UserId = UserId,
-                    Username = CurrentUserName,
+                    UserId = CurrentUser.UserId,
+                    Username = CurrentUser.Username,
                     Content = MessageText,
                     SentAt = DateTime.UtcNow,
                     Status = "SentToProvider",
@@ -284,7 +254,6 @@
             await HubConnection.SendAsync("SendMessageToCustomer", newMessage);
             MessageText = string.Empty;
 
-            Console.WriteLine($"Sending message to customer {chat.SenderId}: {newMessage.Content}");
             await ScrollToBottom();
         }
         else

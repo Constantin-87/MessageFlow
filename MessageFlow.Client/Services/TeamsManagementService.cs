@@ -1,4 +1,5 @@
-﻿using MessageFlow.Shared.DTOs;
+﻿using MessageFlow.Client.Models;
+using MessageFlow.Client.Models.DTOs;
 using System.Net.Http.Json;
 
 namespace MessageFlow.Client.Services
@@ -22,8 +23,7 @@ namespace MessageFlow.Client.Services
             return await _httpClient.GetFromJsonAsync<List<ApplicationUserDTO>>($"api/TeamsManagement/{teamId}") ?? new List<ApplicationUserDTO>();
         }
 
-        // Add a new team to a company
-        public async Task<(bool success, string message)> AddTeamToCompanyAsync(string companyId, string teamName, string teamDescription, List<ApplicationUserDTO> assignedUsers)
+        public async Task<NotificationResult> AddTeamToCompanyAsync(string companyId, string teamName, string teamDescription, List<ApplicationUserDTO> assignedUsers)
         {
             var teamDto = new TeamDTO
             {
@@ -32,24 +32,35 @@ namespace MessageFlow.Client.Services
                 TeamDescription = teamDescription,
                 AssignedUsersDTO = assignedUsers
             };
-
             var response = await _httpClient.PostAsJsonAsync("api/TeamsManagement", teamDto);
-            return response.IsSuccessStatusCode
-                ? (true, "Team created successfully")
-                : (false, await response.Content.ReadAsStringAsync());
+            var message = await response.Content.ReadAsStringAsync();
+            return new NotificationResult
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Message = response.IsSuccessStatusCode ? "Team created successfully." : "Error while creating the Team, contact administrator for support."
+            };
         }
 
-        public async Task<(bool success, string message)> UpdateTeamAsync(TeamDTO team)
+        public async Task<NotificationResult> UpdateTeamAsync(TeamDTO team)
         {
             var response = await _httpClient.PutAsJsonAsync("api/TeamsManagement", team);
-            return response.IsSuccessStatusCode ? (true, "Team updated successfully") : (false, await response.Content.ReadAsStringAsync());
+            var message = await response.Content.ReadAsStringAsync();
+            return new NotificationResult
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Message = response.IsSuccessStatusCode ? "Team updated successfully" : "Error while creating the Team, contact administrator for support."
+            };
         }
 
-        public async Task<(bool success, string message)> DeleteTeamByIdAsync(string teamId)
+        public async Task<NotificationResult> DeleteTeamByIdAsync(string teamId)
         {
             var response = await _httpClient.DeleteAsync($"api/TeamsManagement/{teamId}");
-            return response.IsSuccessStatusCode ? (true, "Team deleted successfully") : (false, await response.Content.ReadAsStringAsync());
+            var message = await response.Content.ReadAsStringAsync();
+            return new NotificationResult
+            {
+                IsSuccess = response.IsSuccessStatusCode,
+                Message = response.IsSuccessStatusCode ? "Team deleted successfully" : "Error while creating the Team, contact administrator for support."
+            };
         }
     }
-
 }

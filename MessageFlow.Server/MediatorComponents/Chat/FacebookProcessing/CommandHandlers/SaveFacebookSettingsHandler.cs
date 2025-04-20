@@ -3,39 +3,54 @@ using MediatR;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.CommandHandlers
 {
-    public class SaveFacebookSettingsHandler : IRequestHandler<SaveFacebookSettingsCommand, bool>
+    public class SaveFacebookSettingsHandler : IRequestHandler<SaveFacebookSettingsCommand, (bool success, string errorMessage)>
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ILogger<SaveFacebookSettingsHandler> _logger;
 
-        public SaveFacebookSettingsHandler(IUnitOfWork unitOfWork, IMapper mapper)
+        public SaveFacebookSettingsHandler(IUnitOfWork unitOfWork, IMapper mapper, ILogger<SaveFacebookSettingsHandler> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<bool> Handle(SaveFacebookSettingsCommand request, CancellationToken cancellationToken)
+        public async Task<(bool success, string errorMessage)> Handle(SaveFacebookSettingsCommand request, CancellationToken cancellationToken)
         {
-            var existingSettings = await _unitOfWork.FacebookSettings.GetSettingsByCompanyIdAsync(request.CompanyId);
-
-            if (existingSettings == null)
+            try
             {
-                var newSettings = _mapper.Map<FacebookSettingsModel>(request.FacebookSettingsDto);
-                newSettings.CompanyId = request.CompanyId;
-                await _unitOfWork.FacebookSettings.AddEntityAsync(newSettings);
-            }
-            else
-            {
-                existingSettings.PageId = request.FacebookSettingsDto.PageId;
-                existingSettings.AccessToken = request.FacebookSettingsDto.AccessToken;
-                await _unitOfWork.FacebookSettings.UpdateEntityAsync(existingSettings);
-            }
+                if (string.IsNullOrWhiteSpace(request.CompanyId))
+                    return (false, "Invalid CompanyId provided.");
 
-            await _unitOfWork.SaveChangesAsync();
-            return true;
+                var existingSettings = await _unitOfWork.FacebookSettings.GetSettingsByCompanyIdAsync(request.CompanyId);
+
+                if (existingSettings == null)
+                {
+                    var newSettings = _mapper.Map<FacebookSettingsModel>(request.FacebookSettingsDto);
+                    newSettings.CompanyId = request.CompanyId;
+                    await _unitOfWork.FacebookSettings.AddEntityAsync(newSettings);
+                }
+                else
+                {
+                    existingSettings.PageId = request.FacebookSettingsDto.PageId;
+                    existingSettings.AccessToken = request.FacebookSettingsDto.AccessToken;
+                    await _unitOfWork.FacebookSettings.UpdateEntityAsync(existingSettings);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("Facebook settings saved for CompanyId: {CompanyId}", request.CompanyId);
+                return (true, "Facebook settings saved successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving Facebook settings for CompanyId: {CompanyId}", request.CompanyId);
+                return (false, "An error occurred while saving Facebook settings.");
+            }
         }
     }
 }

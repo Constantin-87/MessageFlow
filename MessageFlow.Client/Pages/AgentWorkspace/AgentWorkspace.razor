@@ -2,10 +2,9 @@
 @attribute [Authorize(Roles = "Agent, Manager, Admin, SuperAdmin")]
 @layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
-@inject NavigationManager NavigationManager
-@inject HttpClient Http
-@inject AuthenticationStateProvider AuthenticationStateProvider
 @implements IAsyncDisposable
+@inject CurrentUserService CurrentUser
+@inject HttpClient Http
 @inject AppConfig AppConfig
 @inject IJSRuntime JSRuntime
 
@@ -14,16 +13,16 @@
 <div class="workspace-container">
     <!-- Team Members List -->
     <div class="team-members">
-        <TeamMembers CurrentUserName="@UserName" HubConnection="@hubConnection" />
+        <TeamMembers CurrentUserName="@CurrentUser.Username" HubConnection="@hubConnection" />
     </div>
 
     <!-- Chat Section -->
     <div class="chat-section">
-        <ChatWindow UserId="@UserId" CurrentUserName="@UserName" HubConnection="@hubConnection" />
+        <ChatWindow HubConnection="@hubConnection" />
     </div>
 
     <!-- New Conversations List -->
-    <NewConversationsList UserId="@UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
+    <NewConversationsList UserId="@CurrentUser.UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
 
 </div>
 
@@ -31,29 +30,12 @@
     private HubConnection? hubConnection;
     private ChatWindow? ChatWindowRef;
 
-    private string? UserId;
-    private string? CompanyId;
-    private string? UserName;
-
     protected override async Task OnInitializedAsync()
     {
         if (hubConnection == null || hubConnection.State != HubConnectionState.Connected)
-        {
-            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var user = authState.User;
-
-            if (user.Identity == null || !user.Identity.IsAuthenticated)
-            {
-                Console.WriteLine("User is not authenticated.");
-                return;
-            }
-            
-            UserId = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            CompanyId = user?.FindFirst(c => c.Type == "CompanyId")?.Value ?? "";
-            UserName = user?.Identity?.Name;
-          
+        {          
             hubConnection = new HubConnectionBuilder()
-                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub?companyId={CompanyId}", options =>
+                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub?companyId={CurrentUser.CompanyId}", options =>
                 {
                     options.AccessTokenProvider = async () =>
                     {
@@ -77,5 +59,4 @@
             await hubConnection.DisposeAsync();
         }
     }
-
 }

@@ -106,7 +106,7 @@ namespace MessageFlow.Server.Configuration
 
             // Chat.FacebookProcessing Commands
             services.AddScoped<IRequestHandler<SendMessageToFacebookCommand, bool>, SendMessageToFacebookHandler>();
-            services.AddScoped<IRequestHandler<SaveFacebookSettingsCommand, bool>, SaveFacebookSettingsHandler>();
+            services.AddScoped<IRequestHandler<SaveFacebookSettingsCommand, (bool, string)>, SaveFacebookSettingsHandler>();
             services.AddScoped<IRequestHandler<ProcessFacebookWebhookEventCommand, Unit>, ProcessFacebookWebhookEventHandler>();
             services.AddScoped<IRequestHandler<HandleFacebookReadEventCommand, Unit>, HandleFacebookReadEventHandler>();
 
@@ -114,7 +114,9 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IRequestHandler<GetFacebookSettingsQuery, FacebookSettingsDTO?>, GetFacebookSettingsHandler>();
 
             // Chat.WhatsAppProcessing Commands
-            services.AddScoped<IRequestHandler<SaveWhatsAppSettingsCommand, bool>, SaveWhatsAppSettingsHandler>();
+            services.AddScoped<IRequestHandler<SaveWhatsAppCoreSettingsCommand, (bool, string)>, SaveWhatsAppCoreSettingsHandler>();
+            services.AddScoped<IRequestHandler<SaveWhatsAppPhoneNumbersCommand, (bool, string)>, SaveWhatsAppPhoneNumbersHandler>();
+
             services.AddScoped<IRequestHandler<ProcessIncomingWAMessageCommand, Unit>, ProcessIncomingWAMessageHandler>();
             services.AddScoped<IRequestHandler<SendMessageToWhatsAppCommand, Unit>, SendMessageToWhatsAppHandler>();
 

@@ -1,19 +1,21 @@
 ﻿@page "/Accounts/ManageTeams"
 @attribute [Authorize(Roles = "SuperAdmin, Admin")]
-@inject TeamsManagementService TeamsManagementService
-@inject NavigationManager NavigationManager
-@* @inject AuthenticationStateProvider AuthenticationStateProvider *@
-@inject CurrentUserService CurrentUser
-
 @layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
+@inject TeamsManagementService TeamsManagementService
+@inject CurrentUserService CurrentUser
 @inject IJSRuntime JSRuntime
-@inject ILogger<ManageTeams> Logger
+
+<Notification Result="@Notification" />
 
 <h3>Manage Teams</h3>
 
+<button class="btn btn-primary mb-3" @onclick="@(() => ShowAddEditTeam(null, true))">Create New Team</button>
+
+<AddEditTeam @key="selectedTeam?.Id" NewTeam="isNewTeam" Team="selectedTeam" CompanyId="@companyId" OnClose="OnAddEditTeamClose" />
+
 <!-- Teams Table -->
-<table class="table table-hover">
+<table class="table table-striped">
     <thead>
         <tr>
             <th>Team Name</th>
@@ -49,18 +51,11 @@
     </tbody>
 </table>
 
-@if (showAddEditTeam)
-{
-    <AddEditTeam @key="selectedTeam?.Id" NewTeam="isNewTeam" Team="selectedTeam" CompanyId="@companyId" OnClose="OnAddEditTeamClose" />
-}
-
-<button class="btn btn-primary mb-3" @onclick="@(() => ShowAddEditTeam(null, true))">Create New Team</button>
-
 @code {
     private List<TeamDTO> teams = new List<TeamDTO>();
-    private TeamDTO? selectedTeam;
-    private bool showAddEditTeam = false;
-    private bool isNewTeam = false;
+    private TeamDTO? selectedTeam = null;
+    private NotificationResult? Notification;
+    private bool isNewTeam = true;
     private string companyId;
 
     protected override async Task OnInitializedAsync()
@@ -73,14 +68,14 @@
     {
         selectedTeam = team;
         isNewTeam = newTeam;
-        showAddEditTeam = true;
+        Notification = null;
         StateHasChanged();
     }
 
     private async Task DeleteTeam(string teamId)
     {
-        var (success, _) = await TeamsManagementService.DeleteTeamByIdAsync(teamId);
-        if (success)
+        Notification = await TeamsManagementService.DeleteTeamByIdAsync(teamId);
+        if (Notification.IsSuccess)
         {
             teams = teams.Where(t => t.Id != teamId).ToList();
         }
@@ -96,9 +91,9 @@
 
     private string GetRowClass(TeamDTO team) => selectedTeam?.Id == team.Id ? "table-active" : "";
 
-    private async Task OnAddEditTeamClose()
+    private async Task OnAddEditTeamClose(NotificationResult result)
     {
-        showAddEditTeam = false;
+        Notification = result;
         teams = await TeamsManagementService.GetTeamsForCompanyAsync(companyId);
         StateHasChanged();
     }

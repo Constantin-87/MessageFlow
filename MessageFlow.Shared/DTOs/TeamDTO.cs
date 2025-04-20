@@ -1,7 +1,4 @@
-﻿
-using System.Text.Json.Serialization;
-
-namespace MessageFlow.Shared.DTOs
+﻿namespace MessageFlow.Shared.DTOs
 {
     public class TeamDTO
     {

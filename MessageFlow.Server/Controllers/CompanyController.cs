@@ -129,11 +129,41 @@ namespace MessageFlow.Server.Controllers
 
         // Upload pretraining files
         [HttpPost("upload-files")]
-        public async Task<ActionResult> UploadPretrainingFiles([FromBody] List<PretrainDataFileDTO> files)
+        public async Task<IActionResult> UploadPretrainingFiles()
         {
-            var (success, message) = await _mediator.Send(new UploadCompanyFilesCommand(files));
+            var files = Request.Form.Files;
+            var companyId = Request.Form["companyId"].ToString();
+            var descriptions = Request.Form["descriptions"];
 
-            return success ? Ok(message) : BadRequest(message);
+            var fileDtos = new List<PretrainDataFileDTO>();
+            var streams = new List<MemoryStream>();
+
+            for (int i = 0; i < files.Count; i++)
+            {
+                var file = files[i];
+                var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                ms.Position = 0;
+
+                fileDtos.Add(new PretrainDataFileDTO
+                {
+                    FileName = file.FileName,
+                    FileDescription = descriptions,
+                    FileContent = ms,
+                    CompanyId = companyId
+                });
+
+                streams.Add(ms);
+            }
+
+            var result = await _mediator.Send(new UploadCompanyFilesCommand(fileDtos));
+
+            foreach (var stream in streams)
+            {
+                stream.Dispose();
+            }
+
+            return result.success ? Ok(result.errorMessage) : BadRequest(result.errorMessage);
         }
 
         // Delete a specific file

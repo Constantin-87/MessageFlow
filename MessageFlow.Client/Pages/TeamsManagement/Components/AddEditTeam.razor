@@ -1,62 +1,68 @@
 ﻿@inject UserManagementService UserManagementService
 @inject TeamsManagementService TeamsManagementService
-@inject CompanyManagementService CompanyManagementService
 @rendermode RenderMode.InteractiveWebAssembly
 @inject ILogger<AddEditTeam> Logger
 
 <div class="border p-3 mb-3">
     <h5>@(NewTeam ? "Create New Team" : $"Edit Team: {Team?.TeamName}")</h5>
 
-    <!-- Team Name -->
-    <div class="mb-3">
-        <label class="form-label">Team Name:</label>
-        <input @bind="teamName" class="form-control" placeholder="Enter Team Name" />
-    </div>
-
-    <!-- Team Description -->
-    <div class="mb-3">
-        <label class="form-label">Team Description:</label>
-        <textarea @bind="teamDescription" class="form-control" rows="3" placeholder="Enter Team Description"></textarea>
-    </div>
-
-    <!-- User Assignment Section -->
-    <div class="mb-3">
-        <label class="form-label">Assign Users:</label>
-        <div class="d-flex">
-            <!-- Available Users -->
-            <div class="col-4 border p-2">
-                <h6>Available Users</h6>
-                <ul class="list-group">
-                    @foreach (var user in availableUsers)
-                    {
-                        <li class="list-group-item @(selectedAvailableUsers.Contains(user) ? "active" : "")"
-                            @onclick="@(() => ToggleAvailableUserSelection(user))">
-                            @user.UserName
-                        </li>
-                    }
-                </ul>
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Team Name -->
+            <div class="mb-3 max-300">
+                <label class="form-label">Team Name:</label>
+                <input @bind="teamName" class="form-control" placeholder="Enter Team Name" />
             </div>
 
-            <!-- Add/Remove Buttons -->
-            <div class="col-2 d-flex flex-column justify-content-center align-items-center">
-                <button class="btn btn-primary mb-2" @onclick="AddUserToTeam">Add User</button>
-                <button class="btn btn-danger" @onclick="RemoveUserFromTeam">Remove User</button>
-            </div>
-
-            <!-- Assigned Users -->
-            <div class="col-4 border p-2">
-                <h6>Assigned Users</h6>
-                <ul class="list-group">
-                    @foreach (var user in assignedUsers)
-                    {
-                        <li class="list-group-item @(selectedAssignedUsers.Contains(user) ? "active" : "")"
-                            @onclick="@(() => ToggleAssignedUserSelection(user))">
-                            @user.UserName
-                        </li>
-                    }
-                </ul>
+            <!-- Team Description -->
+            <div class="mb-3">
+                <label class="form-label">Team Description:</label>
+                <textarea @bind="teamDescription" class="form-control" rows="3" placeholder="Enter Team Description"></textarea>
             </div>
         </div>
+
+        <div class="col-md-6">
+            <div class="d-flex gap-3">
+                <!-- Available Users -->
+                <div class="d-flex flex-column col-4">
+                    <label class="form-label">Available Users:</label>
+                    <div class="border p-2 scrollable-list-container">
+                        <ul class="list-group">
+                            @foreach (var user in availableUsers)
+                            {
+                                <li class="list-group-item @(selectedAvailableUsers.Contains(user) ? "active" : "")"
+                                    @onclick="@(() => ToggleAvailableUserSelection(user))">
+                                    @user.UserName
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Add/Remove Buttons -->
+                <div class="d-flex flex-column justify-content-center align-items-center col-2">
+                    <button class="btn btn-primary mb-2 add-remove-usr-btn" @onclick="AddUserToTeam">Add User</button>
+                    <button class="btn btn-danger add-remove-usr-btn" @onclick="RemoveUserFromTeam">Remove User</button>
+                </div>
+
+                <!-- Assigned Users -->
+                <div class="d-flex flex-column col-4">
+                    <label class="form-label">Assigned Users:</label>
+                    <div class="border p-2 scrollable-list-container">
+                        <ul class="list-group">
+                            @foreach (var user in assignedUsers)
+                            {
+                                <li class="list-group-item @(selectedAssignedUsers.Contains(user) ? "active" : "")"
+                                    @onclick="@(() => ToggleAssignedUserSelection(user))">
+                                    @user.UserName
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Save and Cancel Buttons -->
@@ -64,22 +70,17 @@
         <button class="btn btn-primary" @onclick="SaveTeam">Save Team</button>
         <button class="btn btn-secondary ms-2" @onclick="() => OnClose.InvokeAsync()">Cancel</button>
     </div>
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div class="text-danger mt-2">@errorMessage</div>
-    }
 </div>
 
 @code {
     [Parameter] public string CompanyId { get; set; }
     [Parameter] public bool NewTeam { get; set; }
     [Parameter] public TeamDTO? Team { get; set; }
-    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<NotificationResult> OnClose { get; set; }
 
     private string teamName = string.Empty;
     private string teamDescription = string.Empty;
-    private string errorMessage = string.Empty;
+    private NotificationResult? Notification;
 
     private List<ApplicationUserDTO> availableUsers = new();
     private List<ApplicationUserDTO> assignedUsers = new();
@@ -88,7 +89,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (Team != null)
+        if (Team != null && Team.Id != null)
         {
             teamName = Team.TeamName;
             teamDescription = Team.TeamDescription ?? string.Empty;
@@ -140,48 +141,17 @@
 
     private async Task SaveTeam()
     {
-        if (string.IsNullOrWhiteSpace(teamName))
-        {
-            errorMessage = "Team name cannot be empty.";
-            return;
-        }
-
-        bool success;
-        string message;
-
         if (NewTeam)
         {
-            // Create a new team
-            var (addSuccess, addMessage) = await TeamsManagementService.AddTeamToCompanyAsync(
-                CompanyId, teamName, teamDescription, assignedUsers);
-            success = addSuccess;
-            message = addMessage;
+            Notification = await TeamsManagementService.AddTeamToCompanyAsync(CompanyId, teamName, teamDescription, assignedUsers);
         }
         else if (Team != null)
         {
-            // Update existing team
             Team.TeamName = teamName;
             Team.TeamDescription = teamDescription;
             Team.AssignedUsersDTO = assignedUsers;
-
-            var (updateSuccess, updateMessage) = await TeamsManagementService.UpdateTeamAsync(Team);
-            success = updateSuccess;
-            message = updateMessage;
+            Notification = await TeamsManagementService.UpdateTeamAsync(Team);
         }
-        else
-        {
-            errorMessage = "Invalid operation.";
-            return;
-        }
-
-        if (!success)
-        {
-            errorMessage = message;
-            return;
-        }
-
-        await OnClose.InvokeAsync();
+        await OnClose.InvokeAsync(Notification);
     }
-
-
 }

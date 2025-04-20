@@ -1,4 +1,4 @@
-﻿using MessageFlow.Shared.DTOs;
+﻿using MessageFlow.Client.Models.DTOs;
 
 namespace MessageFlow.Client.Services.Authentication
 {
@@ -24,9 +24,10 @@ namespace MessageFlow.Client.Services.Authentication
         public bool IsLoggedIn => _user != null;
         public bool IsSuperAdmin => _user?.Role?.Contains("SuperAdmin") == true;
         public bool IsAdmin => _user?.Role?.Contains("Admin") == true;
+        public string? UserId => _user!.Id;
         public string? CompanyId => _user?.CompanyId;
         public string? CompanyName => _user?.CompanyDTO?.CompanyName;
-        public string? Username => _user?.UserName;
+        public string? Username => _user!.UserName;
         public DateTime? LastActivity => _user?.LastActivity;
 
         private void NotifyStateChanged()
@@ -34,6 +35,4 @@ namespace MessageFlow.Client.Services.Authentication
             OnChange?.Invoke();
         }
     }
-
-
 }

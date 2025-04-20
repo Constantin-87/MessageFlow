@@ -9,6 +9,7 @@ namespace MessageFlow.Shared.DTOs
         [Required, EmailAddress]
         public string EmailAddress { get; set; }
 
+        [Required(ErrorMessage = "Email description required.")]
         public string Description { get; set; }
 
         public string CompanyId { get; set; }

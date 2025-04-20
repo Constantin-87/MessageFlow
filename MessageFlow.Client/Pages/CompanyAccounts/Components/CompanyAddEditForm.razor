@@ -431,7 +431,7 @@
                 continue;
             }
 
-            using var stream = file.OpenReadStream();
+            using var stream = file.OpenReadStream(maxFileSize);
             var fileData = new MemoryStream();
             await stream.CopyToAsync(fileData);
             fileData.Position = 0;

@@ -17,9 +17,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageFlow.Server", "MessageFlow.Server\MessageFlow.Server.csproj", "{949834C9-2913-45C2-8820-D343B0B7CBBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageFlow.Client", "MessageFlow.Client\MessageFlow.Client.csproj", "{38B023C1-846A-4B3A-9C8D-19BDAB99F5B3}"
-	ProjectSection(ProjectDependencies) = postProject
-		{C7A7341B-6CE2-4AD9-BE0D-284F9B31AA65} = {C7A7341B-6CE2-4AD9-BE0D-284F9B31AA65}
-	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MessageFlow.AzureServices", "MessageFlow.AzureServices\MessageFlow.AzureServices.csproj", "{B37A18E7-3729-4ADF-B4C6-8756C11E5B19}"
 EndProject

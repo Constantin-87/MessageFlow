@@ -2,14 +2,12 @@
 @attribute [Authorize(Roles = "Admin, SuperAdmin")]
 @rendermode RenderMode.InteractiveWebAssembly
 @layout Pages.Shared.Layout.PrivateSubLayout
-@inject NavigationManager NavigationManager
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CurrentUserService CurrentUser
 @inject CompanyManagementService CompanyService
-
 
 <h3>Channel Setup</h3>
 
-@if (IsSuperAdmin)
+@if (CurrentUser.IsSuperAdmin)
 {
     <div class="mb-3">
         <label>Select Company</label>
@@ -33,40 +31,43 @@ else if (selectedCompany != null)
     <div class="container">
         @foreach (var channel in channels)
         {
-            <div class="mb-3">
-                <div class="card channel-card" @onclick="() => ToggleChannel(channel.Name)">
+            <div class="mb-3 d-flex flex-column">
+
+                <div class="card @(IsExpanded(channel.Name) ? "expanded-card" : "collapsed-card")">
+
                     <div class="card-body">
-                        <h5>@channel.Name</h5>
+
+                        <div class="channel-title" @onclick="() => ToggleChannel(channel.Name)">
+                            <h5>@channel.Name</h5>
+                            <img src="@channel.Icon" alt="Channel logo"/>
+                        </div>
+
+                        @if (channel.Name == "Facebook" && showFacebook)
+                        {
+                            <div class="settings-form">
+                                <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
+                            </div>
+                        }
+
+                        @if (channel.Name == "WhatsApp" && showWhatsApp)
+                        {
+                            <div class="settings-form">
+                                <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
+                            </div>
+                        }
                     </div>
                 </div>
-
-                @if (channel.Name == "Facebook" && showFacebook)
-                {
-                    <div class="settings-form">
-                        <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
-                    </div>
-                }
-
-                @if (channel.Name == "WhatsApp" && showWhatsApp)
-                {
-                    <div class="settings-form">
-                        <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
-                    </div>
-                }
             </div>
-
         }
-    </div>
-}
+    </div>}
 
 @code {
-    private bool IsSuperAdmin;
     private CompanyDTO? selectedCompany;
     private List<CompanyDTO> companies = new();
     private List<Channel> channels = new()
     {
-        new Channel { Name = "Facebook", Icon = "facebook.png" },
-        new Channel { Name = "WhatsApp", Icon = "whatsapp.png" }
+        new Channel { Name = "Facebook", Icon = "images/facebook.svg" },
+        new Channel { Name = "WhatsApp", Icon = "images/whatsapp.svg" }
     };
 
     private bool showFacebook = false;
@@ -74,35 +75,17 @@ else if (selectedCompany != null)
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-        var userId = user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-
-        // Check if the user is a SuperAdmin or Admin
-        IsSuperAdmin = user.IsInRole("SuperAdmin");
-
-        if (IsSuperAdmin)
-        {
-            companies = await CompanyService.GetAllCompaniesAsync();
-            // Preselect the first company for SuperAdmin
-            if (companies.Any())
-            {
-                selectedCompany = companies.FirstOrDefault();
-            }
-        }
-        else
-        {
-            selectedCompany = await CompanyService.GetCompanyForUserAsync(userId);
-        }
+        companies = await CompanyService.GetAllCompaniesAsync();
+        selectedCompany = companies.FirstOrDefault();
         StateHasChanged();
     }
 
-    private async Task HandleCompanyChange(ChangeEventArgs e)
+    private void HandleCompanyChange(ChangeEventArgs e)
     {
         var companyId = e.Value?.ToString();
         if (!string.IsNullOrWhiteSpace(companyId))
         {
-            selectedCompany = await CompanyService.GetCompanyByIdAsync(companyId);
+            selectedCompany = companies.FirstOrDefault(c => c.Id == companyId);
             showFacebook = false;
             showWhatsApp = false;
             StateHasChanged();
@@ -121,5 +104,11 @@ else if (selectedCompany != null)
             showWhatsApp = !showWhatsApp;
             showFacebook = false;
         }
+    }
+
+    private bool IsExpanded(string channelName)
+    {
+        return (channelName == "Facebook" && showFacebook)
+            || (channelName == "WhatsApp" && showWhatsApp);
     }
 }

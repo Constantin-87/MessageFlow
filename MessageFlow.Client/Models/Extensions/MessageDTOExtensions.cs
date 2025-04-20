@@ -1,4 +1,4 @@
-﻿using MessageFlow.Shared.DTOs;
+﻿using MessageFlow.Client.Models.DTOs;
 
 namespace MessageFlow.Client.Models.Extensions
 {

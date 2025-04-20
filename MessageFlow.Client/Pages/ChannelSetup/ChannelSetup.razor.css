@@ -1,0 +1,62 @@
+﻿.container {
+    margin-left: 0;
+    margin-right: auto;
+    padding: 0;
+}
+
+h3 {
+    color: #d1d5db;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+p {
+    color: #a0aec0;
+}
+
+label {
+    color: #a0aec0;
+    margin-bottom: 0.5rem;
+}
+
+.form-select {
+    background-color: #2d3748;
+    color: #d1d5db;
+    border: 1px solid #3a4756;
+    max-width: 250px;
+}
+
+.card {
+    background-color: #1f2937;
+    color: #a0aec0;
+    border: 1px solid #3a4756;
+    border-radius: 8px;
+}
+
+.collapsed-card:hover {
+    background-color: #2a3545;
+    border: 1px solid rgba(26, 188, 156, 0.5);
+}
+
+.card-body h5 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.settings-form {
+    background-color: #2d3748;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 0.75rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.channel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+    .channel-title img {
+        height: 56px;
+    }

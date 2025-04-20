@@ -43,17 +43,7 @@ namespace MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandler
             {
                 var company = await _unitOfWork.Companies.GetByIdStringAsync(companyId);
                 if (company == null)
-                    return (false, "Company not found.");
-
-                var existingFiles = await _unitOfWork.ProcessedPretrainData.GetProcessedFilesByCompanyIdAsync(companyId);
-                foreach (var file in existingFiles)
-                {
-                    if (!string.IsNullOrEmpty(file.FileUrl))
-                        await _blobStorageService.DeleteFileAsync(file.FileUrl);
-                }
-
-                _unitOfWork.ProcessedPretrainData.RemoveProcessedFiles(existingFiles);
-                await _unitOfWork.SaveChangesAsync();
+                    return (false, "Company not found.");               
 
                 var (processedFilesDTO, jsonContents) = await CompanyDataHelper.ProcessUploadedFilesAsync(request.Files, _documentProcessingService);
                 var processedFiles = _mapper.Map<List<ProcessedPretrainData>>(processedFilesDTO);

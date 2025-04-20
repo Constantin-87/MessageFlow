@@ -8,6 +8,7 @@
     width: fit-content;
     max-width: 100%;
     margin-bottom: 1.5rem;
+    border: 1px solid rgba(160, 174, 192, 0.3);
 }
     .card.collapsed {
         width: 300px;
@@ -15,22 +16,24 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        background-color: #2d3748;
     }
         .card.collapsed:hover {
             background-color: #2d3748;
-            box-shadow: 0 0 0 2px #1abc9c;
-            border: 1px solid #1abc9c;
-            cursor: pointer;
+            border: 1px solid rgba(26, 188, 156, 0.5);
         }
 
 .card-header {
-    background-color: #2d3748;
-    color: #d1d5db;
+    background-color: #1f2937;
+    color: #a0aec0;
     cursor: pointer;
 }
     .card-header h5 {
         margin: 0;
         font-weight: bold;
+    }
+    .card-header:hover {
+        background-color: #2d3748;
     }
 
 .card-body {
@@ -126,7 +129,6 @@ table {
 
 .table th {
     background-color: #2d3748;
-    color: #a0aec0;
 }
 
 .table th,
@@ -143,6 +145,14 @@ table {
 .table tbody tr:hover {
     background-color: #3a4756;
     cursor: pointer;
+}
+
+.table td {
+    color: #d1d5db !important;
+}
+
+.table th {
+    color: #1abc9c !important;
 }
 
 .table td[title],
