@@ -25,8 +25,26 @@ jobs:
     - name: Build Project
       run: dotnet build --configuration Release
 
-    - name: Publish Project
-      run: dotnet publish -c Release -o ${{ github.workspace }}/publish
+    # - name: Publish Project
+    #   run: dotnet publish -c Release -o ${{ github.workspace }}/publish
+
+    - name: Publish Server Project
+      run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
+
+    - name: Publish Identity Project
+      run: dotnet publish MessageFlow.Identity/MessageFlow.Identity.csproj -c Release -o ${{ github.workspace }}/publish/Identity
+
+    - name: Publish Client Project
+      run: dotnet publish MessageFlow.Client/MessageFlow.Client.csproj -c Release -o ${{ github.workspace }}/publish/Client
+
+    - name: Combine Publish Outputs
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path ${{ github.workspace }}/publish/Combined -Force
+        Copy-Item ${{ github.workspace }}/publish/Server/* -Destination ${{ github.workspace }}/publish/Combined -Recurse -Force
+        Copy-Item ${{ github.workspace }}/publish/Identity/* -Destination ${{ github.workspace }}/publish/Combined -Recurse -Force
+        New-Item -ItemType Directory -Path ${{ github.workspace }}/publish/Combined/wwwroot -Force
+        Copy-Item ${{ github.workspace }}/publish/Client/wwwroot/* -Destination ${{ github.workspace }}/publish/Combined/wwwroot -Recurse -Force
 
 
     - name: Set Deployment Environment
@@ -58,7 +76,8 @@ jobs:
     - name: Create Environment-Specific AppSettings
       shell: pwsh
       run: |
-        $appSettingsPath = "${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}"
+        # $appSettingsPath = "${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}"
+        -source:contentPath="${{ github.workspace }}/publish/Combined"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
