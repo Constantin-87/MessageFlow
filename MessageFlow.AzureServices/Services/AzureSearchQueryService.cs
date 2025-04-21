@@ -19,11 +19,19 @@ namespace MessageFlow.AzureServices.Services
         private readonly string _searchServiceEndpoint;
         private readonly ILogger<AzureSearchQueryService> _logger;
 
-        public AzureSearchQueryService(IConfiguration configuration, ILogger<AzureSearchQueryService> logger)
+        // Added optional injected factory for testing
+        private readonly Func<string, SearchClient>? _searchClientFactory;
+
+        public AzureSearchQueryService(
+            IConfiguration configuration,
+            ILogger<AzureSearchQueryService> logger,
+            Func<string, SearchClient>? searchClientFactory = null)
         {
+
             _searchServiceEndpoint = configuration["azure-ai-search-url"];
             _searchServiceApiKey = configuration["azure-ai-search-key"];
             _logger = logger;
+            _searchClientFactory = searchClientFactory;
 
             if (string.IsNullOrEmpty(_searchServiceEndpoint) || string.IsNullOrEmpty(_searchServiceApiKey))
             {
@@ -37,11 +45,8 @@ namespace MessageFlow.AzureServices.Services
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 
-            var searchClient = new SearchClient(
-                _searchIndexClient.Endpoint,
-                indexName,
-                new AzureKeyCredential(_searchServiceApiKey)
-            );
+            var searchClient = _searchClientFactory?.Invoke(indexName)
+            ?? new SearchClient(_searchIndexClient.Endpoint, indexName, new AzureKeyCredential(_searchServiceApiKey));
 
             var results = new List<SearchResultDTO>();
             try

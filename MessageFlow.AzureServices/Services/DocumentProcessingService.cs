@@ -38,11 +38,10 @@ namespace MessageFlow.AzureServices.Services
                 string modelId = "prebuilt-layout";
 
                 // Process the file using Azure Document Intelligence
-                Operation<AnalyzeResult> operation = await _client.AnalyzeDocumentAsync(WaitUntil.Completed, modelId, BinaryData.FromStream(fileStream));
-                AnalyzeResult result = operation.Value;
+                var operation = await GetClient().AnalyzeDocumentAsync(WaitUntil.Completed, modelId, BinaryData.FromStream(fileStream));
+                var result = operation.Value;
 
-                // Extract text from all pages
-                string extractedText = string.Join(" ", result.Content);
+                string extractedText = ExtractTextFromResult(result);
 
                 _logger.LogInformation("Document processed successfully.");
                 return extractedText;
@@ -53,6 +52,10 @@ namespace MessageFlow.AzureServices.Services
                 return string.Empty;
             }
         }
-
+        protected internal virtual DocumentIntelligenceClient GetClient() => _client;
+        protected internal virtual string ExtractTextFromResult(AnalyzeResult result)
+        {
+            return string.Join(" ", result.Content);
+        }
     }
 }

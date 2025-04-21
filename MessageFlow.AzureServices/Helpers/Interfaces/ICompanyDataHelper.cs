@@ -9,6 +9,6 @@ namespace MessageFlow.AzureServices.Helpers.Interfaces
             List<PretrainDataFileDTO> files,
             IDocumentProcessingService docService);
 
-        (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company); // ← Add this
+        (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company);
     }
 }

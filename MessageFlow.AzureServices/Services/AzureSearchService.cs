@@ -14,13 +14,13 @@ namespace MessageFlow.AzureServices.Services
         private readonly SearchIndexClient _searchIndexClient;
         private readonly string _searchServiceApiKey;
         private readonly IAzureBlobStorageService _azureBlobStorageService;
-        private readonly ILogger<AzureSearchService> _logger;
+        private readonly ILogger<IAzureSearchService> _logger;
 
         public AzureSearchService(
             string searchServiceEndpoint,
             string adminApiKey,
             IAzureBlobStorageService azureBlobStorageService,
-            ILogger<AzureSearchService> logger)
+            ILogger<IAzureSearchService> logger)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _searchServiceApiKey = adminApiKey;
@@ -32,12 +32,22 @@ namespace MessageFlow.AzureServices.Services
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 
-            await foreach (var existingIndexName in _searchIndexClient.GetIndexNamesAsync())
+            //await foreach (var existingIndexName in _searchIndexClient.GetIndexNamesAsync())
+            //{
+            //    if (existingIndexName == indexName)
+            //    {
+            //        // Delete the existing index before proceeding
+            //        await _searchIndexClient.DeleteIndexAsync(indexName);
+            //        break;
+            //    }
+            //}
+            var indexClient = GetIndexClient();
+
+            await foreach (var existingIndexName in indexClient.GetIndexNamesAsync())
             {
                 if (existingIndexName == indexName)
                 {
-                    // Delete the existing index before proceeding
-                    await _searchIndexClient.DeleteIndexAsync(indexName);
+                    await indexClient.DeleteIndexAsync(indexName);
                     break;
                 }
             }
@@ -57,18 +67,14 @@ namespace MessageFlow.AzureServices.Services
                 Fields = fields
             };
 
-            await _searchIndexClient.CreateIndexAsync(definition);
+            await indexClient.CreateIndexAsync(definition);
         }
 
         public async Task UploadDocumentsToIndexAsync(string companyId, List<ProcessedPretrainDataDTO> processedFiles)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 
-            var searchClient = new SearchClient(
-                _searchIndexClient.Endpoint,
-                indexName,
-                new AzureKeyCredential(_searchServiceApiKey)
-            );
+            var searchClient = GetSearchClient(indexName);
 
             if (processedFiles == null || processedFiles.Count == 0)
             {
@@ -105,7 +111,7 @@ namespace MessageFlow.AzureServices.Services
                             { "document_id", file.Id },
                             { "file_description", file.FileDescription },
                             { "company_id", file.CompanyId },
-                            { "content", jsonContent }, // Full parsed JSON content
+                            { "content", jsonContent },
                             { "processed_at", file.ProcessedAt }
                         };
 
@@ -142,6 +148,20 @@ namespace MessageFlow.AzureServices.Services
             {
                 _logger.LogError(ex, "General error uploading documents to index {IndexName}", indexName);
             }
+        }
+
+        protected internal virtual SearchClient GetSearchClient(string indexName)
+        {
+            return new SearchClient(
+                _searchIndexClient.Endpoint,
+                indexName,
+                new AzureKeyCredential(_searchServiceApiKey)
+            );
+        }
+
+        protected internal virtual SearchIndexClient GetIndexClient()
+        {
+            return _searchIndexClient;
         }
     }
 }

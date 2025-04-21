@@ -10,6 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tests\Helpers\**" />
+    <EmbeddedResource Remove="Tests\Helpers\**" />
+    <None Remove="Tests\Helpers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\MessageFlow.AzureServices\Services\AzureSearchService.cs" Link="AzureSearchService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="appsettings.Test.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
@@ -44,10 +54,6 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Tests\Helpers\" />
   </ItemGroup>
 
 </Project>
