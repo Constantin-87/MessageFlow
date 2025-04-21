@@ -25,6 +25,10 @@ using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.CommandHandlers;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Queries;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.QueryHandlers;
+using MessageFlow.AzureServices.Helpers.Interfaces;
+using MessageFlow.AzureServices.Helpers;
+using MessageFlow.Server.Helpers.Interfaces;
+using MessageFlow.Server.Helpers;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -33,9 +37,11 @@ namespace MessageFlow.Server.Configuration
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             services.AddScoped<IDocumentProcessingService, DocumentProcessingService>();
-            services.AddScoped<AzureSearchQueryService>();
+            services.AddScoped<IAzureSearchQueryService, AzureSearchQueryService>();
             services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
             services.AddScoped<IAuthorizationHelper, AuthorizationHelper>();
+            services.AddScoped<ICompanyDataHelper, CompanyDataHelper>();
+            services.AddScoped<IMessageSenderHelper, MessageSenderHelper>();
 
             return services;
         }

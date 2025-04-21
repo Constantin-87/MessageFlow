@@ -6,9 +6,9 @@ namespace MessageFlow.Server.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly HttpClient _httpClient;
-        private readonly ILogger _logger;
+        private readonly ILogger<UserActivityMiddleware> _logger;
 
-        public UserActivityMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory, ILogger logger)
+        public UserActivityMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory, ILogger<UserActivityMiddleware> logger)
         {
             _logger = logger;
             _next = next;
