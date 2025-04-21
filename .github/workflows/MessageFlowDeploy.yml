@@ -25,11 +25,6 @@ jobs:
     - name: Build Project
       run: dotnet build --configuration Release
 
-    # - name: Azure Login
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
     - name: Set Azure Key Vault URL
       run: echo "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
       shell: pwsh
