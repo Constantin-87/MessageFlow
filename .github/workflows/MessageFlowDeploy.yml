@@ -26,7 +26,7 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Set Azure Key Vault URL
-      run: echo "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+      run: Add-Content -Path $env:GITHUB_ENV -Value "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}"
       shell: pwsh
 
     - name: Display Deploy Environment
