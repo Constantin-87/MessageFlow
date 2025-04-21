@@ -53,31 +53,21 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                Console.WriteLine($"📂 Container Name: {_containerName}");
-                Console.WriteLine($"🔗 Raw URL: {fileUrl}");
                 var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-                Console.WriteLine($"✅ Acquired BlobContainerClient");
 
                 // Extract the correct blob name without container prefix
                 string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
-                Console.WriteLine($"📄 Full Blob Path: {fullBlobPath}");
 
                 string blobName = fullBlobPath.Replace($"{_containerName}/", "");
                 blobName = Uri.UnescapeDataString(blobName);
-                Console.WriteLine($"🧩 Parsed Blob Name: {blobName}");
 
-
-                var blobClient = blobContainerClient.GetBlobClient(blobName);
-                Console.WriteLine($"📦 Getting blob client for: {blobClient.Uri}");
+                var blobClient = blobContainerClient.GetBlobClient(blobName);;
 
                 var response = await blobClient.DeleteIfExistsAsync();
-                Console.WriteLine($"✅ DeleteIfExistsAsync response: {response.Value}");
-
                 return response.Value;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Exception thrown: {ex.Message}");
                 _logger.LogError($"Error deleting file: {ex.Message}");
                 return false;
             }
@@ -90,20 +80,13 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                Console.WriteLine($"[LOG] Starting download for URL: {fileUrl}");
-
                 var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-                Console.WriteLine($"[LOG] Got container client for '{_containerName}'");
-
                 string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
                 string blobName = fullBlobPath.Replace($"{_containerName}/", "");
-                Console.WriteLine($"[LOG] Extracted blob name: {blobName}");
 
                 var blobClient = blobContainerClient.GetBlobClient(blobName);
-                Console.WriteLine("[LOG] Got blob client");
 
                 var existsResponse = await blobClient.ExistsAsync();
-                Console.WriteLine($"[LOG] Blob exists: {existsResponse.Value}");
 
                 if (!existsResponse.Value)
                 {
@@ -112,23 +95,19 @@ namespace MessageFlow.AzureServices.Services
                 }
 
                 var response = await blobClient.DownloadContentAsync();
-                Console.WriteLine($"[LOG] Downloaded content length: {response?.Value.Content.ToStream().Length}");
 
-                if (response?.Value?.Content == null)
+                if (response == null)
                 {
-                    Console.WriteLine("[ERROR] Blob content is null");
                     return string.Empty;
                 }
 
                 var result = response.Value.Content.ToString();
-                Console.WriteLine($"[LOG] Content as string: {result}");
 
                 return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error downloading file: {ex.Message}");
-                Console.WriteLine($"[ERROR] Exception: {ex}");
                 return string.Empty;
             }
         }
