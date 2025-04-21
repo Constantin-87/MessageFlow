@@ -2,23 +2,22 @@
 using Azure.Storage.Blobs.Models;
 using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.AzureServices.Services
 {
     public class AzureBlobStorageService : IAzureBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
-        private readonly string _containerName = "company-files"; // Change this to your container name
+        private readonly string _containerName = "company-files";
+        private readonly ILogger<AzureBlobStorageService> _logger;
 
-        public AzureBlobStorageService(IConfiguration configuration)
+        public AzureBlobStorageService(IConfiguration configuration, ILogger<AzureBlobStorageService> logger, BlobServiceClient blobServiceClient = null)
         {
-            string storageConnectionString = configuration["azure-storage-account-conn-string"];
-            if (string.IsNullOrEmpty(storageConnectionString))
-            {
-                throw new InvalidOperationException("Azure Blob Storage connection string is missing.");
-            }
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _blobServiceClient = new BlobServiceClient(storageConnectionString);
+            _blobServiceClient = blobServiceClient ?? new BlobServiceClient(configuration["azure-storage-account-conn-string"]
+                ?? throw new InvalidOperationException("Azure Blob Storage connection string is missing."));
         }
 
         /// <summary>
@@ -28,7 +27,6 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                // Ensure the container exists
                 var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 await blobContainerClient.CreateIfNotExistsAsync(PublicAccessType.None);
 
@@ -43,7 +41,7 @@ namespace MessageFlow.AzureServices.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error uploading file: {ex.Message}");
+                _logger.LogError($"Error uploading file: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -59,20 +57,17 @@ namespace MessageFlow.AzureServices.Services
 
                 // Extract the correct blob name without container prefix
                 string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
-                string blobName = fullBlobPath.Replace($"{_containerName}/", ""); // Remove container prefix
+                string blobName = fullBlobPath.Replace($"{_containerName}/", "");
                 blobName = Uri.UnescapeDataString(blobName);
                 var blobClient = blobContainerClient.GetBlobClient(blobName);
 
-                Console.WriteLine($"🔍 Deleting Blob: {blobName}");
-
                 var response = await blobClient.DeleteIfExistsAsync();
-                Console.WriteLine($"✅ Blob Deleted: {response.Value}");
 
                 return response.Value;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error deleting file: {ex.Message}");
+                _logger.LogError($"Error deleting file: {ex.Message}");
                 return false;
             }
         }
@@ -94,7 +89,7 @@ namespace MessageFlow.AzureServices.Services
 
                 if (!await blobClient.ExistsAsync())
                 {
-                    Console.WriteLine($"⚠️ Blob not found: {blobName}");
+                    _logger.LogError($"Blob not found: {blobName}");
                     return string.Empty;
                 }
 
@@ -104,7 +99,7 @@ namespace MessageFlow.AzureServices.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error downloading file: {ex.Message}");
+                _logger.LogError($"Error downloading file: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -129,7 +124,7 @@ namespace MessageFlow.AzureServices.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error downloading file as stream: {ex.Message}");
+                _logger.LogError($"Error downloading file as stream: {ex.Message}");
                 throw;
             }
         }
@@ -149,7 +144,7 @@ namespace MessageFlow.AzureServices.Services
                 // List all blobs in the CompanyRAGData folder
                 await foreach (BlobItem blobItem in blobContainerClient.GetBlobsAsync(prefix: baseFolderPath))
                 {
-                    if (blobItem.Name.EndsWith(".json")) // Ensure only JSON files are processed
+                    if (blobItem.Name.EndsWith(".json"))
                     {
                         var blobClient = blobContainerClient.GetBlobClient(blobItem.Name);
 
@@ -163,7 +158,7 @@ namespace MessageFlow.AzureServices.Services
 
                 if (fileContents.Count == 0)
                 {
-                    Console.WriteLine($"⚠️ No JSON files found in {baseFolderPath}");
+                    _logger.LogError($"No JSON files found in {baseFolderPath}");
                     return string.Empty;
                 }
 
@@ -172,12 +167,9 @@ namespace MessageFlow.AzureServices.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error retrieving files from {companyId}/CompanyRAGData/: {ex.Message}");
+                _logger.LogError($"Error retrieving files from {companyId}/CompanyRAGData/: {ex.Message}");
                 return string.Empty;
             }
         }
-
-
-
     }
 }
