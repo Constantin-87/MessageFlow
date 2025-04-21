@@ -126,20 +126,24 @@
 //            .ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
 
 //        var content = BinaryData.FromString("hello");
-
-//        var resultWithContent = BlobsModelFactory.BlobDownloadResult(
+//        var downloadResult = BlobsModelFactory.BlobDownloadResult(
 //            content: content,
 //            details: BlobsModelFactory.BlobDownloadDetails()
 //        );
 
-//        _blobClientMock.Setup(x => x.DownloadContentAsync(default))
-//            .ReturnsAsync(Response.FromValue(resultWithContent, Mock.Of<Response>()));
+//        var responseMock = new Mock<Response<BlobDownloadResult>>();
+//        responseMock.Setup(r => r.Value).Returns(downloadResult);
+
+//        _blobClientMock
+//            .Setup(x => x.DownloadContentAsync(default))
+//            .ReturnsAsync(responseMock.Object);
 
 //        var service = new AzureBlobStorageService(_config, _loggerMock.Object, _blobServiceClientMock.Object);
 //        var result = await service.DownloadFileContentAsync("https://mock.blob.core.windows.net/company-files/company_123/file.json");
 
 //        Assert.Equal("hello", result);
 //    }
+
 
 
 //    [Fact]
