@@ -97,8 +97,10 @@ jobs:
       shell: pwsh
       run: |
         dotnet tool install --global dotnet-ef
-        dotnet ef database update --project "${{ github.workspace }}/MessageFlow/MessageFlow.csproj" --connection "${{ env.DB_CONNECTION_STRING }}"
-
+        dotnet ef database update `
+          --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
+          --startup-project "${{ github.workspace }}/MessageFlow.Server/MessageFlow.Server.csproj" `
+          --connection "${{ env.DB_CONNECTION_STRING }}"
 
     - name: Stop IIS before Deployment
       shell: pwsh
