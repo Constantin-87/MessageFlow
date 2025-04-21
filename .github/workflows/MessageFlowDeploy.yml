@@ -30,10 +30,13 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-
     - name: Set Azure Key Vault URL
-      run: echo "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+      run: echo "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
       shell: pwsh
+
+    - name: Display Deploy Environment
+      run: echo "Deploying to ${{ env.DEPLOY_ENV }}"
+      shell: bash
 
     - name: Publish Server Project
       run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
@@ -53,7 +56,6 @@ jobs:
         New-Item -ItemType Directory -Path ${{ github.workspace }}/publish/Combined/wwwroot -Force
         Copy-Item ${{ github.workspace }}/publish/Client/wwwroot/* -Destination ${{ github.workspace }}/publish/Combined/wwwroot -Recurse -Force
 
-
     - name: Set Deployment Environment
       id: set-env
       shell: pwsh
@@ -65,8 +67,8 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          # echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.production.json" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -75,20 +77,18 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          # echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.preprod.json" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
-
 
     - name: Create Environment-Specific AppSettings
       shell: pwsh
       run: |
-        # $appSettingsPath = "${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}"
-        # $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
-        # echo '{
-        #   "ConnectionStrings": {
-        #     "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
-        #   },
+        $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
+        echo '{
+          "AzureKeyVault": {
+            "Url": "' + "${{ env.AzureKeyVaultURL }}" + '"
+          },
           "Logging": {
             "LogLevel": {
               "Default": "Information",
@@ -98,7 +98,6 @@ jobs:
           "ServerBaseAddress": "https://${{ env.WEB_DEPLOY_SERVER }}",
           "WebHostUrls": [ "http://*:80", "https://*:443" ]
         }' | Out-File -FilePath $appSettingsPath -Encoding utf8 -Force
-
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
@@ -126,7 +125,6 @@ jobs:
     - name: Deploy to IIS via Web Deploy
       env:
         ASPNETCORE_ENVIRONMENT: ${{ env.DEPLOY_ENV }}
-        DB_CONNECTION_STRING: ${{ env.DB_CONNECTION_STRING }}
         WEB_DEPLOY_SERVER: ${{ env.WEB_DEPLOY_SERVER }}
         WEB_DEPLOY_USER: ${{ env.WEB_DEPLOY_USER }}
         WEB_DEPLOY_PASSWORD: ${{ env.WEB_DEPLOY_PASSWORD }}
