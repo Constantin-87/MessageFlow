@@ -1,0 +1,137 @@
+﻿@rendermode RenderMode.InteractiveWebAssembly
+
+<Notification Result="@Notification" OnClear="ClearNotificationMessage" />
+
+@if (isLoading)
+{
+    <LoadingIndicator Message="Fetching Whatsapp settings..." IsDark="false" />
+}
+else
+{
+    <EditForm Model="whatsAppSettings" OnValidSubmit="SaveCoreSettings">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label>Business Account ID</label>
+            <InputText class="form-control" @bind-Value="whatsAppSettings.BusinessAccountId" />
+            <ValidationMessage For="@(() => whatsAppSettings.BusinessAccountId)" class="text-danger" />
+        </div>
+
+        <div class="mb-3">
+            <label>Access Token</label>
+            <InputTextArea class="form-control" @bind-Value="whatsAppSettings.AccessToken" />
+            <ValidationMessage For="@(() => whatsAppSettings.AccessToken)" class="text-danger" />
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-2">Save General Settings</button>
+    </EditForm>
+
+    <EditForm Model="phoneNumbers" OnValidSubmit="SavePhoneNumberSettings">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <h4>Phone Numbers</h4>
+
+        <button type="button" class="btn btn-primary mt-2" @onclick="AddNewPhoneNumber">Add New Phone Number</button>
+        <button type="submit" class="btn btn-success mt-2 ms-2">Save All Phone Numbers</button>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Phone Number</th>
+                        <th>Phone Number ID</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var phoneNumber in whatsAppSettings.PhoneNumbers)
+                    {
+                        <tr>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumber" />
+                                <ValidationMessage For="@(() => phoneNumber.PhoneNumber)" class="text-danger" />
+                            </td>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumberId" />
+                                <ValidationMessage For="@(() => phoneNumber.PhoneNumberId)" class="text-danger" />
+                            </td>
+                            <td>
+                                <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumberDesc" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeletePhoneNumber(phoneNumber)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </EditForm>
+}
+@code {
+    [Parameter] public string CompanyId { get; set; }
+
+    private WhatsAppSettingsDTO whatsAppSettings = new();
+    private List<PhoneNumberInfoDTO> phoneNumbers = new();
+
+    private bool isLoading = true;
+
+    [Inject] private ChannelService ChannelService { get; set; }
+
+    private NotificationResult? Notification;
+
+    protected override async Task OnInitializedAsync()
+    {
+        whatsAppSettings = await ChannelService.GetWhatsAppSettingsAsync(CompanyId) ?? new WhatsAppSettingsDTO();
+        phoneNumbers = whatsAppSettings.PhoneNumbers;
+        foreach (var number in phoneNumbers)
+        {
+            number.CompanyId = CompanyId;
+            number.WhatsAppSettingsId = whatsAppSettings.Id;
+        }
+        isLoading = false;
+    }
+
+    private async Task SavePhoneNumberSettings()
+    {
+        Notification = await ChannelService.SavePhoneNumbersAsync(phoneNumbers);
+    }
+
+    private void DeletePhoneNumber(PhoneNumberInfoDTO phoneNumber)
+    {
+        phoneNumbers.Remove(phoneNumber);
+    }
+
+    private void AddNewPhoneNumber()
+    {
+        var newPhoneNumber = new PhoneNumberInfoDTO
+            {
+                WhatsAppSettingsId = whatsAppSettings.Id,
+                CompanyId = CompanyId
+            };
+
+        phoneNumbers.Add(newPhoneNumber);
+    }
+
+    private async Task SaveCoreSettings()
+    {
+        var coreSettings = new WhatsAppCoreSettingsDTO
+            {
+                CompanyId = whatsAppSettings.CompanyId,
+                BusinessAccountId = whatsAppSettings.BusinessAccountId,
+                AccessToken = whatsAppSettings.AccessToken
+            };
+
+        Notification = await ChannelService.SaveWhatsCoreAppSettingsAsync(coreSettings);        
+    }
+
+    private void ClearNotificationMessage()
+    {
+        Notification = null;
+    }
+}
+
+

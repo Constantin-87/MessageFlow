@@ -1,0 +1,73 @@
+﻿@page "/Accounts/RequestAccount"
+@rendermode RenderMode.InteractiveWebAssembly
+@layout Pages.Shared.Layout.PublicSubLayout
+@inject NavigationManager NavigationManager
+
+<PageTitle>Request Account</PageTitle>
+
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        @if (!submitted)
+        {
+            <h2 class="mb-4">Request an Account</h2>
+            <p class="text-muted mb-4">
+                Submit your company details and our team will get in touch to set up your account.
+            </p>
+
+            <EditForm Model="request" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <InputText class="form-control" placeholder="Company Name" @bind-Value="request.CompanyName" />
+                </div>
+
+                <div class="mb-3">
+                    <InputText class="form-control" placeholder="Your Name" @bind-Value="request.ContactName" />
+                </div>
+
+                <div class="mb-3">
+                    <InputText class="form-control" placeholder="Email Address" type="email" @bind-Value="request.Email" />
+                </div>
+
+                <div class="mb-3">
+                    <InputText class="form-control" placeholder="Phone Number" @bind-Value="request.Phone" />
+                </div>
+
+                <div class="mb-3">
+                    <InputTextArea class="form-control" placeholder="Message / Request Details" rows="4" @bind-Value="request.Message" />
+                </div>
+
+                <button class="btn btn-primary w-100" type="submit">Submit Request</button>
+            </EditForm>
+        }
+        else
+        {
+            <div class="alert alert-info mt-5">
+                ✅ Form submitted successfully, but this page is under construction.<br />
+                Redirecting to the home page...
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private RequestAccountModel request = new();
+    private bool submitted = false;
+
+    private async Task HandleSubmit()
+    {
+        submitted = true;
+        await Task.Delay(3000);
+        NavigationManager.NavigateTo("/");
+    }
+
+    private class RequestAccountModel
+    {
+        public string CompanyName { get; set; } = "";
+        public string ContactName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Message { get; set; } = "";
+    }
+}

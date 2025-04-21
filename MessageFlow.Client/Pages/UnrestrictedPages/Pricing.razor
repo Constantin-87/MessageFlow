@@ -1,0 +1,85 @@
+﻿@page "/Pricing"
+@layout Pages.Shared.Layout.PublicSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+@inject NavigationManager NavigationManager
+
+<PageTitle>Pricing</PageTitle>
+
+<!-- Hero Section -->
+<section class="text-white text-center py-5" style="background-color: #0B0C45;">
+    <div class="container">
+        <h2 class="text-uppercase small mb-3">MessageFlow Pricing</h2>
+        <h1 class="display-4 fw-bold">Simple pricing.<br />Minimal add‑ons.<br />No service fees.</h1>
+        <p class="lead mt-3">Making it easy for you to realize measurable returns on your communication investments.</p>
+        <button class="btn btn-primary btn-lg mt-4" @onclick='() => NavigationManager.NavigateTo("/Accounts/RequestAccount")'>
+            Try For Free →
+        </button>
+    </div>
+</section>
+
+<!-- Plan Comparison Table -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row text-center mb-4">
+            <div class="col-md-4">
+                <h4>Bronze</h4>
+                <p>Boost agent efficiency with a secure chat workspace</p>
+            </div>
+            <div class="col-md-4">
+                <h4>Silver</h4>
+                <p>Increase self-service with intelligent automation</p>
+            </div>
+            <div class="col-md-4">
+                <h4>Gold</h4>
+                <p>Advanced analytics, integrations, and AI features</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-start">Feature</th>
+                    <th>Bronze</th>
+                    <th>Silver</th>
+                    <th>Gold</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var feature in PricingFeatures)
+                {
+                    <tr>
+                        <td class="text-start">@feature.Name</td>
+                        <td>@(feature.Bronze ? "✔️" : "—")</td>
+                        <td>@(feature.Silver ? "✔️" : "—")</td>
+                        <td>@(feature.Gold ? "✔️" : "—")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Notes -->
+<section class="container py-4">
+    <p class="text-muted small"><sup>1</sup> Advanced features available upon request</p>
+    <p class="text-muted small"><sup>2</sup> Contact sales for access to premium automations</p>
+    <p class="text-muted small"><sup>3</sup> AI features may require additional usage-based pricing</p>
+</section>
+
+@code {
+    private record FeatureRow(string Name, bool Bronze, bool Silver, bool Gold);
+
+    private List<FeatureRow> PricingFeatures = new()
+    {
+        new("Secure Messaging", true, true, true),
+        new("AI Message Insights", false, true, true),
+        new("Channel Integrations (FB, WhatsApp)", false, true, true),
+        new("Team Management", true, true, true),
+        new("Analytics Dashboard", false, false, true),
+        new("Priority Support", false, false, true),
+        new("Custom Automations", false, true, true),
+        new("Activity Logs", true, true, true),
+        new("Company Branding", false, false, true),
+        new("Custom Roles", false, false, true)
+    };
+}

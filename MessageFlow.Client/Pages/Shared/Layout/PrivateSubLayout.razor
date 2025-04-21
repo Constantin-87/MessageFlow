@@ -1,0 +1,58 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<div class="d-flex flex-column min-vh-100">
+
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a href="/"><img src="images/MessageFlow_icon_wide.png" alt="Logo" style="height: 36px;" /></a>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+               <UserActivity />
+               <button class="btn btn-outline-light btn-sm" @onclick="@(() => NavigationManager.NavigateTo("/Accounts/Logout"))">Logout</button>               
+            </div>
+        </div>
+    </header>
+
+    <div class="private-layout container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <SideBar />
+
+            <!-- Main content -->
+            <main class="main-content offset-md-3 offset-lg-2 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <article class="content">
+                    @Body
+                </article>
+            </main>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        if (currentUrl != "AgentWorkspace")
+        {
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
+}

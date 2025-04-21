@@ -1,0 +1,42 @@
+﻿/* Notification overlay */
+.notification-overlay {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Success */
+.alert-success {
+    background-color: #e6f2ff;
+    color: #004085;
+    border: 1px solid #b8daff;
+    border-radius: 0.5rem;
+}
+
+/* Error */
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 0.5rem;
+}
+
+/* Close button */
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}

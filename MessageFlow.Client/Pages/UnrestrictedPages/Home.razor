@@ -1,0 +1,72 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@rendermode RenderMode.InteractiveWebAssembly
+@layout Pages.Shared.Layout.PublicSubLayout
+
+<PageTitle>Welcome</PageTitle>
+
+<!-- Hero Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <!-- Left: Text -->
+            <div class="col-md-6 mb-4 mb-md-0 text-center text-md-start">
+                <h1 class="display-4 fw-bold mb-3">Live chat <span class="text-primary">platform</span></h1>
+                <p class="lead text-muted">
+                    Empower your teams with secure, AI-powered chat and customer communication.
+                </p>
+                <ul class="list-unstyled text-muted mb-4">
+                    <li>✔️ No setup fees</li>
+                    <li>✔️ 24/7 company communication</li>
+                    <li>✔️ Cancel anytime</li>
+                </ul>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-primary btn-lg" @onclick="NavigateToFreeTrial">Get Started</button>
+                    <button class="btn btn-outline-secondary btn-lg" @onclick="ShowDemo">Watch Demo</button>
+                </div>
+            </div>
+
+            <!-- Right: Illustration -->
+            <div class="col-md-6 text-center">
+                <img src="images/home-chat-illustration.svg" class="img-fluid rounded" style="max-height: 350px;" alt="Chat Illustration" />
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Section (Placeholder for now) -->
+<section class="py-5">
+    <div class="container text-center">
+        <h2 class="fw-bold mb-4">What makes MessageFlow unique?</h2>
+        <p class="lead text-muted mb-4">
+            Real-time messaging, seamless channel integrations, and full control over your customer communication.
+        </p>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <h5>🔐 Secure Messaging</h5>
+                <p class="text-muted">End-to-end encrypted chat for your teams and clients.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>📊 AI-Powered Insights</h5>
+                <p class="text-muted">Understand customer needs with intelligent message processing.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>⚡ Channel Integrations</h5>
+                <p class="text-muted">Connect Facebook, WhatsApp, and more — in minutes.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (showModal)
+{
+    <VideoModal VideoUrl="https://www.youtube.com/embed/xvFZjo5PgG0" OnClose="HideDemo" />
+}
+
+@code {
+    private bool showModal = false;
+
+    private void NavigateToFreeTrial() => NavigationManager.NavigateTo("/Accounts/RequestAccount");
+    private void ShowDemo() => showModal = true;
+    private void HideDemo() => showModal = false;
+}

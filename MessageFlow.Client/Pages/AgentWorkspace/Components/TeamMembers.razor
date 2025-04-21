@@ -1,0 +1,141 @@
+﻿@rendermode RenderMode.InteractiveWebAssembly
+
+<div class="team-members">
+    <h4>Teams:</h4>
+    @if (GroupedTeamMembers != null && GroupedTeamMembers.Any())
+    {
+        @foreach (var team in GroupedTeamMembers.Keys)
+        {
+            <div class="team-group">
+                <button class="btn btn-primary mb-2" @onclick="() => ToggleTeam(team)">
+                    @team (@GroupedTeamMembers[team].Count)
+                </button>
+                @if (ExpandedTeams.Contains(team))
+                {
+                    <ul>
+                        @foreach (var member in GroupedTeamMembers[team])
+                        {
+                            <li>
+                                @member.UserName
+                                <img class="status-icon"
+                                     src="images/@(IsActive(member.LastActivity) ? "activeClock.svg" : "inactiveClock.svg")"
+                                     title="@GetActivityStatus(member.LastActivity)"
+                                     alt="Status" />
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <p>No other agents online.</p>
+    }
+</div>
+
+@code {
+    private Dictionary<string, List<ApplicationUserDTO>> GroupedTeamMembers = new();
+    private HashSet<string> ExpandedTeams = new();
+
+    [Parameter] 
+    public HubConnection HubConnection { get; set; }
+    [Parameter]
+    public string? CurrentUserName { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (HubConnection != null)
+        {
+            RegisterHandlers();
+        }
+    }
+
+    public void RegisterHandlers()
+    {
+        if (HubConnection != null)
+        {
+            HubConnection.On<ApplicationUserDTO>("AddTeamMember", AddTeamMember);
+            HubConnection.On<ApplicationUserDTO>("RemoveTeamMember", RemoveTeamMember);
+        }
+    }
+
+    public void AddTeamMember(ApplicationUserDTO member)
+    {
+        if (member.UserName == CurrentUserName) return; // Exclude the current user
+
+        var teamNames = member.TeamsDTO != null && member.TeamsDTO.Any()
+            ? member.TeamsDTO.Select(t => t.TeamName ?? "Unnamed").ToList()
+            : new List<string> { "Unassigned" };
+
+        foreach (var teamName in teamNames)
+        {
+            if (!GroupedTeamMembers.ContainsKey(teamName))
+            {
+                GroupedTeamMembers[teamName] = new List<ApplicationUserDTO>();
+            }
+
+            if (!GroupedTeamMembers[teamName].Any(m => m.Id == member.Id))
+            {
+                GroupedTeamMembers[teamName].Add(member);
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    // Remove a team member
+    public void RemoveTeamMember(ApplicationUserDTO member)
+    {
+        var teamNames = member.TeamsDTO != null && member.TeamsDTO.Any()
+            ? member.TeamsDTO.Select(t => t.TeamName ?? "Unnamed").ToList()
+            : new List<string> { "Unassigned" };
+
+        foreach (var teamName in teamNames)
+        {
+            if (GroupedTeamMembers.ContainsKey(teamName))
+            {
+                GroupedTeamMembers[teamName].RemoveAll(m => m.Id == member.Id);
+                if (GroupedTeamMembers[teamName].Count == 0)
+                {
+                    GroupedTeamMembers.Remove(teamName);
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private void ToggleTeam(string team)
+    {
+        if (ExpandedTeams.Contains(team))
+        {
+            ExpandedTeams.Remove(team);
+        }
+        else
+        {
+            ExpandedTeams.Add(team);
+        }
+    }
+
+    private bool IsActive(DateTime lastActivity)
+    {
+        return (DateTime.UtcNow - lastActivity).TotalMinutes < 1;
+    }
+
+    private string GetActivityStatus(DateTime lastActivity)
+    {
+        var now = DateTime.UtcNow;
+        var timeDifference = now - lastActivity;
+
+        if (timeDifference.TotalMinutes < 1)
+        {
+            return "Active";
+        }
+        else
+        {
+            var minutesAgo = (int)Math.Floor(timeDifference.TotalMinutes);
+            return $"Last seen {minutesAgo} minute{(minutesAgo != 1 ? "s" : "")} ago";
+        }
+    }
+}

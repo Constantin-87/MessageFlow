@@ -1,0 +1,26 @@
+﻿@page "/edit-company/{companyId}"
+@attribute [Authorize(Roles = "SuperAdmin, Admin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Company</PageTitle>
+
+<Notification Result="@Notification" />
+
+<CompanyAddEditForm IsEditMode="true" CompanyId="@companyId" OnActionCompleted="HandleActionCompleted" />
+
+@code {
+    private NotificationResult? Notification;
+
+    [Parameter]
+    public string companyId { get; set; }
+
+    private Task HandleActionCompleted(NotificationResult result)
+    {
+        Notification = result;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

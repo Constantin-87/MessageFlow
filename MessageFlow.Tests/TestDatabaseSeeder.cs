@@ -1,138 +1,147 @@
-﻿using System.Collections.Generic;
-using Microsoft.AspNetCore.Identity;
-using MessageFlow.Server.Data;
-using MessageFlow.Server.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using MessageFlow.DataAccess.Models;
+using MessageFlow.DataAccess.Services;
+using MessageFlow.Shared.DTOs;
+using AutoMapper;
 
-namespace MessageFlow.Server.Tests
+namespace MessageFlow.Tests
 {
     public class TestDatabaseSeeder
     {
-        public static async Task Seed(ApplicationDbContext context)
+        public static async Task Seed(
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager)
         {
-            // Ensure the database is created
-            context.Database.EnsureCreated();
+            // Seed Roles (Using RoleManager)
+            var roles = new List<string> { "SuperAdmin", "Admin", "Manager", "Agent" };
 
-            using var transaction = context.Database.BeginTransaction(); // Begin a transaction
-
-            // Seed Companies with IDENTITY_INSERT ON
-            context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Companies] ON");
-
-            var company0 = new Company { Id = 1, CompanyName = "HeadCompany", AccountNumber = "0000" }; // HeadCompany
-            var company1 = new Company { Id = 2, CompanyName = "Company A", AccountNumber = "COMP-A123" }; // Company A
-            var company2 = new Company { Id = 3, CompanyName = "Company B", AccountNumber = "COMP-B123" }; // Company B
-            context.Companies.AddRange(company0, company1, company2);
-            context.SaveChanges();
-            context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Companies] OFF");
-
-            // Seed Teams with IDENTITY_INSERT ON
-            context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Teams] ON");
-            var team1 = new Team { Id = 1, TeamName = "Development Team", CompanyId = company1.Id }; // Team 1 for Company A
-            var team2 = new Team { Id = 2, TeamName = "Support Team", CompanyId = company2.Id };     // Team 2 for Company B
-            context.Teams.AddRange(team1, team2);
-            context.SaveChanges();
-            context.Database.ExecuteSqlRaw("SET IDENTITY_INSERT [Teams] OFF");
-
-            transaction.Commit(); // Commit the transaction
-
-            // Seed Roles (if not already present)
-            if (!context.Roles.Any())
+            foreach (var roleName in roles)
             {
-                context.Roles.AddRange(
-                    new IdentityRole { Id = "1", Name = "SuperAdmin", NormalizedName = "SUPERADMIN" },
-                    new IdentityRole { Id = "2", Name = "Admin", NormalizedName = "ADMIN" },
-                    new IdentityRole { Id = "3", Name = "Manager", NormalizedName = "MANAGER" },
-                    new IdentityRole { Id = "4", Name = "Agent", NormalizedName = "AGENT" }
-                );
-
-                // Save roles to ensure they exist before assigning to users
-                await context.SaveChangesAsync();
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    await roleManager.CreateAsync(new IdentityRole
+                    {
+                        Name = roleName,
+                        NormalizedName = roleName.ToUpper()
+                    });
+                }
             }
 
-            // Seed Users
-            var passwordHasher = new PasswordHasher<ApplicationUser>();
-
-            var superAdmin = new ApplicationUser
+            // Seed Companies with all required fields
+            var companies = new List<CompanyDTO>
             {
-                Id = "1",
-                UserName = "superadmin@headcompany.com",
-                Email = "superadmin@headcompany.com",
-                NormalizedUserName = "SUPERADMIN@HEADCOMPANY.COM",
-                NormalizedEmail = "SUPERADMIN@HEADCOMPANY.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                CompanyId = company0.Id
+                new CompanyDTO
+                {
+                    Id = "1",
+                    CompanyName = "HeadCompany",
+                    AccountNumber = "0000",
+                    Description = "Main company managing operations",
+                    IndustryType = "Technology",
+                    WebsiteUrl = "https://headcompany.com"
+                },
+                new CompanyDTO
+                {
+                    Id = "2",
+                    CompanyName = "Company A",
+                    AccountNumber = "COMP-A123",
+                    Description = "Leading provider of tech solutions",
+                    IndustryType = "Software",
+                    WebsiteUrl = "https://companya.com"
+                },
+                new CompanyDTO
+                {
+                    Id = "3",
+                    CompanyName = "Company B",
+                    AccountNumber = "COMP-B123",
+                    Description = "Specializes in hardware manufacturing",
+                    IndustryType = "Hardware",
+                    WebsiteUrl = "https://companyb.com"
+                }
             };
-            superAdmin.PasswordHash = passwordHasher.HashPassword(superAdmin, "SuperAdmin@123");
 
-            var agentHeadCompany = new ApplicationUser
+            // Map and add companies
+            foreach (var company in companies)
             {
-                Id = "2",
-                UserName = "agent@headcompany.com",
-                Email = "agent@headcompany.com",
-                NormalizedUserName = "AGENT@HEADCOMPANY.COM",
-                NormalizedEmail = "AGENT@HEADCOMPANY.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                CompanyId = company0.Id
-            };
-            agentHeadCompany.PasswordHash = passwordHasher.HashPassword(agentHeadCompany, "Agent@123");
+                var companyEntity = mapper.Map<Company>(company);
+                await unitOfWork.Companies.AddEntityAsync(companyEntity);
+            }
+            await unitOfWork.SaveChangesAsync();
 
-            var adminCompanyA = new ApplicationUser
+            // Seed Teams
+            var teams = new List<TeamDTO>
             {
-                Id = "3",
-                UserName = "admin@companya.com",
-                Email = "admin@companya.com",
-                NormalizedUserName = "ADMIN@COMPANYA.COM",
-                NormalizedEmail = "ADMIN@COMPANYA.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                CompanyId = company1.Id // Belongs to Company A
-            };
-            adminCompanyA.PasswordHash = passwordHasher.HashPassword(adminCompanyA, "Admin@123");
+                // HeadCompany (Id = "1")
+                new TeamDTO { Id = "1", TeamName = "HQ Dev Team", TeamDescription = "Handles internal development", CompanyId = "1" },
+                new TeamDTO { Id = "2", TeamName = "HQ Support Team", TeamDescription = "Handles internal support", CompanyId = "1" },
+                new TeamDTO { Id = "3", TeamName = "HQ Ops Team", TeamDescription = "Manages operations", CompanyId = "1" },
 
-            var managerCompanyA = new ApplicationUser
+                // Company A (Id = "2")
+                new TeamDTO { Id = "4", TeamName = "A Dev Team", TeamDescription = "Develops products", CompanyId = "2" },
+                new TeamDTO { Id = "5", TeamName = "A Support Team", TeamDescription = "Customer support", CompanyId = "2" },
+                new TeamDTO { Id = "6", TeamName = "A Marketing Team", TeamDescription = "Marketing and outreach", CompanyId = "2" },
+
+                // Company B (Id = "3")
+                new TeamDTO { Id = "7", TeamName = "B Hardware Team", TeamDescription = "Builds hardware", CompanyId = "3" },
+                new TeamDTO { Id = "8", TeamName = "B QA Team", TeamDescription = "Tests products", CompanyId = "3" },
+                new TeamDTO { Id = "9", TeamName = "B Sales Team", TeamDescription = "Sales and distribution", CompanyId = "3" }
+            };
+
+            foreach (var teamDTO in teams)
             {
-                Id = "4",
-                UserName = "manager@companya.com",
-                Email = "manager@companya.com",
-                NormalizedUserName = "MANAGER@COMPANYA.COM",
-                NormalizedEmail = "MANAGER@COMPANYA.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                CompanyId = company1.Id // Belongs to Company A
-            };
-            managerCompanyA.PasswordHash = passwordHasher.HashPassword(managerCompanyA, "Manager@123");
+                var teamEntity = mapper.Map<Team>(teamDTO);  // Map DTO to entity
+                await unitOfWork.Teams.AddEntityAsync(teamEntity); // Use repository to add
+            }
+            await unitOfWork.SaveChangesAsync();
 
-            var agentCompanyB = new ApplicationUser
+            // Seed Users (Using UserManager and assign roles)
+            var usersToSeed = new List<(ApplicationUser User, string Password, string Role)>
             {
-                Id = "5",
-                UserName = "agent@companyb.com",
-                Email = "agent@companyb.com",
-                NormalizedUserName = "AGENT@COMPANYB.COM",
-                NormalizedEmail = "AGENT@COMPANYB.COM",
-                EmailConfirmed = true,
-                LockoutEnabled = false,
-                CompanyId = company2.Id // Belongs to Company B
+                (new ApplicationUser { Id = "1", UserName = "superadmin@headcompany.com", Email = "superadmin@headcompany.com", CompanyId = "1" }, "SuperAdmin@123", "SuperAdmin"),
+                (new ApplicationUser { Id = "2", UserName = "agent@headcompany.com", Email = "agent@headcompany.com", CompanyId = "1" }, "Agent@123", "Agent"),
+                (new ApplicationUser { Id = "3", UserName = "admin@companya.com", Email = "admin@companya.com", CompanyId = "2" }, "Admin@123", "Admin"),
+                (new ApplicationUser { Id = "4", UserName = "manager@companya.com", Email = "manager@companya.com", CompanyId = "2" }, "Manager@123", "Manager"),
+                (new ApplicationUser { Id = "5", UserName = "agent@companyb.com", Email = "agent@companyb.com", CompanyId = "3" }, "Agent@123", "Agent")
             };
-            agentCompanyB.PasswordHash = passwordHasher.HashPassword(agentCompanyB, "Agent@123");
-                   
-            context.Users.AddRange(superAdmin, agentHeadCompany, adminCompanyA, managerCompanyA, agentCompanyB);
 
-            // Save users
-            context.SaveChanges();
+            foreach (var (user, password, role) in usersToSeed)
+            {
+                var userToProcess = await userManager.FindByEmailAsync(user.Email) ?? user;
 
-            // Assign roles to users
-            context.UserRoles.AddRange(
-                new IdentityUserRole<string> { UserId = superAdmin.Id, RoleId = "1" }, // SuperAdmin
-                new IdentityUserRole<string> { UserId = agentHeadCompany.Id, RoleId = "4" }, // Agent
-                new IdentityUserRole<string> { UserId = adminCompanyA.Id, RoleId = "2" },     // Admin
-                new IdentityUserRole<string> { UserId = managerCompanyA.Id, RoleId = "3" },   // Manager
-                new IdentityUserRole<string> { UserId = agentCompanyB.Id, RoleId = "4" }     // Agent
-            );
+                // Create the user if it doesn't exist
+                if (userToProcess.Id == user.Id)  // Means user was not found and is newly created
+                {
+                    var result = await userManager.CreateAsync(userToProcess, password);
+                    if (!result.Succeeded)
+                    {
+                        throw new Exception($"Failed to create user {userToProcess.Email}: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    }
+                }
 
-            // Save user-role assignments
-            context.SaveChanges();
+                // Assign role if not already assigned
+                var userRoles = await userManager.GetRolesAsync(userToProcess);
+                if (!userRoles.Contains(role))
+                {
+                    var roleAssignResult = await userManager.AddToRoleAsync(userToProcess, role);
+                    if (!roleAssignResult.Succeeded)
+                    {
+                        throw new Exception($"Failed to assign role {role} to {userToProcess.Email}: {string.Join(", ", roleAssignResult.Errors.Select(e => e.Description))}");
+                    }
+                }
+            }
+
+            // Assign users to teams
+            var companyATeam = await unitOfWork.Teams.GetTeamByIdAsync("4");
+            var manager = await userManager.FindByEmailAsync("manager@companya.com");
+            companyATeam.Users = new List<ApplicationUser> { manager };
+
+            var companyBTeam = await unitOfWork.Teams.GetTeamByIdAsync("7");
+            var agent = await userManager.FindByEmailAsync("agent@companyb.com");
+            companyBTeam.Users = new List<ApplicationUser> { agent };
+
+            await unitOfWork.SaveChangesAsync();
+
         }
     }
 }

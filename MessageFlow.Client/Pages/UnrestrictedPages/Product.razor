@@ -1,0 +1,59 @@
+﻿@page "/Product"
+@layout Pages.Shared.Layout.PublicSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+
+<PageTitle>Product</PageTitle>
+
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        <h1 class="fw-bold display-5 mb-4">Powerful Communication Platform for Modern Teams</h1>
+        <p class="lead text-muted mb-5">
+            MessageFlow helps businesses centralize team communication, manage customer messages, and gain AI-driven insights — all from one secure, web-based platform.
+        </p>
+
+        <div class="row g-5">
+            <div class="col-md-4">
+                <h5>🔐 Role-Based Access</h5>
+                <p class="text-muted">Granular control for SuperAdmins, Admins, Managers, and Agents with scoped access and centralized authorization.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>📞 Channel Integrations</h5>
+                <p class="text-muted">Connect Facebook, WhatsApp, and other messaging platforms to unify inbound/outbound communication.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>📊 AI-Powered Messaging</h5>
+                <p class="text-muted">Leverage AI to extract insights, summarize conversations, and optimize agent performance.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>⚙️ Company & Team Management</h5>
+                <p class="text-muted">Admins can manage users, teams, and branding with ease using intuitive interfaces and live updates.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>🧠 Intelligent Automation</h5>
+                <p class="text-muted">Build custom workflows, message handlers, and automate repetitive tasks with full flexibility.</p>
+            </div>
+            <div class="col-md-4">
+                <h5>🛡️ Enterprise-Grade Security</h5>
+                <p class="text-muted">Built with secure authentication, CSRF protection, tokenized APIs, and Azure-hosted infrastructure.</p>
+            </div>
+        </div>
+
+        <div class="mt-5">
+            <a class="btn btn-warning btn-lg" href="/Accounts/RequestAccount">Start Free Trial</a>
+            <button class="btn btn-outline-secondary btn-lg ms-3" @onclick="ShowDemo">Watch Demo</button>
+        </div>
+    </div>
+</section>
+
+@if (showModal)
+{
+    <VideoModal VideoUrl="https://www.youtube.com/embed/xvFZjo5PgG0" OnClose="HideDemo" />
+}
+
+@code {
+    private bool showModal = false;
+
+    private void ShowDemo() => showModal = true;
+
+    private void HideDemo() => showModal = false;
+}

@@ -1,0 +1,28 @@
+﻿@page "/Accounts/Create-company"
+@attribute [Authorize(Roles = "SuperAdmin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+
+@inject NavigationManager NavigationManager
+
+<PageTitle>Create Company</PageTitle>
+
+<Notification Result="@Notification" />
+
+<CompanyAddEditForm IsEditMode="false" OnActionCompleted="HandleActionCompleted" />
+
+@code {
+    private NotificationResult? Notification;
+
+    private async Task HandleActionCompleted(NotificationResult result)
+    {
+        Notification = result;
+        StateHasChanged();
+
+        if (Notification.IsSuccess)
+        {
+            await Task.Delay(3000);
+            NavigationManager.NavigateTo("/Accounts/CompanyAccounts");
+        }
+    }
+}

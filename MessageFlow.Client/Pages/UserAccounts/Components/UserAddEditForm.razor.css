@@ -1,0 +1,78 @@
+﻿h3 {
+    color: #d1d5db;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Form Styling */
+form {
+    background-color: #1f2937;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 600px;
+}
+
+/* Limit width of inputs, selects, and button inside floating containers */
+.form-floating {
+    width: 300px;    
+}
+
+/* Floating labels */
+.form-floating > label {
+    color: #a0aec0;
+}
+
+.form-control {
+    background-color: #2d3748;
+    border: 1px solid #3a4756;
+    color: #d1d5db;
+}
+
+    .form-control:focus {
+        background-color: #2d3748;
+        border-color: #1abc9c;
+        color: #fff;
+        box-shadow: none;
+    }
+
+.form-check-label {
+    color: #d1d5db;
+}
+
+button[type="submit"] {
+    background-color: #11545F;
+    border-color: #166976;
+    color: #d1d5db;
+    font-weight: bold;
+    max-width: 200px;
+}
+
+    button[type="submit"]:hover {
+        background-color: #166976;
+        border-color: #2BA2B5;
+    }
+
+input::placeholder {
+    color: #6c757d;
+}
+
+/* Validation messages */
+.text-danger {
+    color: #e57373;
+    font-size: 0.875rem;
+}
+
+/* Alert messages */
+.alert-success {
+    background-color: #22543d;
+    color: #c6f6d5;
+    border: 1px solid #2f855a;
+}
+
+.alert-danger {
+    background-color: #4a1a1a;
+    color: #fca5a5;
+    border: 1px solid #e53e3e;
+}

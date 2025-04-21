@@ -1,0 +1,15 @@
+﻿<div class="loading-indicator">
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <span>@Message</span>
+</div>
+
+@code {
+    [Parameter]
+    public string Message { get; set; } = "Loading...";
+    [Parameter]
+    public bool IsDark { get; set; } = true;
+
+    private string TextColorClass => IsDark ? "text-light" : "text-dark";
+}

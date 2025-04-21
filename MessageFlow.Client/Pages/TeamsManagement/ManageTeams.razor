@@ -1,0 +1,100 @@
+﻿@page "/Accounts/ManageTeams"
+@attribute [Authorize(Roles = "SuperAdmin, Admin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+@inject TeamsManagementService TeamsManagementService
+@inject CurrentUserService CurrentUser
+@inject IJSRuntime JSRuntime
+
+<Notification Result="@Notification" />
+
+<h3>Manage Teams</h3>
+
+<button class="btn btn-primary mb-3" @onclick="@(() => ShowAddEditTeam(null, true))">Create New Team</button>
+
+<AddEditTeam @key="selectedTeam?.Id" NewTeam="isNewTeam" Team="selectedTeam" CompanyId="@companyId" OnClose="OnAddEditTeamClose" />
+
+<!-- Teams Table -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Team Name</th>
+            <th>Description</th>
+            <th>Current Users</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var team in teams)
+        {
+            <tr class="@GetRowClass(team)" @onclick="@(() => ShowAddEditTeam(team, false))">
+                <td>@team.TeamName</td>
+                <td title ="@team.TeamDescription">@team.TeamDescription</td>
+                <td>
+                    @if (team?.AssignedUsersDTO != null && team.AssignedUsersDTO.Any())
+                    {
+                        @string.Join(", ", team.AssignedUsersDTO.Select(u => u.UserName))
+                    }
+                    else
+                    {
+                        <em>No users assigned</em>
+                    }
+                </td>
+                <td>
+                    <button class="btn btn-danger btn-sm" @onclick:stopPropagation @onclick="() => ConfirmDeleteTeam(team.Id)">
+                        Delete
+                    </button>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<TeamDTO> teams = new List<TeamDTO>();
+    private TeamDTO? selectedTeam = null;
+    private NotificationResult? Notification;
+    private bool isNewTeam = true;
+    private string companyId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        companyId = CurrentUser.CompanyId!;
+        teams = await TeamsManagementService.GetTeamsForCompanyAsync(companyId);
+    }
+
+    private void ShowAddEditTeam(TeamDTO? team, bool newTeam)
+    {
+        selectedTeam = team;
+        isNewTeam = newTeam;
+        Notification = null;
+        StateHasChanged();
+    }
+
+    private async Task DeleteTeam(string teamId)
+    {
+        Notification = await TeamsManagementService.DeleteTeamByIdAsync(teamId);
+        if (Notification.IsSuccess)
+        {
+            teams = teams.Where(t => t.Id != teamId).ToList();
+        }
+    }
+
+    private async Task ConfirmDeleteTeam(string teamId)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete this team?"))
+        {
+            await DeleteTeam(teamId);
+        }
+    }
+
+    private string GetRowClass(TeamDTO team) => selectedTeam?.Id == team.Id ? "table-active" : "";
+
+    private async Task OnAddEditTeamClose(NotificationResult result)
+    {
+        Notification = result;
+        teams = await TeamsManagementService.GetTeamsForCompanyAsync(companyId);
+        StateHasChanged();
+    }
+}

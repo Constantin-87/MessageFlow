@@ -1,0 +1,63 @@
+﻿@rendermode RenderMode.InteractiveWebAssembly
+@inject ChannelService ChannelService
+
+<Notification Result="@Notification" OnClear="ClearNotificationMessage" />
+
+@if (isLoading)
+{
+    <LoadingIndicator Message="Fetching Facebook settings..." IsDark="false" />
+}
+else
+{
+    <EditForm Model="facebookSettings" OnValidSubmit="HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label>Page ID</label>
+            <InputText class="form-control" @bind-Value="facebookSettings.PageId" />
+            <ValidationMessage For="@(() => facebookSettings.PageId)" class="text-danger" />
+        </div>
+
+
+        <div class="mb-3">
+            <label>Access Token</label>
+            <InputTextArea class="form-control" @bind-Value="facebookSettings.AccessToken" />
+            <ValidationMessage For="@(() => facebookSettings.AccessToken)" class="text-danger" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string CompanyId { get; set; }
+
+    private NotificationResult? Notification;
+
+    private FacebookSettingsDTO facebookSettings = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        facebookSettings = await ChannelService.GetFacebookSettingsAsync(CompanyId) ?? new FacebookSettingsDTO();
+        isLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var success = await ChannelService.SaveFacebookSettingsAsync(CompanyId, facebookSettings);
+
+        Notification = new NotificationResult
+            {
+                IsSuccess = success,
+                Message = success ? "Facebook settings saved successfully." : "Failed to save Facebook settings."
+            };
+    }
+
+
+
+    private void ClearNotificationMessage()
+    {
+        Notification = null;
+    }
+}

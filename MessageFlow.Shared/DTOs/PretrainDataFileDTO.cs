@@ -5,7 +5,7 @@ namespace MessageFlow.Shared.DTOs
 {
     public class PretrainDataFileDTO
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
 
         [Required]
         public string FileName { get; set; } // Original file name
@@ -24,7 +24,7 @@ namespace MessageFlow.Shared.DTOs
 
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
-        public int CompanyId { get; set; }
+        public string CompanyId { get; set; }
         public CompanyDTO Company { get; set; }
     }
 }

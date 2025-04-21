@@ -1,25 +1,24 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
-using MessageFlow.AzureServices.Services;
+using MessageFlow.AzureServices.Helpers.Interfaces;
+using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Shared.Enums;
 using OfficeOpenXml;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Text.Json;
 
 namespace MessageFlow.AzureServices.Helpers
 {
-    public static class CompanyDataHelper
+    public class CompanyDataHelper : ICompanyDataHelper
     {
 
         /// <summary>
         /// Processes a list of uploaded files and extracts structured data into separate documents.
         /// </summary>
-        public static async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
+        public async Task<(List<ProcessedPretrainDataDTO>, List<string>)> ProcessUploadedFilesAsync(
             List<PretrainDataFileDTO> uploadedFiles,
-            DocumentProcessingService documentProcessingService)
+            IDocumentProcessingService documentProcessingService)
         {
             var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
@@ -29,7 +28,6 @@ namespace MessageFlow.AzureServices.Helpers
                 using var memoryStream = new MemoryStream();
                 await file.FileContent.CopyToAsync(memoryStream);
                 memoryStream.Position = 0; // Reset position for reading
-
 
                 string fileExtension = Path.GetExtension(file.FileName).ToLower();
 
@@ -75,14 +73,14 @@ namespace MessageFlow.AzureServices.Helpers
                 // Convert the row into a structured JSON string
                 var jsonContent = JsonSerializer.Serialize(rowDict, new JsonSerializerOptions { WriteIndented = true });
 
-                // Add to JSON contents list (for blob storage)
+                // Add to JSON contents list
                 jsonContents.Add(jsonContent);
 
                 processedFiles.Add(new ProcessedPretrainDataDTO
                 {
                     FileDescription = originalFile.FileDescription,
                     FileUrl = "",  // Will be set after uploading to Azure Blob Storage
-                    CompanyId = originalFile.CompanyId,  // Associate with the correct company
+                    CompanyId = originalFile.CompanyId,
                     FileType = FileType.CsvFile,
                     ProcessedAt = DateTime.UtcNow
                 });
@@ -103,7 +101,7 @@ namespace MessageFlow.AzureServices.Helpers
             var jsonContents = new List<string>();
             using var package = new ExcelPackage(fileStream);
 
-            // 🔹 Loop through all sheets in the workbook
+            // Loop through all sheets in the workbook
             foreach (var worksheet in package.Workbook.Worksheets)
             {
                 if (worksheet.Dimension == null) continue; // Skip empty sheets
@@ -130,7 +128,7 @@ namespace MessageFlow.AzureServices.Helpers
 
                     // Serialize the row data into a structured JSON format
                     var jsonContent = JsonSerializer.Serialize(rowDict, new JsonSerializerOptions { WriteIndented = true });
-                    // Add to JSON contents list (for blob storage)
+                    // Add to JSON contents list
                     jsonContents.Add(jsonContent);
 
                     processedFiles.Add(new ProcessedPretrainDataDTO
@@ -156,7 +154,7 @@ namespace MessageFlow.AzureServices.Helpers
             var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
-            // 🔹 If no FAQ pattern is detected, store the text as a general document
+            // If no FAQ pattern is detected, store the text as a general document
             if (!DetectFAQPattern(extractedText))
             {
                 var document = new
@@ -167,7 +165,7 @@ namespace MessageFlow.AzureServices.Helpers
 
                 var jsonContent = JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = true });
 
-                // Add JSON content to list (for Blob Storage)
+                // Add JSON content to list
                 jsonContents.Add(jsonContent);
 
                 // Add metadata for DB storage
@@ -183,7 +181,7 @@ namespace MessageFlow.AzureServices.Helpers
                 return (processedFiles, jsonContents);
             }
 
-            // 🔹 If FAQ pattern is detected, extract and store each FAQ separately
+            // If FAQ pattern is detected, extract and store each FAQ separately
             var faqs = ExtractFAQs(extractedText);
             foreach (var faq in faqs)
             {
@@ -195,7 +193,7 @@ namespace MessageFlow.AzureServices.Helpers
 
                 var jsonContent = JsonSerializer.Serialize(faqDocument, new JsonSerializerOptions { WriteIndented = true });
 
-                // Add JSON content to list (for Blob Storage)
+                // Add JSON content to list
                 jsonContents.Add(jsonContent);
 
                 // Add metadata for DB storage
@@ -211,9 +209,6 @@ namespace MessageFlow.AzureServices.Helpers
 
             return (processedFiles, jsonContents);
         }
-
-
-
 
         private static bool DetectFAQPattern(string text)
         {
@@ -239,14 +234,15 @@ namespace MessageFlow.AzureServices.Helpers
         /// <summary>
         /// Generates structured metadata documents for a company.
         /// </summary>
-        public static (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company)
+        public (List<ProcessedPretrainDataDTO>, List<string>) GenerateStructuredCompanyMetadata(CompanyDTO company)
         {
             var processedFiles = new List<ProcessedPretrainDataDTO>();
             var jsonContents = new List<string>();
 
-            // 🔹 1. General Company Information Document
+            // General Company Information Document
             var generalInfo = new
             {
+                Id = Guid.NewGuid().ToString(),
                 company_name = company.CompanyName,
                 company_description = company.Description,
                 industry_type = company.IndustryType,
@@ -259,14 +255,15 @@ namespace MessageFlow.AzureServices.Helpers
 
             processedFiles.Add(new ProcessedPretrainDataDTO
             {
+                Id = Guid.NewGuid().ToString(),
                 FileDescription = "General information about the company, including industry type and website.",
-                FileUrl = "",  // To be updated after uploading to Azure Blob Storage
+                FileUrl = "",
                 CompanyId = company.Id,
                 FileType = FileType.CompanyDetails,
                 ProcessedAt = DateTime.UtcNow
             });
 
-            // 🔹 2. Company Emails Document
+            // Company Emails Document
             var companyEmails = company.CompanyEmails.Select(e => new { e.EmailAddress, e.Description }).ToList();
             var companyEmailsJson = JsonSerializer.Serialize(companyEmails, new JsonSerializerOptions { WriteIndented = true });
 
@@ -274,39 +271,41 @@ namespace MessageFlow.AzureServices.Helpers
 
             processedFiles.Add(new ProcessedPretrainDataDTO
             {
+                Id = Guid.NewGuid().ToString(),
                 FileDescription = "Company contact emails. Use this for support, inquiries, or reaching out to relevant departments.",
-                FileUrl = "",  // To be updated after uploading to Azure Blob Storage
+                FileUrl = "",
                 CompanyId = company.Id,
                 FileType = FileType.CompanyEmails,
                 ProcessedAt = DateTime.UtcNow
             });
 
-            // 🔹 3. Company Phone Numbers Document
+            // Company Phone Numbers Document
             var companyPhones = company.CompanyPhoneNumbers.Select(p => new { p.PhoneNumber, p.Description }).ToList();
             var companyPhonesJson = JsonSerializer.Serialize(companyPhones, new JsonSerializerOptions { WriteIndented = true });
 
-            jsonContents.Add(companyPhonesJson); // Store JSON for Blob Storage
+            jsonContents.Add(companyPhonesJson);
 
             processedFiles.Add(new ProcessedPretrainDataDTO
             {
+                Id = Guid.NewGuid().ToString(),
                 FileDescription = "Company contact phone numbers. Use this for customer support, direct contact, and urgent inquiries.",
-                FileUrl = "",  // To be updated after uploading to Azure Blob Storage
+                FileUrl = "",
                 CompanyId = company.Id,
                 FileType = FileType.CompanyPhoneNumbers,
                 ProcessedAt = DateTime.UtcNow
             });
 
-
-            // 🔹 4. Company Teams Document
+            // Company Teams Document
             var companyTeams = company.Teams.Select(t => new { t.Id, t.TeamName, t.TeamDescription }).ToList();
             var companyTeamsJson = JsonSerializer.Serialize(companyTeams, new JsonSerializerOptions { WriteIndented = true });
 
-            jsonContents.Add(companyTeamsJson); // Store JSON for Blob Storage
+            jsonContents.Add(companyTeamsJson);
 
             processedFiles.Add(new ProcessedPretrainDataDTO
             {
+                Id = Guid.NewGuid().ToString(),
                 FileDescription = "List of company teams. Keywords: support teams, customer service, redirect to agent, escalation, assistance, live agent.",
-                FileUrl = "",  // To be updated after uploading to Azure Blob Storage
+                FileUrl = "",
                 CompanyId = company.Id,
                 FileType = FileType.CompanyTeams,
                 ProcessedAt = DateTime.UtcNow

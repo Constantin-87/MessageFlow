@@ -1,0 +1,13 @@
+﻿.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+    .loading-indicator .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        color: #f8f9fa;
+    }

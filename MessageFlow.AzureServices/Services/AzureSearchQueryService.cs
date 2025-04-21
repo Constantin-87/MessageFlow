@@ -7,19 +7,23 @@ using Azure.Search.Documents.Indexes;
 using System.Text.Json;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using MessageFlow.AzureServices.Interfaces;
 
 namespace MessageFlow.AzureServices.Services
 {
-    public class AzureSearchQueryService
+    public class AzureSearchQueryService: IAzureSearchQueryService
     {
         private readonly SearchIndexClient _searchIndexClient;
         private readonly string _searchServiceApiKey;
         private readonly string _searchServiceEndpoint;
+        private readonly ILogger<AzureSearchQueryService> _logger;
 
-        public AzureSearchQueryService(IConfiguration configuration)
+        public AzureSearchQueryService(IConfiguration configuration, ILogger<AzureSearchQueryService> logger)
         {
             _searchServiceEndpoint = configuration["azure-ai-search-url"];
             _searchServiceApiKey = configuration["azure-ai-search-key"];
+            _logger = logger;
 
             if (string.IsNullOrEmpty(_searchServiceEndpoint) || string.IsNullOrEmpty(_searchServiceApiKey))
             {
@@ -29,9 +33,8 @@ namespace MessageFlow.AzureServices.Services
             _searchIndexClient = new SearchIndexClient(new Uri(_searchServiceEndpoint), new AzureKeyCredential(_searchServiceApiKey));
         }
 
-        public async Task<List<SearchResult>> QueryIndexAsync(string query, int companyId)
+        public async Task<List<SearchResultDTO>> QueryIndexAsync(string query, string companyId)
         {
-
             string indexName = SearchIndexHelper.GetIndexName(companyId);
 
             var searchClient = new SearchClient(
@@ -40,24 +43,24 @@ namespace MessageFlow.AzureServices.Services
                 new AzureKeyCredential(_searchServiceApiKey)
             );
 
-            var results = new List<SearchResult>();
+            var results = new List<SearchResultDTO>();
             try
             {
-                // ✅ Ensure the query is properly formatted
+                // Formating the string
                 query = query?.Trim() ?? "";
 
                 if (string.IsNullOrWhiteSpace(query))
                 {
-                    Console.WriteLine("🔹 Empty search query detected. Skipping search.");
+                    _logger.LogWarning("Empty search query received for company {CompanyId}", companyId);
                     return results;
                 }
 
-                // ✅ Set safe SearchOptions
+                // Set safe SearchOptions
                 var searchOptions = new SearchOptions
                 {
                     Size = 10,  // Limit results to 10
-                    QueryType = SearchQueryType.Simple, // 🔹 Use 'Simple' instead of 'Full'
-                    SearchMode = SearchMode.Any,  // 🔹 Allow partial matches
+                    QueryType = SearchQueryType.Simple, // Use 'Simple' instead of 'Full'
+                    SearchMode = SearchMode.Any,  // Allow partial matches
                     IncludeTotalCount = true
                 };
 
@@ -65,16 +68,10 @@ namespace MessageFlow.AzureServices.Services
 
                 foreach (var result in response.Value.GetResults())
                 {
-                    Console.WriteLine("Available fields in document:");
-                    foreach (var field in result.Document.Keys)
-                    {
-                        Console.WriteLine($" - {field}");
-                    }
-
                     string content = ExtractContentFromDocument(result.Document);
 
-                    // ✅ Handle missing fields safely
-                    results.Add(new SearchResult
+                    // Handle missing fields
+                    results.Add(new SearchResultDTO
                     {
                         Id = result.Document.TryGetValue("document_id", out var idValue) ? idValue.ToString() : "N/A",
                         FileDescription = result.Document.TryGetValue("file_description", out var descriptionValue) ? descriptionValue.ToString() : "N/A",
@@ -87,11 +84,12 @@ namespace MessageFlow.AzureServices.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"🚨 Error querying index: {ex.Message}");
+                _logger.LogError(ex, "Error querying Azure Search index for company {CompanyId}", companyId);
             }
 
             return results;
         }
+
         public string ExtractContentFromDocument(SearchDocument document)
         {
             StringBuilder contentBuilder = new StringBuilder();
@@ -150,6 +148,5 @@ namespace MessageFlow.AzureServices.Services
 
             return builder.ToString();
         }
-
     }
 }

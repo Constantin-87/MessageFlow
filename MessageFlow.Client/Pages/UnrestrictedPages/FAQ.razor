@@ -1,0 +1,46 @@
+﻿@page "/Faq"
+@layout Pages.Shared.Layout.PublicSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+
+<PageTitle>FAQ</PageTitle>
+
+<div class="container py-5">
+    <h1 class="mb-4 text-center">Frequently Asked Questions</h1>
+
+    <div class="accordion" id="faqAccordion">
+
+        @foreach (var item in FaqList)
+        {
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-@item.Id">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-@item.Id" aria-expanded="false" aria-controls="collapse-@item.Id">
+                        @item.Question
+                    </button>
+                </h2>
+                <div id="collapse-@item.Id" class="accordion-collapse collapse" aria-labelledby="heading-@item.Id" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                        @item.Answer
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    private record FaqItem(int Id, string Question, string Answer);
+
+    private List<FaqItem> FaqList = new()
+    {
+        new(1, "What is MessageFlow?", "MessageFlow is a secure, AI-powered messaging platform for team collaboration and customer support."),
+        new(2, "Who is MessageFlow for?", "It's designed for companies needing internal messaging and customer communication through agents."),
+        new(3, "Which messaging channels can I integrate?", "Currently, MessageFlow supports Facebook Messenger and WhatsApp."),
+        new(4, "Does it support real-time chat?", "Yes, real-time communication is enabled through WebSockets."),
+        new(5, "Can I manage multiple teams?", "Yes, Admins can create teams and assign users accordingly."),
+        new(6, "What roles are available?", "SuperAdmin, Admin, Manager, and Agent — each with custom permissions."),
+        new(7, "Can I restrict user access by company?", "Yes, Admins are scoped to their company only."),
+        new(8, "Is my data secure?", "Yes, JWT authentication, HTTPS, and RBAC ensure strong data protection."),
+        new(9, "How can I get support?", "Use the floating 'Contact Us' button or access support from the Help section.")
+    };
+}

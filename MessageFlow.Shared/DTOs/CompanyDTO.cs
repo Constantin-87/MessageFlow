@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MessageFlow.Shared.DTOs
 {
     public class CompanyDTO
     {
-        public int Id { get; set; }  // Primary key
+        public string? Id { get; set; }
 
         [Required(ErrorMessage = "Company Account Number is required.")]
         public string AccountNumber { get; set; }
@@ -15,11 +14,12 @@ namespace MessageFlow.Shared.DTOs
 
         [Required(ErrorMessage = "Company Description is required.")]
         public string Description { get; set; }
-
+        [Required(ErrorMessage = "Industry Type is required.")]
         public string IndustryType { get; set; }
+        [Required(ErrorMessage = "Company Website is required.")]
         public string WebsiteUrl { get; set; }
 
-        // Customer Support - Multiple Emails & Phone Numbers
+        // Multiple Emails & Phone Numbers
         public ICollection<CompanyEmailDTO> CompanyEmails { get; set; } = new List<CompanyEmailDTO>();
         public ICollection<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new List<CompanyPhoneNumberDTO>();
 
@@ -28,8 +28,7 @@ namespace MessageFlow.Shared.DTOs
 
         public ICollection<TeamDTO> Teams { get; set; } = new List<TeamDTO>();
 
-        // Property to hold the total users count dynamically
-        [NotMapped] // Property is not persisted in the database
+        // Property to hold the total users count
         public int TotalUsers { get; set; }
     }
 }

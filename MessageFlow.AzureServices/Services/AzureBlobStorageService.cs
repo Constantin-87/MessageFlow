@@ -1,11 +1,11 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Configuration;
-
 
 namespace MessageFlow.AzureServices.Services
 {
-    public class AzureBlobStorageService
+    public class AzureBlobStorageService : IAzureBlobStorageService
     {
         private readonly BlobServiceClient _blobServiceClient;
         private readonly string _containerName = "company-files"; // Change this to your container name
@@ -24,7 +24,7 @@ namespace MessageFlow.AzureServices.Services
         /// <summary>
         /// Uploads a file to Azure Blob Storage.
         /// </summary>
-        public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, int companyId)
+        public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType, string companyId)
         {
             try
             {
@@ -137,7 +137,7 @@ namespace MessageFlow.AzureServices.Services
         /// <summary>
         /// Retrieves all JSON files in the "CompanyRAGData" folder for a given company and returns their combined content.
         /// </summary>
-        public async Task<string> GetAllCompanyRagDataFilesAsync(int companyId)
+        public async Task<string> GetAllCompanyRagDataFilesAsync(string companyId)
         {
             try
             {

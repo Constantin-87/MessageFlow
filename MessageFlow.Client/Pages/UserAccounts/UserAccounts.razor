@@ -1,0 +1,128 @@
+﻿@page "/Accounts/UserAccounts"
+@attribute [Authorize(Roles = "Admin, SuperAdmin")]
+@rendermode RenderMode.InteractiveWebAssembly
+@layout Pages.Shared.Layout.PrivateSubLayout
+@inject NavigationManager NavigationManager
+@inject UserManagementService UserManagementService
+
+<h3>User Accounts</h3>
+
+<!-- Button to create a new user account -->
+<button class="btn btn-primary mb-3" @onclick="NavigateToCreateUser">Create New User Account</button>
+
+<!-- Table to display the user accounts -->
+@if (users == null)
+{
+    <LoadingIndicator Message="Fetching user data..." IsDark="false" />
+}
+else if (users.Count == 0)
+{
+    <p>No user accounts available.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Company Name</th>
+                <th>Role</th>
+                <th>Teams</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.UserEmail</td>
+                    <td>@user.PhoneNumber</td>
+                    <td>@(user.CompanyDTO?.CompanyName ?? "N/A")</td>
+                    <td>@user.Role</td>
+                    <td>@string.Join(", ", user.TeamsDTO?.Select(t => t.TeamName) ?? new List<string>())</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => NavigateToEditUser(user.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => ConfirmDelete(user.Id, user.UserName)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Delete confirmation -->
+@if (showDeleteConfirmation)
+{
+    <div class="modal show" tabindex="-1" role="dialog" style="display:block;">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Delete</h5>
+                    <button type="button" class="close" aria-label="Close" @onclick="CancelDelete">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the user @userNameToDelete?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" @onclick="DeleteUser">Delete</button>
+                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ApplicationUserDTO> users;
+    private bool showDeleteConfirmation = false;
+    private string? userIdToDelete;
+    private string? userNameToDelete;
+    private int currentUserCompanyId;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        users = await UserManagementService.GetUsersAsync();
+    }
+
+    private void NavigateToCreateUser()
+    {
+        NavigationManager.NavigateTo("/Accounts/Create-user");
+    }
+
+    private void NavigateToEditUser(string userId)
+    {
+        NavigationManager.NavigateTo($"/Accounts/Edit-user/{userId}");
+    }
+
+    private void ConfirmDelete(string userId, string userName)
+    {
+        userIdToDelete = userId;
+        userNameToDelete = userName;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+        userIdToDelete = null;
+        userNameToDelete = null;
+    }
+
+    private async Task DeleteUser()
+    {        
+        if (await UserManagementService.DeleteUserAsync(userIdToDelete))
+        {
+            // Remove user from the list after deletion
+            users.Remove(users.FirstOrDefault(u => u.Id == userIdToDelete));
+        }
+
+        // Hide the confirmation dialog
+        CancelDelete();
+    }
+}

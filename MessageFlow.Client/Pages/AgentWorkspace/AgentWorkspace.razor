@@ -1,0 +1,62 @@
+﻿@page "/AgentWorkspace"
+@attribute [Authorize(Roles = "Agent, Manager, Admin, SuperAdmin")]
+@layout Pages.Shared.Layout.PrivateSubLayout
+@rendermode RenderMode.InteractiveWebAssembly
+@implements IAsyncDisposable
+@inject CurrentUserService CurrentUser
+@inject HttpClient Http
+@inject AppConfig AppConfig
+@inject IJSRuntime JSRuntime
+
+<h3>Agent Workspace</h3>
+
+<div class="workspace-container">
+    <!-- Team Members List -->
+    <div class="team-members">
+        <TeamMembers CurrentUserName="@CurrentUser.Username" HubConnection="@hubConnection" />
+    </div>
+
+    <!-- Chat Section -->
+    <div class="chat-section">
+        <ChatWindow HubConnection="@hubConnection" />
+    </div>
+
+    <!-- New Conversations List -->
+    <NewConversationsList UserId="@CurrentUser.UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
+
+</div>
+
+@code {
+    private HubConnection? hubConnection;
+    private ChatWindow? ChatWindowRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (hubConnection == null || hubConnection.State != HubConnectionState.Connected)
+        {          
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{AppConfig.ServerApiUrl}/chatHub?companyId={CurrentUser.CompanyId}", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var token = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");
+                        return token;
+                    };
+                })
+                .WithAutomaticReconnect()
+                .AddNewtonsoftJsonProtocol()
+                .Build();
+            await hubConnection.StartAsync();
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.StopAsync();
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

@@ -1,21 +1,37 @@
-﻿@using System.Net.Http
+﻿@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using System.Net.Http
 @using System.Net.Http.Json
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
-@using static Microsoft.AspNetCore.Components.Web.RenderMode
-@using Microsoft.AspNetCore.Components.Web.Virtualization
-@using Microsoft.JSInterop
-@using MessageFlow.Client
-@using MessageFlow.Client.Components
-
-
-@using System.Security.Claims
 @using Microsoft.AspNetCore.SignalR.Client
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Authorization
-
-
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.JSInterop
+@using MessageFlow.Client
+@using MessageFlow.Client.Pages.AgentWorkspace
+@using MessageFlow.Client.Pages.AgentWorkspace.Components
+@using MessageFlow.Client.Pages.ChannelSetup
+@using MessageFlow.Client.Pages.ChannelSetup.Components
+@using MessageFlow.Client.Pages.CompanyAccounts
+@using MessageFlow.Client.Pages.CompanyAccounts.Components
+@using MessageFlow.Client.Pages.ManagerWorkspace
+@using MessageFlow.Client.Pages.Shared
+@using MessageFlow.Client.Pages.Shared.Layout
+@using MessageFlow.Client.Pages.TeamsManagement
+@using MessageFlow.Client.Pages.TeamsManagement.Components
+@using MessageFlow.Client.Pages.UnrestrictedPages
+@using MessageFlow.Client.Pages.UnrestrictedPages.Authentication
+@using MessageFlow.Client.Pages.UserAccounts
+@using MessageFlow.Client.Pages.UserAccounts.Components
+@using MessageFlow.Client.Services
+@using MessageFlow.Client.Services.Authentication
 @using MessageFlow.Client.Models
+@using MessageFlow.Client.Models.DTOs
+@using MessageFlow.Client.Models.Extensions
+@using MessageFlow.Client.Models.ViewModels
+@* @using MessageFlow.Shared.DTOs *@
 @* @using Blazorise
 @using Blazorise.Charts *@

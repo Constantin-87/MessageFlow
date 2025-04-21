@@ -1,0 +1,33 @@
+﻿label {
+    color: #a0aec0;
+}
+
+input.form-control,
+textarea.form-control {
+    background-color: #2d3748;
+    border: 1px solid #3a4756;
+    color: #d1d5db;
+}
+
+    input.form-control:focus {
+        border-color: #1abc9c;
+        outline: none;
+        box-shadow: none;
+    }
+
+button[type="submit"] {
+    background-color: #11545F;
+    border-color: #166976;
+    color: #d1d5db;
+    font-weight: bold;
+}
+
+    button[type="submit"]:hover {
+        background-color: #166976;
+        border-color: #2BA2B5;
+    }
+
+.text-danger {
+    color: #e57373;
+    font-size: 0.875rem;
+}

@@ -4,28 +4,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+	 <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
   </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Properties\launchSettings.json" />
+  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.7.0" />
-    <PackageReference Include="Blazorise" Version="1.7.4" />
-    <PackageReference Include="Blazorise.Bootstrap5" Version="1.7.4" />
-    <PackageReference Include="Blazorise.Charts" Version="1.7.4" />
-    <PackageReference Include="Blazorise.Icons.Bootstrap" Version="1.7.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.10" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\css\AgentWorkspace.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\images\" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.*-*" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

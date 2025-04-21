@@ -1,0 +1,80 @@
+﻿@inject CurrentUserService CurrentUser
+
+<nav class="col-md-3 col-lg-2 d-md-block bg-dark sidebar">
+
+    <div class="nav-scrollable">
+        <nav class="flex-column">
+
+            <AuthorizeView>
+                <!-- Agent Workspace -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/AgentWorkspace">
+                        <span class="bi bi-chat-left-text" aria-hidden="true"></span> Agent Workspace
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Manager, Admin, SuperAdmin">
+                <!-- Manager Workspace -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/AgentManagerWorkspace">
+                        <span class="bi bi-clipboard-data" aria-hidden="true"></span> Manager Workspace
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin, SuperAdmin">
+                <!-- Manage Dropdown -->
+                <div class="nav-item px-3 dropdown">
+                    <button class="nav-link dropdown-toggle" href="#" @onclick="()=>expandSubMenu = !expandSubMenu">
+                        <span class="bi bi-kanban" aria-hidden="true"></span> Manage
+                    </button>
+
+                    @if (expandSubMenu)
+                    {
+                        <ul class="nav flex-column">
+                            <li class="nav-item px-3 dropdown">
+                                <!-- User Accounts -->
+                                <NavLink class="dropdown-item" href="/Accounts/UserAccounts">
+                                    <i class="bi bi-person-fill" aria-hidden="true"></i> User Accounts
+                                </NavLink>
+                            </li>
+
+                            <AuthorizeView Roles="SuperAdmin, Admin" Context="CompanyAccountsContext">
+                                <li class="nav-item px-3 dropdown">
+                                    <NavLink class="dropdown-item" href="@GetCompanyLink()">
+                                        <i class="bi bi-building"></i> @GetCompanyLabel()
+                                    </NavLink>
+                                </li>
+                            </AuthorizeView>
+
+                            <li class="nav-item px-3 dropdown">
+                                <!-- Manage Teams -->
+                                <NavLink class="dropdown-item" href="/Accounts/ManageTeams">
+                                    <i class="bi bi-people" aria-hidden="true"></i> Manage Teams
+                                </NavLink>
+                            </li>
+
+                            <li class="nav-item px-3">
+                                <NavLink class="dropdown-item" href="/ChannelSetup">
+                                    <i class="bi bi-gear"></i> Channel Setup
+                                </NavLink>
+                            </li>
+                        </ul>
+                    }
+                </div>
+            </AuthorizeView>
+
+        </nav>
+    </div>
+</nav>
+
+@code {
+    private bool expandSubMenu;
+
+    private string GetCompanyLabel() =>
+        CurrentUser.IsSuperAdmin ? "Company Accounts" : "Company Details";
+
+    private string GetCompanyLink() =>
+        CurrentUser.IsSuperAdmin ? "/Accounts/CompanyAccounts" : $"/edit-company/{CurrentUser.CompanyId}";
+}
