@@ -81,6 +81,10 @@ jobs:
       run: |
         $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
         echo '{
+          "ConnectionStrings": {
+            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
+          },
+          {
           "AzureKeyVault": {
             "Url": "' + "${{ env.AzureKeyVaultURL }}" + '"
           },
@@ -101,6 +105,7 @@ jobs:
         dotnet ef database update `
           --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
           --startup-project "${{ github.workspace }}/MessageFlow.Server/MessageFlow.Server.csproj" `
+          --connection "${{ env.DB_CONNECTION_STRING }}"
 
     - name: Stop IIS before Deployment
       shell: pwsh
