@@ -96,7 +96,7 @@ jobs:
     - name: Apply Entity Framework Migrations
       shell: pwsh
       run: |
-        dotnet tool install --global dotnet-ef
+        dotnet tool install --global dotnet-ef --version 8.0.4
         dotnet ef database update `
           --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
           --startup-project "${{ github.workspace }}/MessageFlow.Server/MessageFlow.Server.csproj" `
