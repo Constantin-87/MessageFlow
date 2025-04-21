@@ -25,8 +25,16 @@ jobs:
     - name: Build Project
       run: dotnet build --configuration Release
 
-    # - name: Publish Project
-    #   run: dotnet publish -c Release -o ${{ github.workspace }}/publish
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+
+    - name: Set Azure Key Vault URL
+      run: echo "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+      shell: pwsh
 
     - name: Publish Server Project
       run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
@@ -58,7 +66,7 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.production.json" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
@@ -68,7 +76,7 @@ jobs:
           echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          # echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
           echo "APPSETTINGS_FILE=appsettings.preprod.json" | Out-File -FilePath $env:GITHUB_ENV -Append
         }
 
@@ -77,11 +85,11 @@ jobs:
       shell: pwsh
       run: |
         # $appSettingsPath = "${{ github.workspace }}/publish/${{ env.APPSETTINGS_FILE }}"
-        $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
-        echo '{
-          "ConnectionStrings": {
-            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
-          },
+        # $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
+        # echo '{
+        #   "ConnectionStrings": {
+        #     "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
+        #   },
           "Logging": {
             "LogLevel": {
               "Default": "Information",
@@ -96,11 +104,10 @@ jobs:
     - name: Apply Entity Framework Migrations
       shell: pwsh
       run: |
-        dotnet tool install --global dotnet-ef --version 8.0.4
+        dotnet tool install --global dotnet-ef --version 8.0.10
         dotnet ef database update `
           --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
           --startup-project "${{ github.workspace }}/MessageFlow.Server/MessageFlow.Server.csproj" `
-          --connection "${{ env.DB_CONNECTION_STRING }}"
 
     - name: Stop IIS before Deployment
       shell: pwsh
