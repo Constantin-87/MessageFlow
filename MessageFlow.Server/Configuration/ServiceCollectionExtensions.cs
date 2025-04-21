@@ -2,32 +2,32 @@
 using MessageFlow.AzureServices.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.QueryHandlers;
-using MessageFlow.Server.MediatorComponents.TeamManagement.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.TeamManagement.Commands;
-using MessageFlow.Server.MediatorComponents.TeamManagement.Queries;
-using MessageFlow.Server.MediatorComponents.TeamManagement.QueryHandlers;
-using MessageFlow.Server.MediatorComponents.UserManagement.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
-using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
-using MessageFlow.Server.MediatorComponents.UserManagement.QueryHandlers;
+using MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers;
+using MessageFlow.Server.MediatR.CompanyManagement.Commands;
+using MessageFlow.Server.MediatR.CompanyManagement.Queries;
+using MessageFlow.Server.MediatR.CompanyManagement.QueryHandlers;
+using MessageFlow.Server.MediatR.TeamManagement.CommandHandlers;
+using MessageFlow.Server.MediatR.TeamManagement.Commands;
+using MessageFlow.Server.MediatR.TeamManagement.Queries;
+using MessageFlow.Server.MediatR.TeamManagement.QueryHandlers;
+using MessageFlow.Server.MediatR.UserManagement.CommandHandlers;
+using MessageFlow.Server.MediatR.UserManagement.Commands;
+using MessageFlow.Server.MediatR.UserManagement.Queries;
+using MessageFlow.Server.MediatR.UserManagement.QueryHandlers;
 using MessageFlow.Shared.DTOs;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Queries;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.QueryHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Handlers;
-using MessageFlow.Server.MediatorComponents.Chat.Handlers;
-using MessageFlow.Server.MediatorComponents.Chat.Messaging.Handlers;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.QueryHandlers;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.CommandHandlers;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Queries;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.QueryHandlers;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
+using MessageFlow.Server.MediatR.Chat.Handlers;
+using MessageFlow.Server.MediatR.Chat.Messaging.Handlers;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.CommandHandlers;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Queries;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.QueryHandlers;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -42,7 +42,6 @@ namespace MessageFlow.Server.Configuration
 
             return services;
         }
-
 
         public static IServiceCollection AddMediatorHandlers(this IServiceCollection services)
         {
@@ -123,7 +122,6 @@ namespace MessageFlow.Server.Configuration
             // Chat.WhatsAppProcessing Queries
             services.AddScoped<IRequestHandler<GetWhatsAppSettingsQuery, WhatsAppSettingsDTO?>, GetWhatsAppSettingsHandler>();
 
-
             return services;
         }
 
@@ -143,7 +141,5 @@ namespace MessageFlow.Server.Configuration
 
             return services;
         }
-
     }
-
 }

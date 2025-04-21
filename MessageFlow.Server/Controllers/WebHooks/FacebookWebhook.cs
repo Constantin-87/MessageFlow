@@ -3,7 +3,7 @@ using System.Text.Json;
 using MessageFlow.Server.Configuration;
 using Microsoft.Extensions.Options;
 using MediatR;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.Helpers;
 
 [Route("api/[controller]")]

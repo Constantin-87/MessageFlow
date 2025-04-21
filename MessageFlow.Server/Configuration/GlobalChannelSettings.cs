@@ -7,5 +7,4 @@
         public string FacebookWebhookVerifyToken { get; set; }
         public string WhatsAppWebhookVerifyToken { get; set; }
     }
-
 }

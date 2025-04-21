@@ -22,7 +22,6 @@ namespace MessageFlow.DataAccess.Models
         [Required(ErrorMessage = "Website is required.")]
         public string WebsiteUrl { get; set; }
 
-        // Navigation Properties
         public ICollection<ApplicationUser>? Users { get; set; } = new List<ApplicationUser>();
         public ICollection<CompanyEmail>? CompanyEmails { get; set; } = new List<CompanyEmail>();
         public ICollection<CompanyPhoneNumber>? CompanyPhoneNumbers { get; set; } = new List<CompanyPhoneNumber>();

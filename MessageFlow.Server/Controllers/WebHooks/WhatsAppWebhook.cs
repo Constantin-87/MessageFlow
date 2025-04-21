@@ -2,7 +2,7 @@
 using System.Text.Json;
 using MessageFlow.Server.Configuration;
 using Microsoft.Extensions.Options;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
 using MediatR;
 using MessageFlow.Server.Helpers;
 

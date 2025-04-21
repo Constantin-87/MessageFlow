@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MediatR;
 using Moq;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
 namespace MessageFlow.Tests
 {

@@ -12,7 +12,6 @@
         public string Status { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation property
         public Conversation Conversation { get; set; }
     }
 }

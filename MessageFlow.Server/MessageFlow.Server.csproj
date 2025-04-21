@@ -18,11 +18,4 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="MediatorComponents\Chat\AiBotProcessing\Queries\" />
-    <Folder Include="MediatorComponents\Chat\AiBotProcessing\QueryHandlers\" />
-    <Folder Include="MediatorComponents\Chat\GeneralProcessing\QueryHandlers\" />
-    <Folder Include="MediatorComponents\Chat\GeneralProcessing\Queries\" />
-  </ItemGroup>
-
 </Project>

@@ -6,18 +6,20 @@ namespace MessageFlow.Server.Middleware
     {
         private readonly RequestDelegate _next;
         private readonly HttpClient _httpClient;
+        private readonly ILogger _logger;
 
-        public UserActivityMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory)
+        public UserActivityMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory, ILogger logger)
         {
+            _logger = logger;
             _next = next;
             _httpClient = httpClientFactory.CreateClient("IdentityAPI");
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Skip for specific paths (e.g. SignalR, Webhook, Static files)
+            // Skip for specific paths like Webhook or for Static files
             var path = context.Request.Path;
-            if (path.StartsWithSegments("/_blazor") || path.StartsWithSegments("/api/webhook")/* || path.StartsWithSegments("/chatHub")*/)
+            if (path.StartsWithSegments("/_blazor") || path.StartsWithSegments("/api/webhook"))
             {
                 await _next(context);
                 return;
@@ -37,12 +39,10 @@ namespace MessageFlow.Server.Middleware
                     }
                     catch (Exception ex)
                     {
-                        // Optionally log failure but continue request
-                        Console.WriteLine($"Failed to update user activity: {ex.Message}");
+                        _logger.LogError($"Failed to update user activity: {ex.Message}");
                     }
                 }
             }
-
             await _next(context);
         }
     }

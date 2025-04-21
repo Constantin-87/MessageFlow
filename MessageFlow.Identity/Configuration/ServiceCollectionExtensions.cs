@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MessageFlow.Identity.Services;
 using MessageFlow.Identity.Services.Interfaces;
-using MessageFlow.Identity.MediatorComponents.Commands;
-using MessageFlow.Identity.MediatorComponents.CommandHandlers;
-using MessageFlow.Identity.MediatorComponents.Queries;
-using MessageFlow.Identity.MediatorComponents.QueryHandlers;
+using MessageFlow.Identity.MediatR.Commands;
+using MessageFlow.Identity.MediatR.CommandHandlers;
+using MessageFlow.Identity.MediatR.Queries;
+using MessageFlow.Identity.MediatR.QueryHandlers;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
 using MediatR;

@@ -49,15 +49,4 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tests\Server\Chat\AIBotProcessing\Commands\" />
-    <Folder Include="Tests\Server\Chat\AIBotProcessing\Queries\" />
-    <Folder Include="Tests\Server\Chat\FacebookProcessing\Commands\" />
-    <Folder Include="Tests\Server\Chat\FacebookProcessing\Queries\" />
-    <Folder Include="Tests\Server\Chat\WhatsappProcessing\Commands\" />
-    <Folder Include="Tests\Server\Chat\WhatsappProcessing\Queries\" />
-    <Folder Include="Tests\Server\Chat\GeneralProcessing\Commands\" />
-    <Folder Include="Tests\Server\Chat\GeneralProcessing\Queries\" />
-  </ItemGroup>
-
 </Project>

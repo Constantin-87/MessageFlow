@@ -2,12 +2,10 @@
 using Microsoft.AspNetCore.Authorization;
 using MessageFlow.Server.DataTransferObjects.Client;
 using MediatR;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Queries;
-using MessageFlow.Server.MediatorComponents.Chat.FacebookProcessing.Commands;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Commands;
-using MessageFlow.Server.MediatorComponents.Chat.WhatsappProcessing.Queries;
-using System.ComponentModel.DataAnnotations;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Queries;
+using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Queries;
 
 namespace MessageFlow.Server.Controllers
 {

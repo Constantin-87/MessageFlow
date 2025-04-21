@@ -1,7 +1,0 @@
-﻿using MediatR;
-using MessageFlow.Shared.DTOs;
-
-namespace MessageFlow.Server.MediatorComponents.CompanyManagement.Commands
-{
-    public record UpdateCompanyEmailsCommand(List<CompanyEmailDTO> CompanyEmails) : IRequest<(bool success, string errorMessage)>;
-}

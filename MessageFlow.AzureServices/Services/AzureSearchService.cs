@@ -5,6 +5,7 @@ using Azure.Search.Documents.Indexes.Models;
 using MessageFlow.AzureServices.Helpers;
 using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
+using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.AzureServices.Services
 {
@@ -13,14 +14,19 @@ namespace MessageFlow.AzureServices.Services
         private readonly SearchIndexClient _searchIndexClient;
         private readonly string _searchServiceApiKey;
         private readonly IAzureBlobStorageService _azureBlobStorageService;
+        private readonly ILogger<AzureSearchService> _logger;
 
-        public AzureSearchService(string searchServiceEndpoint, string adminApiKey, IAzureBlobStorageService azureBlobStorageService)
+        public AzureSearchService(
+            string searchServiceEndpoint,
+            string adminApiKey,
+            IAzureBlobStorageService azureBlobStorageService,
+            ILogger<AzureSearchService> logger)
         {
             _azureBlobStorageService = azureBlobStorageService;
             _searchServiceApiKey = adminApiKey;
             _searchIndexClient = new SearchIndexClient(new Uri(searchServiceEndpoint), new AzureKeyCredential(adminApiKey));
+            _logger = logger;
         }
-
 
         public async Task CreateCompanyIndexAsync(string companyId)
         {
@@ -30,21 +36,13 @@ namespace MessageFlow.AzureServices.Services
             {
                 if (existingIndexName == indexName)
                 {
-                    Console.WriteLine($"Index {indexName} already exists. Deleting...");
-
-                    // ✅ Delete the existing index before proceeding
+                    // Delete the existing index before proceeding
                     await _searchIndexClient.DeleteIndexAsync(indexName);
-
-                    Console.WriteLine($"Index {indexName} deleted successfully.");
-                    break; // No need to continue checking further
+                    break;
                 }
             }
 
-            // ✅ Continue execution (creating a new index)
-            Console.WriteLine($"Creating new index: {indexName}");
-            // Proceed with index creation logic here
-
-            // 🔹 Define the index schema explicitly
+            // Define the index schema explicitly
             var fields = new List<SearchField>
             {
                 new SearchField("document_id", SearchFieldDataType.String) { IsKey = true, IsFilterable = true },
@@ -60,10 +58,7 @@ namespace MessageFlow.AzureServices.Services
             };
 
             await _searchIndexClient.CreateIndexAsync(definition);
-            Console.WriteLine($"✅ Index {indexName} created with required key field.");
-
         }
-
 
         public async Task UploadDocumentsToIndexAsync(string companyId, List<ProcessedPretrainDataDTO> processedFiles)
         {
@@ -77,7 +72,7 @@ namespace MessageFlow.AzureServices.Services
 
             if (processedFiles == null || processedFiles.Count == 0)
             {
-                Console.WriteLine($"⚠️ No documents to upload for index {indexName}");
+                _logger.LogWarning("No documents to upload for index {IndexName}", indexName);
                 return;
             }
 
@@ -89,30 +84,22 @@ namespace MessageFlow.AzureServices.Services
                 {
                     if (string.IsNullOrEmpty(file.FileUrl))
                     {
-                        Console.WriteLine($"⚠️ Skipping file {file.Id} - No associated FileUrl.");
+                        _logger.LogWarning("Skipping file {FileId} - No associated FileUrl", file.Id);
                         continue;
                     }
 
                     try
                     {
-                        // 🔹 Retrieve file content from Azure Blob Storage
+                        // Retrieve file content from Azure Blob Storage
                         string jsonContent = await _azureBlobStorageService.DownloadFileContentAsync(file.FileUrl);
 
                         if (string.IsNullOrEmpty(jsonContent))
                         {
-                            Console.WriteLine($"⚠️ Skipping file {file.Id} - Empty content retrieved.");
+                            _logger.LogWarning("Skipping file {FileId} - Empty content retrieved", file.Id);
                             continue;
                         }
 
-                        //// 🔹 Convert JSON content to a structured dictionary
-                        //var parsedContent = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
-                        //if (parsedContent == null)
-                        //{
-                        //    Console.WriteLine($"⚠️ Skipping file {file.Id} - Failed to deserialize JSON.");
-                        //    continue;
-                        //}
-
-                        // 🔹 Prepare document for indexing
+                        // Prepare document for indexing
                         var document = new Dictionary<string, object>
                         {
                             { "document_id", file.Id },
@@ -126,98 +113,35 @@ namespace MessageFlow.AzureServices.Services
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"🚨 Error processing file {file.Id} from {file.FileUrl}: {ex.Message}");
+                        _logger.LogError(ex, "Error processing file {FileId} from {FileUrl}", file.Id, file.FileUrl);
                     }
                 }
 
                 if (documents.Count == 0)
                 {
-                    Console.WriteLine($"⚠️ No valid documents to upload for index {indexName}");
+                    _logger.LogWarning("No valid documents to upload for index {IndexName}", indexName);
                     return;
                 }
 
-                // 🔹 Upload structured documents to Azure Search
+                // Upload structured documents to Azure Search
                 var response = await searchClient.UploadDocumentsAsync(documents);
-                Console.WriteLine($"✅ Uploaded {documents.Count} documents to index {indexName}");
-
-                // 🔍 Log response details
-                Console.WriteLine($"🔎 Response Status: {response.GetRawResponse().Status}");
 
                 foreach (var result in response.Value.Results)
                 {
                     if (!result.Succeeded)
                     {
-                        Console.WriteLine($"❌ Failed to index document with key: {result.Key}");
+                        _logger.LogError("Failed to index document with key: {Key}", result.Key);
                     }
                 }
             }
             catch (RequestFailedException ex)
             {
-                Console.WriteLine($"🚨 Azure Search API Error: {ex.Message}");
-                Console.WriteLine($"🔎 Response Code: {ex.Status}");
+                _logger.LogError(ex, "Azure Search API Error - Status: {StatusCode}", ex.Status);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"🚨 General Error uploading documents: {ex.Message}");
+                _logger.LogError(ex, "General error uploading documents to index {IndexName}", indexName);
             }
         }
-
-
-
-
-
-        //public async Task UploadDocumentsToIndexAsync(int companyId, Dictionary<string, object> documents)
-        //{
-        //    string indexName = SearchIndexHelper.GetIndexName(companyId);
-
-        //    var searchClient = new SearchClient(
-        //        _searchIndexClient.Endpoint,
-        //        indexName,
-        //        new AzureKeyCredential(_searchServiceApiKey)
-        //    );
-
-        //    if (documents == null || documents.Count == 0)
-        //    {
-        //        Console.WriteLine($"⚠️ No documents to upload for index {indexName}");
-        //        return;
-        //    }
-
-        //    // ✅ Ensure the root document has an `id`
-        //    if (!documents.ContainsKey("id") || string.IsNullOrEmpty(documents["id"]?.ToString()))
-        //    {
-        //        documents["id"] = $"company-{companyId}"; // Generate a unique ID using company ID
-        //        Console.WriteLine($"🛠 Assigned root `id`: {documents["id"]}");
-        //    }
-
-        //    try
-        //    {
-        //        var response = await searchClient.UploadDocumentsAsync(new List<Dictionary<string, object>> { documents });
-        //        Console.WriteLine($"✅ Uploaded {documents.Count} documents to index {indexName}");
-
-        //        // Log response details
-        //        Console.WriteLine($"🔎 Response Status: {response.GetRawResponse().Status}");
-
-        //        foreach (var result in response.Value.Results)
-        //        {
-        //            if (!result.Succeeded)
-        //            {
-        //                Console.WriteLine($"❌ Failed to index document with key: {result.Key}");
-        //            }
-        //        }
-        //    }
-        //    catch (RequestFailedException ex)
-        //    {
-        //        Console.WriteLine($"🚨 Azure Search API Error: {ex.Message}");
-        //        Console.WriteLine($"🔎 Response Code: {ex.Status}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"🚨 General Error uploading documents: {ex.Message}");
-        //    }
-        //}
-
-
-
-
     }
 }

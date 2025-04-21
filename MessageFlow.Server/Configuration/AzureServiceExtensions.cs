@@ -18,7 +18,8 @@ namespace MessageFlow.Server.Configuration
             services.AddScoped<IAzureSearchService>(provider =>
             {
                 var blobService = provider.GetRequiredService<IAzureBlobStorageService>();
-                return new AzureSearchService(searchServiceEndpoint, searchServiceApiKey, blobService);
+                var logger = provider.GetRequiredService<ILogger<AzureSearchService>>();
+                return new AzureSearchService(searchServiceEndpoint, searchServiceApiKey, blobService, logger);
             });
 
             services.AddScoped<AzureSearchQueryService>();
@@ -26,5 +27,4 @@ namespace MessageFlow.Server.Configuration
             return services;
         }
     }
-
 }

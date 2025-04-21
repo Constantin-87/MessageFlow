@@ -2,8 +2,8 @@
 using MessageFlow.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.Queries;
-using MessageFlow.Server.MediatorComponents.CompanyManagement.Commands;
+using MessageFlow.Server.MediatR.CompanyManagement.Queries;
+using MessageFlow.Server.MediatR.CompanyManagement.Commands;
 
 namespace MessageFlow.Server.Controllers
 {

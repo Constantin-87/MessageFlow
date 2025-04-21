@@ -7,7 +7,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using MediatR;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.Commands;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Agent,Manager,Admin,SuperAdmin")]
 public class ChatHub : Hub
@@ -18,16 +18,18 @@ public class ChatHub : Hub
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IMediator _mediator;
+    private readonly ILogger _logger;
 
     public ChatHub(
         IUnitOfWork unitOfWork,
         IMapper mapper,
-        IMediator mediator
-        )
+        IMediator mediator,
+        ILogger logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _mediator = mediator;
+        _logger = logger;
     }
 
     public override async Task OnConnectedAsync()
@@ -36,7 +38,7 @@ public class ChatHub : Hub
         {
             if (!IsAuthorized(Context.User))
             {
-                Console.WriteLine("Unauthorized connection attempt.");
+                _logger.LogWarning("Unauthorized connection attempt. Claims: {Claims}", string.Join(", ", Context.User?.Claims.Select(c => $"{c.Type}={c.Value}") ?? []));
                 Context.Abort();
                 return;
             }
@@ -45,7 +47,7 @@ public class ChatHub : Hub
 
             if (string.IsNullOrEmpty(userId))
             {
-                Console.WriteLine("Missing userId. Aborting connection.");
+                _logger.LogWarning("Missing userId. Aborting connection.");
                 Context.Abort();
                 return;
             }
@@ -55,7 +57,7 @@ public class ChatHub : Hub
 
             if (applicationUser == null || string.IsNullOrEmpty(applicationUser.CompanyId))
             {
-                Console.WriteLine($"User {userId} does not exist or does not have a valid CompanyId. Aborting connection.");
+                _logger.LogWarning("User {UserId} not found or missing CompanyId. Aborting connection.", userId);
                 Context.Abort();
                 return;
             }
@@ -65,23 +67,20 @@ public class ChatHub : Hub
 
             if (applicationUserDto == null || string.IsNullOrEmpty(applicationUserDto.CompanyId))
             {
-                Console.WriteLine($"User {userId} does not have a valid CompanyId. Aborting connection.");
+                _logger.LogWarning("Mapped DTO for user {UserId} is null or missing CompanyId. Aborting connection.", userId);
                 Context.Abort();
                 return;
             }
 
-            //await AddUserToGroups(applicationUserDto);
             await _mediator.Send(new AddUserToGroupsCommand(applicationUserDto, Context.ConnectionId));
 
-            //await LoadUserConversations(applicationUserDto.Id, applicationUserDto.CompanyId);
             await _mediator.Send(new LoadUserConversationsCommand(applicationUserDto.Id, applicationUserDto.CompanyId, Clients.Caller));
 
-            //await BroadcastTeamMembers(applicationUserDto.CompanyId);
             await _mediator.Send(new BroadcastTeamMembersCommand(applicationUserDto.CompanyId));
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in OnConnectedAsync: {ex.Message}");
+            _logger.LogError(ex, "Error in OnConnectedAsync.");
         }
 
         await base.OnConnectedAsync();
@@ -92,6 +91,7 @@ public class ChatHub : Hub
         try
         {
             var companyId = GetQueryValue("companyId");
+
             if (!string.IsNullOrEmpty(companyId))
             {
                 await _mediator.Send(new BroadcastUserDisconnectedCommand(companyId, Context.ConnectionId));
@@ -105,11 +105,10 @@ public class ChatHub : Hub
                     await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Team_{team.Id}");
                 }
             }
-
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in OnDisconnectedAsync: {ex.Message}");
+            _logger.LogError(ex, "Error in OnDisconnectedAsync.");
         }
 
         await base.OnDisconnectedAsync(exception);
@@ -121,7 +120,7 @@ public class ChatHub : Hub
         var result = await _mediator.Send(new AssignConversationToUserCommand(conversationId, userId));
 
         if (!result.Success)
-            Console.WriteLine($"{result.ErrorMessage}");
+            _logger.LogWarning("AssignConversationToUser failed: {Error}", result.ErrorMessage);
     }
 
     public async Task SendMessageToCustomer(MessageDTO messageDto)
@@ -129,17 +128,15 @@ public class ChatHub : Hub
         var result = await _mediator.Send(new SendMessageToCustomerCommand(messageDto));
 
         if (!result.Success)
-            Console.WriteLine($"{result.ErrorMessage}");
+            _logger.LogWarning("SendMessageToCustomer failed: {Error}", result.ErrorMessage);
     }
-   
+
     public async Task CloseAndAnonymizeChat(string customerId)
     {
         var result = await _mediator.Send(new ArchiveConversationCommand(customerId));
 
         if (!result.Success)
-            Console.WriteLine(result.ErrorMessage);
-        else
-            Console.WriteLine(result.ErrorMessage); 
+            _logger.LogWarning("CloseAndAnonymizeChat failed: {Error}", result.ErrorMessage);
     }
 
     private string GetQueryValue(string key)

@@ -49,5 +49,4 @@ namespace MessageFlow.Server.Configuration
             return services;
         }
     }
-
 }

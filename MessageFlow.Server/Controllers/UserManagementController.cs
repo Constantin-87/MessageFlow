@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using MessageFlow.Server.MediatorComponents.UserManagement.Queries;
-using MessageFlow.Server.MediatorComponents.UserManagement.Commands;
+using MessageFlow.Server.MediatR.UserManagement.Queries;
+using MessageFlow.Server.MediatR.UserManagement.Commands;
 
 namespace MessageFlow.Server.Controllers
 {

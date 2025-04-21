@@ -9,7 +9,7 @@ using MessageFlow.DataAccess.Repositories;
 using Azure.Core;
 using Azure.Identity;
 using MessageFlow.Identity.Configuration;
-using MessageFlow.Identity.MediatorComponents.CommandHandlers;
+using MessageFlow.Identity.MediatR.CommandHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;

@@ -6,7 +6,7 @@ using MessageFlow.Server.Middleware;
 using MessageFlow.DataAccess.Configurations;
 using MessageFlow.DataAccess.Models;
 using Microsoft.AspNetCore.Identity;
-using MessageFlow.Server.MediatorComponents.Chat.GeneralProcessing.CommandHandlers;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;

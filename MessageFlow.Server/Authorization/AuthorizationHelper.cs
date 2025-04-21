@@ -115,17 +115,22 @@ namespace MessageFlow.Server.Authorization
             return Task.FromResult((false, "Unauthorized to manage users for this company."));
         }
 
-        // NOT USED !!!!
-        public string? GetBearerToken()
+        public Task<(bool isAuthorized, string errorMessage)> ChannelSettingsAccess(string companyId)
         {
-            var authHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-            {
-                return authHeader.Substring("Bearer ".Length);
-            }
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null)
+                return Task.FromResult((false, "User context not available."));
 
-            return null;
+            var userCompanyId = user.FindFirstValue("CompanyId");
+            var role = user.FindFirstValue(ClaimTypes.Role);
+
+            if (role?.Contains("SuperAdmin") == true)
+                return Task.FromResult((true, string.Empty));
+
+            if (userCompanyId == companyId)
+                return Task.FromResult((true, string.Empty));
+
+            return Task.FromResult((false, "Unauthorized to manage channel settings for this company."));
         }
-
     }
 }

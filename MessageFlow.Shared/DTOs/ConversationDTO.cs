@@ -13,7 +13,6 @@
         public string Source { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
 
-        // Navigation property for related messages
         public ICollection<MessageDTO> Messages { get; set; } = new List<MessageDTO>();
 
     }

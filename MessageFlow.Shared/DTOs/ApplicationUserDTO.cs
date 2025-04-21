@@ -31,6 +31,5 @@ namespace MessageFlow.Shared.DTOs
         public ICollection<TeamDTO>? TeamsDTO { get; set; } = null;
 
         public CompanyDTO? CompanyDTO { get; set; } = null;
-
     }
 }
