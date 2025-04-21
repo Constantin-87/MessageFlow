@@ -5,6 +5,20 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
+public class TestDbContext : ApplicationDbContext
+{
+    public TestDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+    // Add DbSet for test entities here
+    public DbSet<TestEntity> TestEntities => Set<TestEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<TestEntity>().HasKey(e => e.Id);
+    }
+}
+
 public static class TestDbContextFactory
 {
     public static IUnitOfWork CreateUnitOfWork(
@@ -30,7 +44,7 @@ public static class TestDbContextFactory
             .UseInMemoryDatabase(databaseName)
             .Options;
 
-        var context = new ApplicationDbContext(options);
+        var context = new TestDbContext(options);
         context.Database.EnsureCreated();
         return context;
     }
@@ -53,4 +67,10 @@ public static class TestDbContextFactory
 
         return userManagerMock.Object;
     }
+}
+
+public class TestEntity
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Name { get; set; } = string.Empty;
 }

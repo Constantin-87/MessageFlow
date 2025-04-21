@@ -12,10 +12,7 @@ namespace MessageFlow.DataAccess.Models
         public DateTime RefreshTokenExpiryTime { get; set; }
 
         // Navigation properties
-        public ICollection<Team> Teams { get; set; }
+        public ICollection<Team> Teams { get; set; } = new List<Team>();
         public Company Company { get; set; }
     }
 }
-
-
-

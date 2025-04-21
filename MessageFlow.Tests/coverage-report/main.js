@@ -213,14 +213,14 @@ var assemblies = [
   {
     "name": "MessageFlow.AzureServices",
     "classes": [
-      { "name": "MessageFlow.AzureServices.Helpers.CompanyDataHelper", "rp": "MessageFlow.AzureServices_CompanyDataHelper.html", "cl": 0, "ucl": 199, "cal": 199, "tl": 317, "cb": 0, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Helpers.JsonStructureHelper", "rp": "MessageFlow.AzureServices_JsonStructureHelper.html", "cl": 0, "ucl": 47, "cal": 47, "tl": 72, "cb": 0, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Helpers.SearchIndexDefinitionHelper", "rp": "MessageFlow.AzureServices_SearchIndexDefinitionHelper.html", "cl": 0, "ucl": 59, "cal": 59, "tl": 87, "cb": 0, "tb": 34, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Helpers.SearchIndexHelper", "rp": "MessageFlow.AzureServices_SearchIndexHelper.html", "cl": 0, "ucl": 3, "cal": 3, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Services.AzureBlobStorageService", "rp": "MessageFlow.AzureServices_AzureBlobStorageService.html", "cl": 0, "ucl": 97, "cal": 97, "tl": 183, "cb": 0, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "rp": "MessageFlow.AzureServices_AzureSearchQueryService.html", "cl": 0, "ucl": 99, "cal": 99, "tl": 152, "cb": 0, "tb": 40, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Services.AzureSearchService", "rp": "MessageFlow.AzureServices_AzureSearchService.html", "cl": 0, "ucl": 96, "cal": 96, "tl": 147, "cb": 0, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.AzureServices.Services.DocumentProcessingService", "rp": "MessageFlow.AzureServices_DocumentProcessingService.html", "cl": 0, "ucl": 23, "cal": 23, "tl": 58, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Helpers.CompanyDataHelper", "rp": "MessageFlow.AzureServices_CompanyDataHelper.html", "cl": 199, "ucl": 0, "cal": 199, "tl": 317, "cb": 30, "tb": 30, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Helpers.JsonStructureHelper", "rp": "MessageFlow.AzureServices_JsonStructureHelper.html", "cl": 47, "ucl": 0, "cal": 47, "tl": 72, "cb": 12, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Helpers.SearchIndexDefinitionHelper", "rp": "MessageFlow.AzureServices_SearchIndexDefinitionHelper.html", "cl": 59, "ucl": 0, "cal": 59, "tl": 87, "cb": 33, "tb": 34, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Helpers.SearchIndexHelper", "rp": "MessageFlow.AzureServices_SearchIndexHelper.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Services.AzureBlobStorageService", "rp": "MessageFlow.AzureServices_AzureBlobStorageService.html", "cl": 56, "ucl": 42, "cal": 98, "tl": 183, "cb": 4, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "rp": "MessageFlow.AzureServices_AzureSearchQueryService.html", "cl": 74, "ucl": 26, "cal": 100, "tl": 157, "cb": 27, "tb": 44, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Services.AzureSearchService", "rp": "MessageFlow.AzureServices_AzureSearchService.html", "cl": 0, "ucl": 103, "cal": 103, "tl": 167, "cb": 0, "tb": 20, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.AzureServices.Services.DocumentProcessingService", "rp": "MessageFlow.AzureServices_DocumentProcessingService.html", "cl": 21, "ucl": 6, "cal": 27, "tl": 61, "cb": 2, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
   {
     "name": "MessageFlow.DataAccess",
@@ -228,22 +228,18 @@ var assemblies = [
       { "name": "MessageFlow.DataAccess.Configurations.ApplicationDbContext", "rp": "MessageFlow.DataAccess_ApplicationDbContext.html", "cl": 68, "ucl": 0, "cal": 68, "tl": 92, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Configurations.DatabaseSeeder", "rp": "MessageFlow.DataAccess_DatabaseSeeder.html", "cl": 0, "ucl": 50, "cal": 50, "tl": 72, "cb": 0, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Configurations.DesignTimeDbContextFactory", "rp": "MessageFlow.DataAccess_DesignTimeDbContextFactory.html", "cl": 0, "ucl": 32, "cal": 32, "tl": 57, "cb": 0, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.ApplicationUserRepository", "rp": "MessageFlow.DataAccess_ApplicationUserRepository.html", "cl": 4, "ucl": 6, "cal": 10, "tl": 26, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.ApplicationUserRepository", "rp": "MessageFlow.DataAccess_ApplicationUserRepository.html", "cl": 10, "ucl": 0, "cal": 10, "tl": 26, "cb": 1, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Implementations.ArchivedConversationRepository", "rp": "MessageFlow.DataAccess_ArchivedConversationRepository.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 13, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.CompanyEmailRepository", "rp": "MessageFlow.DataAccess_CompanyEmailRepository.html", "cl": 4, "ucl": 20, "cal": 24, "tl": 45, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.CompanyPhoneNumberRepository", "rp": "MessageFlow.DataAccess_CompanyPhoneNumberRepository.html", "cl": 4, "ucl": 20, "cal": 24, "tl": 45, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.CompanyRepository", "rp": "MessageFlow.DataAccess_CompanyRepository.html", "cl": 4, "ucl": 28, "cal": 32, "tl": 51, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.ConversationRepository", "rp": "MessageFlow.DataAccess_ConversationRepository.html", "cl": 4, "ucl": 27, "cal": 31, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.FacebookSettingsRepository", "rp": "MessageFlow.DataAccess_FacebookSettingsRepository.html", "cl": 4, "ucl": 8, "cal": 12, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.MessageRepository", "rp": "MessageFlow.DataAccess_MessageRepository.html", "cl": 4, "ucl": 21, "cal": 25, "tl": 46, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.ProcessedPretrainDataRepository", "rp": "MessageFlow.DataAccess_ProcessedPretrainDataRepository.html", "cl": 4, "ucl": 16, "cal": 20, "tl": 42, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.TeamRepository", "rp": "MessageFlow.DataAccess_TeamRepository.html", "cl": 10, "ucl": 36, "cal": 46, "tl": 74, "cb": 0, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Implementations.WhatsAppSettingsRepository", "rp": "MessageFlow.DataAccess_WhatsAppSettingsRepository.html", "cl": 4, "ucl": 10, "cal": 14, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Migrations.ApplicationDbContextModelSnapshot", "rp": "MessageFlow.DataAccess_ApplicationDbContextModelSnapshot.html", "cl": 0, "ucl": 749, "cal": 749, "tl": 809, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Migrations.InitialCreate", "rp": "MessageFlow.DataAccess_InitialCreate.html", "cl": 0, "ucl": 1275, "cal": 1275, "tl": 1413, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Migrations.MigrationName", "rp": "MessageFlow.DataAccess_MigrationName.html", "cl": 0, "ucl": 770, "cal": 770, "tl": 852, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Migrations.RemovedUserTeamModel", "rp": "MessageFlow.DataAccess_RemovedUserTeamModel.html", "cl": 0, "ucl": 805, "cal": 805, "tl": 888, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Models.ApplicationUser", "rp": "MessageFlow.DataAccess_ApplicationUser.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 21, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.CompanyEmailRepository", "rp": "MessageFlow.DataAccess_CompanyEmailRepository.html", "cl": 24, "ucl": 0, "cal": 24, "tl": 45, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.CompanyPhoneNumberRepository", "rp": "MessageFlow.DataAccess_CompanyPhoneNumberRepository.html", "cl": 24, "ucl": 0, "cal": 24, "tl": 45, "cb": 4, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.CompanyRepository", "rp": "MessageFlow.DataAccess_CompanyRepository.html", "cl": 30, "ucl": 2, "cal": 32, "tl": 51, "cb": 2, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.ConversationRepository", "rp": "MessageFlow.DataAccess_ConversationRepository.html", "cl": 31, "ucl": 0, "cal": 31, "tl": 52, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.FacebookSettingsRepository", "rp": "MessageFlow.DataAccess_FacebookSettingsRepository.html", "cl": 12, "ucl": 0, "cal": 12, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.MessageRepository", "rp": "MessageFlow.DataAccess_MessageRepository.html", "cl": 25, "ucl": 0, "cal": 25, "tl": 46, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.ProcessedPretrainDataRepository", "rp": "MessageFlow.DataAccess_ProcessedPretrainDataRepository.html", "cl": 20, "ucl": 0, "cal": 20, "tl": 42, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.TeamRepository", "rp": "MessageFlow.DataAccess_TeamRepository.html", "cl": 46, "ucl": 0, "cal": 46, "tl": 74, "cb": 8, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Implementations.WhatsAppSettingsRepository", "rp": "MessageFlow.DataAccess_WhatsAppSettingsRepository.html", "cl": 14, "ucl": 0, "cal": 14, "tl": 32, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Models.ApplicationUser", "rp": "MessageFlow.DataAccess_ApplicationUser.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.ArchivedConversation", "rp": "MessageFlow.DataAccess_ArchivedConversation.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 12, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.ArchivedMessage", "rp": "MessageFlow.DataAccess_ArchivedMessage.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.Company", "rp": "MessageFlow.DataAccess_Company.html", "cl": 11, "ucl": 0, "cal": 11, "tl": 34, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -251,12 +247,12 @@ var assemblies = [
       { "name": "MessageFlow.DataAccess.Models.CompanyPhoneNumber", "rp": "MessageFlow.DataAccess_CompanyPhoneNumber.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.Conversation", "rp": "MessageFlow.DataAccess_Conversation.html", "cl": 11, "ucl": 0, "cal": 11, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.FacebookSettingsModel", "rp": "MessageFlow.DataAccess_FacebookSettingsModel.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Models.Message", "rp": "MessageFlow.DataAccess_Message.html", "cl": 9, "ucl": 1, "cal": 10, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Models.Message", "rp": "MessageFlow.DataAccess_Message.html", "cl": 10, "ucl": 0, "cal": 10, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.PhoneNumberInfo", "rp": "MessageFlow.DataAccess_PhoneNumberInfo.html", "cl": 5, "ucl": 1, "cal": 6, "tl": 21, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.ProcessedPretrainData", "rp": "MessageFlow.DataAccess_ProcessedPretrainData.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 16, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Models.Team", "rp": "MessageFlow.DataAccess_Team.html", "cl": 5, "ucl": 1, "cal": 6, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Models.Team", "rp": "MessageFlow.DataAccess_Team.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Models.WhatsAppSettingsModel", "rp": "MessageFlow.DataAccess_WhatsAppSettingsModel.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 20, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.DataAccess.Repositories.GenericRepository<T>", "rp": "MessageFlow.DataAccess_GenericRepository_1.html", "cl": 10, "ucl": 31, "cal": 41, "tl": 71, "cb": 1, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.DataAccess.Repositories.GenericRepository<T>", "rp": "MessageFlow.DataAccess_GenericRepository_1.html", "cl": 35, "ucl": 6, "cal": 41, "tl": 71, "cb": 6, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.DataAccess.Services.UnitOfWork", "rp": "MessageFlow.DataAccess_UnitOfWork.html", "cl": 22, "ucl": 14, "cal": 36, "tl": 53, "cb": 1, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
   {
@@ -301,6 +297,7 @@ var assemblies = [
       { "name": "MessageFlow.Server.Configuration.DataAccessExtensions", "rp": "MessageFlow.Server_DataAccessExtensions.html", "cl": 0, "ucl": 20, "cal": 20, "tl": 36, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Configuration.GlobalChannelSettings", "rp": "MessageFlow.Server_GlobalChannelSettings.html", "cl": 0, "ucl": 4, "cal": 4, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Configuration.ServiceCollectionExtensions", "rp": "MessageFlow.Server_ServiceCollectionExtensions.html", "cl": 0, "ucl": 80, "cal": 80, "tl": 148, "cb": 0, "tb": 2, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.Server.Configuration.WebApplicationBuilderExtensions", "rp": "MessageFlow.Server_WebApplicationBuilderExtensions.html", "cl": 0, "ucl": 110, "cal": 110, "tl": 173, "cb": 0, "tb": 22, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Controllers.ChannelManagementController", "rp": "MessageFlow.Server_ChannelManagementController.html", "cl": 0, "ucl": 33, "cal": 33, "tl": 71, "cb": 0, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Controllers.CompanyController", "rp": "MessageFlow.Server_CompanyController.html", "cl": 0, "ucl": 95, "cal": 95, "tl": 189, "cb": 0, "tb": 32, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Controllers.TeamsManagementController", "rp": "MessageFlow.Server_TeamsManagementController.html", "cl": 0, "ucl": 24, "cal": 24, "tl": 57, "cb": 0, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -419,7 +416,7 @@ var assemblies = [
       { "name": "MessageFlow.Server.MediatR.UserManagement.QueryHandlers.GetUsersByIdsHandler", "rp": "MessageFlow.Server_GetUsersByIdsHandler.html", "cl": 36, "ucl": 0, "cal": 36, "tl": 67, "cb": 7, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.MediatR.UserManagement.QueryHandlers.GetUsersForCompanyHandler", "rp": "MessageFlow.Server_GetUsersForCompanyHandler.html", "cl": 38, "ucl": 0, "cal": 38, "tl": 70, "cb": 9, "tb": 10, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Server.Middleware.UserActivityMiddleware", "rp": "MessageFlow.Server_UserActivityMiddleware.html", "cl": 29, "ucl": 0, "cal": 29, "tl": 49, "cb": 11, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Program", "rp": "MessageFlow.Server_Program.html", "cl": 0, "ucl": 106, "cal": 106, "tl": 163, "cb": 0, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Program", "rp": "MessageFlow.Server_Program.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 7, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "WhatsAppWebhook", "rp": "MessageFlow.Server_WhatsAppWebhook.html", "cl": 0, "ucl": 41, "cal": 41, "tl": 76, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
   {
@@ -433,9 +430,9 @@ var assemblies = [
       { "name": "MessageFlow.Shared.DTOs.FacebookSettingsDTO", "rp": "MessageFlow.Shared_FacebookSettingsDTO.html", "cl": 4, "ucl": 0, "cal": 4, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Shared.DTOs.MessageDTO", "rp": "MessageFlow.Shared_MessageDTO.html", "cl": 10, "ucl": 0, "cal": 10, "tl": 17, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Shared.DTOs.PhoneNumberInfoDTO", "rp": "MessageFlow.Shared_PhoneNumberInfoDTO.html", "cl": 0, "ucl": 5, "cal": 5, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.Shared.DTOs.PretrainDataFileDTO", "rp": "MessageFlow.Shared_PretrainDataFileDTO.html", "cl": 4, "ucl": 4, "cal": 8, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.Shared.DTOs.PretrainDataFileDTO", "rp": "MessageFlow.Shared_PretrainDataFileDTO.html", "cl": 6, "ucl": 2, "cal": 8, "tl": 30, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Shared.DTOs.ProcessedPretrainDataDTO", "rp": "MessageFlow.Shared_ProcessedPretrainDataDTO.html", "cl": 6, "ucl": 0, "cal": 6, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "MessageFlow.Shared.DTOs.SearchResultDTO", "rp": "MessageFlow.Shared_SearchResultDTO.html", "cl": 2, "ucl": 3, "cal": 5, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "MessageFlow.Shared.DTOs.SearchResultDTO", "rp": "MessageFlow.Shared_SearchResultDTO.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Shared.DTOs.TeamDTO", "rp": "MessageFlow.Shared_TeamDTO.html", "cl": 5, "ucl": 0, "cal": 5, "tl": 18, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "MessageFlow.Shared.DTOs.WhatsAppSettingsDTO", "rp": "MessageFlow.Shared_WhatsAppSettingsDTO.html", "cl": 4, "ucl": 1, "cal": 5, "tl": 11, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
     ]},
@@ -452,46 +449,16 @@ var riskHotspotMetrics = [
 
 var riskHotspots = [
   {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.SearchIndexDefinitionHelper", "reportPath": "MessageFlow.AzureServices_SearchIndexDefinitionHelper.html", "methodName": "CreateSearchField(System.String,System.Object)", "methodShortName": "CreateSearchField(...)", "fileIndex": 0, "line": 30,
+    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchService", "reportPath": "MessageFlow.AzureServices_AzureSearchService.html", "methodName": "UploadDocumentsToIndexAsync()", "methodShortName": "UploadDocumentsToIndexAsync()", "fileIndex": 0, "line": 74,
     "metrics": [
       { "value": 272, "exceeded": true },
       { "value": 16, "exceeded": true },
     ]},
   {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchService", "reportPath": "MessageFlow.AzureServices_AzureSearchService.html", "methodName": "UploadDocumentsToIndexAsync()", "methodShortName": "UploadDocumentsToIndexAsync()", "fileIndex": 0, "line": 64,
-    "metrics": [
-      { "value": 272, "exceeded": true },
-      { "value": 16, "exceeded": true },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "reportPath": "MessageFlow.AzureServices_AzureSearchQueryService.html", "methodName": "ExtractContentFromDocument(Azure.Search.Documents.Models.SearchDocument)", "methodShortName": "ExtractContentFromDocument(...)", "fileIndex": 0, "line": 94,
-    "metrics": [
-      { "value": 210, "exceeded": true },
-      { "value": 14, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "reportPath": "MessageFlow.AzureServices_AzureSearchQueryService.html", "methodName": "QueryIndexAsync()", "methodShortName": "QueryIndexAsync()", "fileIndex": 0, "line": 37,
-    "metrics": [
-      { "value": 210, "exceeded": true },
-      { "value": 14, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.JsonStructureHelper", "reportPath": "MessageFlow.AzureServices_JsonStructureHelper.html", "methodName": "ExtractFieldsRecursively(System.Text.Json.JsonElement,System.Collections.Generic.Dictionary`2<System.String,System.Object>)", "methodShortName": "ExtractFieldsRecursively(...)", "fileIndex": 0, "line": 18,
+    "assembly": "MessageFlow.Server", "class": "MessageFlow.Server.Configuration.WebApplicationBuilderExtensions", "reportPath": "MessageFlow.Server_WebApplicationBuilderExtensions.html", "methodName": "ConfigureApp(Microsoft.AspNetCore.Builder.WebApplicationBuilder)", "methodShortName": "ConfigureApp(...)", "fileIndex": 0, "line": 15,
     "metrics": [
       { "value": 156, "exceeded": true },
       { "value": 12, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.SearchIndexDefinitionHelper", "reportPath": "MessageFlow.AzureServices_SearchIndexDefinitionHelper.html", "methodName": "DetermineSearchFieldType(System.Object)", "methodShortName": "DetermineSearchFieldType(...)", "fileIndex": 0, "line": 76,
-    "metrics": [
-      { "value": 156, "exceeded": true },
-      { "value": 12, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.CompanyDataHelper", "reportPath": "MessageFlow.AzureServices_CompanyDataHelper.html", "methodName": "ConvertExcelToPretrainFiles(MessageFlow.Shared.DTOs.PretrainDataFileDTO,System.IO.Stream)", "methodShortName": "ConvertExcelToPretrainFiles(...)", "fileIndex": 0, "line": 98,
-    "metrics": [
-      { "value": 110, "exceeded": true },
-      { "value": 10, "exceeded": false },
     ]},
   {
     "assembly": "MessageFlow.DataAccess", "class": "MessageFlow.DataAccess.Configurations.DatabaseSeeder", "reportPath": "MessageFlow.DataAccess_DatabaseSeeder.html", "methodName": "SeedSuperAdminAsync()", "methodShortName": "SeedSuperAdminAsync()", "fileIndex": 0, "line": 10,
@@ -500,31 +467,13 @@ var riskHotspots = [
       { "value": 10, "exceeded": false },
     ]},
   {
-    "assembly": "MessageFlow.Server", "class": "Program", "reportPath": "MessageFlow.Server_Program.html", "methodName": "<Main>$()", "methodShortName": "<Main>$()", "fileIndex": 0, "line": 11,
-    "metrics": [
-      { "value": 110, "exceeded": true },
-      { "value": 10, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "reportPath": "MessageFlow.AzureServices_AzureSearchQueryService.html", "methodName": "ParseJsonElement(System.Text.Json.JsonElement)", "methodShortName": "ParseJsonElement(...)", "fileIndex": 0, "line": 127,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.DataAccess", "class": "MessageFlow.DataAccess.Implementations.TeamRepository", "reportPath": "MessageFlow.DataAccess_TeamRepository.html", "methodName": "RemoveUserFromAllTeamsAsync()", "methodShortName": "RemoveUserFromAllTeamsAsync()", "fileIndex": 0, "line": 56,
-    "metrics": [
-      { "value": 72, "exceeded": true },
-      { "value": 8, "exceeded": false },
-    ]},
-  {
     "assembly": "MessageFlow.Identity", "class": "Program", "reportPath": "MessageFlow.Identity_Program.html", "methodName": "<Main>$(System.String[])", "methodShortName": "<Main>$(...)", "fileIndex": 0, "line": 14,
     "metrics": [
       { "value": 72, "exceeded": true },
       { "value": 8, "exceeded": false },
     ]},
   {
-    "assembly": "MessageFlow.Server", "class": "Program", "reportPath": "MessageFlow.Server_Program.html", "methodName": "ValidateConfig()", "methodShortName": "ValidateConfig()", "fileIndex": 0, "line": 43,
+    "assembly": "MessageFlow.Server", "class": "MessageFlow.Server.Configuration.WebApplicationBuilderExtensions", "reportPath": "MessageFlow.Server_WebApplicationBuilderExtensions.html", "methodName": "ValidateConfig()", "methodShortName": "ValidateConfig()", "fileIndex": 0, "line": 50,
     "metrics": [
       { "value": 72, "exceeded": true },
       { "value": 8, "exceeded": false },
@@ -542,13 +491,7 @@ var riskHotspots = [
       { "value": 16, "exceeded": true },
     ]},
   {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.CompanyDataHelper", "reportPath": "MessageFlow.AzureServices_CompanyDataHelper.html", "methodName": "ProcessUploadedFilesAsync()", "methodShortName": "ProcessUploadedFilesAsync()", "fileIndex": 0, "line": 22,
-    "metrics": [
-      { "value": 42, "exceeded": true },
-      { "value": 6, "exceeded": false },
-    ]},
-  {
-    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureBlobStorageService", "reportPath": "MessageFlow.AzureServices_AzureBlobStorageService.html", "methodName": "GetAllCompanyRagDataFilesAsync()", "methodShortName": "GetAllCompanyRagDataFilesAsync()", "fileIndex": 0, "line": 141,
+    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureBlobStorageService", "reportPath": "MessageFlow.AzureServices_AzureBlobStorageService.html", "methodName": "GetAllCompanyRagDataFilesAsync()", "methodShortName": "GetAllCompanyRagDataFilesAsync()", "fileIndex": 0, "line": 144,
     "metrics": [
       { "value": 42, "exceeded": true },
       { "value": 6, "exceeded": false },
@@ -578,6 +521,12 @@ var riskHotspots = [
       { "value": 6, "exceeded": false },
     ]},
   {
+    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "reportPath": "MessageFlow.AzureServices_AzureSearchQueryService.html", "methodName": "ExtractContentFromDocument(Azure.Search.Documents.Models.SearchDocument)", "methodShortName": "ExtractContentFromDocument(...)", "fileIndex": 0, "line": 99,
+    "metrics": [
+      { "value": 31, "exceeded": true },
+      { "value": 14, "exceeded": false },
+    ]},
+  {
     "assembly": "MessageFlow.Server", "class": "MessageFlow.Server.MediatR.Chat.WhatsappProcessing.CommandHandlers.ProcessIncomingWAMessageHandler", "reportPath": "MessageFlow.Server_ProcessIncomingWAMessageHandler.html", "methodName": "Handle()", "methodShortName": "Handle()", "fileIndex": 0, "line": 25,
     "metrics": [
       { "value": 22, "exceeded": false },
@@ -590,10 +539,22 @@ var riskHotspots = [
       { "value": 20, "exceeded": true },
     ]},
   {
+    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Services.AzureSearchQueryService", "reportPath": "MessageFlow.AzureServices_AzureSearchQueryService.html", "methodName": "QueryIndexAsync()", "methodShortName": "QueryIndexAsync()", "fileIndex": 0, "line": 45,
+    "metrics": [
+      { "value": 18, "exceeded": false },
+      { "value": 18, "exceeded": true },
+    ]},
+  {
     "assembly": "MessageFlow.Server", "class": "MessageFlow.Server.MediatR.Chat.FacebookProcessing.CommandHandlers.ProcessFacebookWebhookEventHandler", "reportPath": "MessageFlow.Server_ProcessFacebookWebhookEventHandler.html", "methodName": "Handle()", "methodShortName": "Handle()", "fileIndex": 0, "line": 20,
     "metrics": [
       { "value": 18, "exceeded": false },
       { "value": 18, "exceeded": true },
+    ]},
+  {
+    "assembly": "MessageFlow.AzureServices", "class": "MessageFlow.AzureServices.Helpers.SearchIndexDefinitionHelper", "reportPath": "MessageFlow.AzureServices_SearchIndexDefinitionHelper.html", "methodName": "CreateSearchField(System.String,System.Object)", "methodShortName": "CreateSearchField(...)", "fileIndex": 0, "line": 30,
+    "metrics": [
+      { "value": 16, "exceeded": false },
+      { "value": 16, "exceeded": true },
     ]},
   {
     "assembly": "MessageFlow.Server", "class": "MessageFlow.Server.Authorization.AuthorizationHelper", "reportPath": "MessageFlow.Server_AuthorizationHelper.html", "methodName": "CompanyAccess(System.String)", "methodShortName": "CompanyAccess(...)", "fileIndex": 0, "line": 17,
