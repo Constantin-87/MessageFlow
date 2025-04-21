@@ -5,10 +5,10 @@ using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
-using MessageFlow.Server.MediatR.Chat.Messaging.Handlers;
 using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
 using Microsoft.Extensions.Logging;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands;
 

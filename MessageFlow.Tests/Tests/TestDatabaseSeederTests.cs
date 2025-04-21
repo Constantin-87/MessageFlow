@@ -2,7 +2,7 @@
 using MessageFlow.Infrastructure.Mappings;
 using MessageFlow.Tests.Helpers;
 
-namespace MessageFlow.Tests
+namespace MessageFlow.Tests.Tests
 {
     public class TestDatabaseSeederTests
     {

@@ -5,7 +5,7 @@ using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class LoadUserConversationsHandler : IRequestHandler<LoadUserConversationsCommand, Unit>
 {

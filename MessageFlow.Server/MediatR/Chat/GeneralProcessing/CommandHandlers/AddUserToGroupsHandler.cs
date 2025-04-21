@@ -4,7 +4,7 @@ using MessageFlow.Shared.DTOs;
 using System.Collections.Concurrent;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
-namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class AddUserToGroupsHandler : IRequestHandler<AddUserToGroupsCommand, Unit>
 {

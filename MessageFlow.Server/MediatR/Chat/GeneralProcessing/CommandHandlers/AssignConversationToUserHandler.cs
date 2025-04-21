@@ -5,7 +5,7 @@ using AutoMapper;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
-namespace MessageFlow.Server.MediatR.Chat.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class AssignConversationToUserHandler : IRequestHandler<AssignConversationToUserCommand, (bool Success, string ErrorMessage)>
 {

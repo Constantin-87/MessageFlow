@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
-namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class BroadcastTeamMembersHandler : IRequestHandler<BroadcastTeamMembersCommand, Unit>
 {

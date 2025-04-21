@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
-using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
 using MessageFlow.Shared.DTOs;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands;
 

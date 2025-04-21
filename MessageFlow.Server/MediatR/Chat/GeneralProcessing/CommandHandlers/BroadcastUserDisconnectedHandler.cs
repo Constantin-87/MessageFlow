@@ -4,7 +4,7 @@ using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using System.Collections.Concurrent;
 
-namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class BroadcastUserDisconnectedHandler : IRequestHandler<BroadcastUserDisconnectedCommand, Unit>
 {

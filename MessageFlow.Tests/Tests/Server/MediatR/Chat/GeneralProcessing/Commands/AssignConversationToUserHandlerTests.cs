@@ -3,9 +3,9 @@ using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.DataAccess.Services;
-using MessageFlow.Server.MediatR.Chat.Handlers;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Shared.DTOs;
+using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands;
 

@@ -6,7 +6,7 @@ using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
 
-namespace MessageFlow.Server.MediatR.Chat.Messaging.Handlers;
+namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 
 public class SendMessageToCustomerHandler : IRequestHandler<SendMessageToCustomerCommand, (bool Success, string ErrorMessage)>
 {
@@ -71,7 +71,7 @@ public class SendMessageToCustomerHandler : IRequestHandler<SendMessageToCustome
                     ),
                     cancellationToken
                 );
-            break;
+                break;
 
             case "WhatsApp":
                 await _mediator.Send(
@@ -80,15 +80,15 @@ public class SendMessageToCustomerHandler : IRequestHandler<SendMessageToCustome
                          message.Content,
                          conversation.CompanyId,
                          message.Id
-                     ), 
+                     ),
                     cancellationToken
                 );
-            break;
+                break;
 
             default:
                 var sourceInfo = conversation.Source ?? "<null>";
                 _logger.LogWarning("Unknown platform: {Source}", sourceInfo);
-            return (false, $"Unknown source: {sourceInfo}");
+                return (false, $"Unknown source: {sourceInfo}");
 
         }
         return (true, "Message sent.");
