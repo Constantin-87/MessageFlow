@@ -82,9 +82,8 @@ jobs:
         $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
         echo '{
           "ConnectionStrings": {
-            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
+            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
           },
-          {
           "AzureKeyVault": {
             "Url": "' + "${{ env.AzureKeyVaultURL }}" + '"
           },

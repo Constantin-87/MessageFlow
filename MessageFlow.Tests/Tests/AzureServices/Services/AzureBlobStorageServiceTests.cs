@@ -7,6 +7,7 @@
 //using Microsoft.Extensions.Configuration;
 //using Microsoft.Extensions.Logging;
 //using Moq;
+//using Xunit.Abstractions;
 
 //namespace MessageFlow.Tests.Tests.AzureServices.Services;
 
@@ -18,8 +19,13 @@
 //    private readonly Mock<ILogger<AzureBlobStorageService>> _loggerMock = new();
 //    private readonly IConfiguration _config;
 
-//    public AzureBlobStorageServiceTests()
+//    private readonly ITestOutputHelper _output;
+
+//    public AzureBlobStorageServiceTests(ITestOutputHelper output)
 //    {
+//        _output = output;
+//        Console.SetOut(new TestOutputTextWriter(output));
+
 //        var configMock = new Mock<IConfiguration>();
 //        configMock.Setup(c => c["azure-storage-account-conn-string"]).Returns("UseDevelopmentStorage=true");
 //        _config = configMock.Object;
@@ -42,6 +48,33 @@
 
 
 //        _blobClientMock.Setup(c => c.Uri).Returns(new Uri("https://mockstorage.blob.core.windows.net/company_123/test.json"));
+//        _output = output;
+//    }
+
+
+//    /// <summary>
+//    /// Helper classes
+//    /// </summary>
+//    private class TestOutputTextWriter : TextWriter
+//    {
+//        private readonly ITestOutputHelper _output;
+
+//        public TestOutputTextWriter(ITestOutputHelper output)
+//        {
+//            _output = output;
+//        }
+
+//        public override void WriteLine(string? value)
+//        {
+//            _output.WriteLine(value ?? "");
+//        }
+
+//        public override void Write(char value)
+//        {
+//            _output.WriteLine(value.ToString());
+//        }
+
+//        public override Encoding Encoding => Encoding.UTF8;
 //    }
 
 //    [Fact]
@@ -89,16 +122,25 @@
 //    [Fact]
 //    public async Task DownloadFileContentAsync_ReturnsContent_WhenBlobExists()
 //    {
-//        _blobClientMock.Setup(x => x.ExistsAsync(default)).ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
+//        _blobClientMock.Setup(x => x.ExistsAsync(default))
+//            .ReturnsAsync(Response.FromValue(true, Mock.Of<Response>()));
+
 //        var content = BinaryData.FromString("hello");
+
+//        var resultWithContent = BlobsModelFactory.BlobDownloadResult(
+//            content: content,
+//            details: BlobsModelFactory.BlobDownloadDetails()
+//        );
+
 //        _blobClientMock.Setup(x => x.DownloadContentAsync(default))
-//            .ReturnsAsync(Response.FromValue(BlobsModelFactory.BlobDownloadResult(content), Mock.Of<Response>()));
+//            .ReturnsAsync(Response.FromValue(resultWithContent, Mock.Of<Response>()));
 
 //        var service = new AzureBlobStorageService(_config, _loggerMock.Object, _blobServiceClientMock.Object);
 //        var result = await service.DownloadFileContentAsync("https://mock.blob.core.windows.net/company-files/company_123/file.json");
 
 //        Assert.Equal("hello", result);
 //    }
+
 
 //    [Fact]
 //    public async Task DownloadFileContentAsync_ReturnsEmpty_WhenBlobNotFound()
