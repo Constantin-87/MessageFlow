@@ -51,7 +51,7 @@ jobs:
           "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" >> $env:GITHUB_ENV
           "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" >> $env:GITHUB_ENV
-          "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+          "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           "DEPLOY_ENV=Preprod" >> $env:GITHUB_ENV
@@ -62,20 +62,39 @@ jobs:
           "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" >> $env:GITHUB_ENV
           "APPSETTINGS_FILE=appsettings.preprod.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" >> $env:GITHUB_ENV
-          "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+          "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
         }
 
-    - name: Create Identity AppSettings
+    - name: Create Server AppSettings
       shell: pwsh
       run: |
-        $identityAppSettingsPath = "${{ github.workspace }}/publish/Identity/appsettings.${{ env.DEPLOY_ENV }}.json"
+        $path = "${{ github.workspace }}/publish/server/appsettings.${{ env.DEPLOY_ENV }}.json"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
           },
-          "ServerBaseAddress": "https://${{ env.WEB_DEPLOY_SERVER }}",
           "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
-          "WebHostUrls": [ "http://*:80", "https://*:443" ],
+          "WebHostUrls": [ "https://*:443" ],
+          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}/identity",
+          "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft.EntityFrameworkCore": "Warning"
+            }
+          },
+          "AllowedHosts": "*"
+        }' | Out-File -FilePath $path -Encoding utf8 -Force
+
+    - name: Create Identity AppSettings
+      shell: pwsh
+      run: |
+        $path = "${{ github.workspace }}/publish/identity/appsettings.${{ env.DEPLOY_ENV }}.json"
+        echo '{
+          "ConnectionStrings": {
+            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
+          },
+          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
+          "WebHostUrls": [ "https://*:443" ],
           "Logging": {
             "LogLevel": {
               "Default": "Information",
@@ -83,34 +102,12 @@ jobs:
             }
           },
           "AllowedHosts": "*"
-        }' | Out-File -FilePath $identityAppSettingsPath -Encoding utf8 -Force
-       
-    - name: Create Server AppSettings
-      shell: pwsh
-      run: |
-        $serverAppSettingsPath = "${{ github.workspace }}/publish/Server/appsettings.${{ env.DEPLOY_ENV }}.json"
-        echo '{
-          "ConnectionStrings": {
-            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
-          },
-          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
-          "WebHostUrls": [ "http://*:80", "https://*:443" ],
-          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}",
-          "Logging": {
-            "LogLevel": {
-              "Default": "Information",
-              "Microsoft.EntityFrameworkCore": "Warning",
-              "Microsoft.EntityFrameworkCore.Database.Command": "Error",
-              "Microsoft.EntityFrameworkCore.Model.Validation": "None"
-            }
-          },
-          "AllowedHosts": "*"
-        }' | Out-File -FilePath $serverAppSettingsPath -Encoding utf8 -Force
+        }' | Out-File -FilePath $path -Encoding utf8 -Force
 
-    - name: Create Client appsettings.json in wwwroot
+    - name: Create Client appsettings.json
       shell: pwsh
       run: |
-        $clientSettingsPath = "${{ github.workspace }}/publish/Client/wwwroot/appsettings.json"
+        $path = "${{ github.workspace }}/publish/wwwroot/appsettings.json"
         echo '{
           "Logging": {
             "LogLevel": {
@@ -128,7 +125,7 @@ jobs:
             "YouTube": "https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran",
             "Facebook": "https://www.facebook.com/profile.php?id=61566864236921"
           }
-        }' | Out-File -FilePath $clientSettingsPath -Encoding utf8 -Force
+        }' | Out-File -FilePath $path -Encoding utf8 -Force
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
@@ -145,36 +142,16 @@ jobs:
         Write-Host "Stopping IIS to release locked files..."
         iisreset /stop
 
-    - name: Deploy Client to IIS
+    - name: Deploy Consolidated App to IIS Root
+      shell: cmd  
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish/Client" ^
-        -dest:contentPath="C:\inetpub\MessageFlowClient",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Client",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -source:contentPath="${{ github.workspace }}/publish" ^
+        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000
-
-    - name: Deploy Identity to IIS
-      run: |
-        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
-        -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish/Identity" ^
-        -dest:contentPath="C:\inetpub\MessageFlowIdentity",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Identity",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
-        -allowUntrusted ^
-        -retryAttempts:2 ^
-        -retryInterval:5000
-
-    - name: Deploy Server to IIS
-      run: |
-        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
-        -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish/Server" ^
-        -dest:contentPath="C:\inetpub\MessageFlowServer",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Server",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
-        -allowUntrusted ^
-        -retryAttempts:2 ^
-        -retryInterval:5000
-
 
     - name: Start IIS after Deployment
       shell: pwsh
