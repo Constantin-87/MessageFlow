@@ -22,6 +22,9 @@ var appConfig = new AppConfig
     SocialLinks = JsonSerializer.Deserialize<SocialLinks>(configRoot.GetProperty("SocialLinks").GetRawText())
 };
 
+Console.WriteLine("Loaded IdentityApiUrl: " + appConfig.IdentityApiUrl);
+Console.WriteLine("Loaded ServerApiUrl: " + appConfig.ServerApiUrl);
+
 builder.Services.AddSingleton(appConfig);
 
 // Add authorization services

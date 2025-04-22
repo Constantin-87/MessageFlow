@@ -47,7 +47,7 @@ namespace MessageFlow.Identity.Configuration
 
         public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
         {
-            var allowedOrigins = new[] { "https://localhost:5003", "http://localhost:5004", "https://localhost:7164", "http://localhost:5002" };
+            var allowedOrigins = new[] { "https://localhost:5003", "http://localhost:5004", "https://localhost:7164", "http://localhost:5002", "https://messageflow-preprod.westeurope.cloudapp.azure.com" };
 
             services.AddCors(options =>
             {
