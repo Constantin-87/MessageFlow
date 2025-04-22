@@ -5,8 +5,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
-	<StaticWebAssetBasePath>/</StaticWebAssetBasePath>
 	<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+	<PublishIISAssets>true</PublishIISAssets>
+	<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Properties\launchSettings.json" />
