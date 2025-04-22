@@ -142,16 +142,32 @@ jobs:
         Write-Host "Stopping IIS to release locked files..."
         iisreset /stop
 
-    - name: Deploy Consolidated App to IIS Root
-      shell: cmd  
+    - name: Deploy Client
+      shell: cmd
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish" ^
-        -dest:contentPath="C:\inetpub\MessageFlow",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
-        -allowUntrusted ^
-        -retryAttempts:2 ^
-        -retryInterval:5000
+        -source:contentPath="${{ github.workspace }}\publish\Client" ^
+        -dest:contentPath="Client",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -allowUntrusted
+
+    - name: Deploy Server
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
+        -verb:sync ^
+        -source:contentPath="${{ github.workspace }}\publish\Server" ^
+        -dest:contentPath="Server",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -allowUntrusted
+
+    - name: Deploy Identity
+      shell: cmd
+      run: |
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
+        -verb:sync ^
+        -source:contentPath="${{ github.workspace }}\publish\Identity" ^
+        -dest:contentPath="Identity",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -allowUntrusted
 
     - name: Start IIS after Deployment
       shell: pwsh
