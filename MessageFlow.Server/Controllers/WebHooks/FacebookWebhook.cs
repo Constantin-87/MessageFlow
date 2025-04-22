@@ -26,15 +26,12 @@ public class FacebookWebhook : ControllerBase
                                 [FromQuery(Name = "hub.challenge")] string hub_challenge,
                                 [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {
-        _logger.LogInformation($"Verifying Facebook Webhook: mode={hub_mode}, token={hub_verify_token}");
-
         if (hub_mode != "subscribe")
         {
             _logger.LogWarning("Invalid hub mode.");
             return Unauthorized();
         }
 
-        // Compare with verify token from appsettings.json
         if (_globalChannelSettings.FacebookWebhookVerifyToken == hub_verify_token)
         {
             return Ok(hub_challenge);
@@ -47,8 +44,6 @@ public class FacebookWebhook : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive([FromBody] JsonElement body)
     {
-        _logger.LogInformation($"Received Facebook webhook event: {body}");
-
         try
         {
             await WebhookProcessingHelper.ProcessWebhookEntriesAsync(
@@ -59,7 +54,6 @@ public class FacebookWebhook : ControllerBase
                 {
                     var messagingArray = entry.GetProperty("messaging").EnumerateArray();
 
-                    // Delegate message processing to the Facebook service
                     await _mediator.Send(new ProcessFacebookWebhookEventCommand(entry));
                 });
 

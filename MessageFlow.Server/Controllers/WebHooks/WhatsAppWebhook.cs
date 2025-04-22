@@ -26,8 +26,6 @@ public class WhatsAppWebhook : ControllerBase
                                         [FromQuery(Name = "hub.challenge")] string hub_challenge,
                                         [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {
-        _logger.LogInformation($"Verifying WhatsApp Webhook: mode={hub_mode}, token={hub_verify_token}");
-
         if (hub_mode != "subscribe")
         {
             _logger.LogWarning("Invalid hub mode.");
@@ -46,8 +44,6 @@ public class WhatsAppWebhook : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Receive([FromBody] JsonElement body)
      {
-        _logger.LogInformation($"Received WhatsApp webhook event: {body}");
-
         try
         {
             await WebhookProcessingHelper.ProcessWebhookEntriesAsync(
@@ -61,7 +57,6 @@ public class WhatsAppWebhook : ControllerBase
 
                     var changes = entry.GetProperty("changes");
 
-                    // Delegate message processing to the WhatsApp service
                     await _mediator.Send(new ProcessIncomingWAMessageCommand(businessAccountId, changes));
                 });
 

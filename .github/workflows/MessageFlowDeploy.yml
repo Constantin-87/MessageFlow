@@ -52,24 +52,24 @@ jobs:
       shell: pwsh
       run: |
         if ("${{ github.ref }}" -eq "refs/heads/master") {
-          echo "DEPLOY_ENV=Production" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "APPSETTINGS_FILE=appsettings.production.json" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "DEPLOY_ENV=Production" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" >> $env:GITHUB_ENV
+          "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
+          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" >> $env:GITHUB_ENV
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
-          echo "DEPLOY_ENV=Preprod" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "APPSETTINGS_FILE=appsettings.preprod.json" | Out-File -FilePath $env:GITHUB_ENV -Append
-          echo "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "DEPLOY_ENV=Preprod" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PREPROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PREPROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PREPROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PREPROD }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" >> $env:GITHUB_ENV
+          "APPSETTINGS_FILE=appsettings.preprod.json" >> $env:GITHUB_ENV
+          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" >> $env:GITHUB_ENV
         }
 
     - name: Create Environment-Specific AppSettings

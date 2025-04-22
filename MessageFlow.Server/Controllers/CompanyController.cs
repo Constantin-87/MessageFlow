@@ -183,7 +183,5 @@ namespace MessageFlow.Server.Controllers
 
             return success ? Ok(message) : BadRequest(message);
         }
-
-
     }
 }
