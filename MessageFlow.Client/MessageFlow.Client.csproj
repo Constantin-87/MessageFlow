@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
-	 <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+	<StaticWebAssetBasePath></StaticWebAssetBasePath>
+	<RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="Properties\launchSettings.json" />
