@@ -68,7 +68,7 @@ jobs:
     - name: Create Server AppSettings
       shell: pwsh
       run: |
-        $path = "${{ github.workspace }}/publish/server/appsettings.${{ env.DEPLOY_ENV }}.json"
+        $path = "${{ github.workspace }}/publish/Server/appsettings.${{ env.DEPLOY_ENV }}.json"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
@@ -88,7 +88,7 @@ jobs:
     - name: Create Identity AppSettings
       shell: pwsh
       run: |
-        $path = "${{ github.workspace }}/publish/identity/appsettings.${{ env.DEPLOY_ENV }}.json"
+        $path = "${{ github.workspace }}/publish/Identity/appsettings.${{ env.DEPLOY_ENV }}.json"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
@@ -129,7 +129,8 @@ jobs:
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
-      run: |
+      run: |        
+        $env:DOTNET_HOST_FACTORY_RESOLVER_DEFAULT_TIMEOUT_IN_SECONDS = 15    
         dotnet tool install --global dotnet-ef --version 8.0.10
         dotnet ef database update `
           --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
