@@ -51,6 +51,7 @@ jobs:
           "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" >> $env:GITHUB_ENV
           "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" >> $env:GITHUB_ENV
+          "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           "DEPLOY_ENV=Preprod" >> $env:GITHUB_ENV
@@ -61,6 +62,7 @@ jobs:
           "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PREPROD }}" >> $env:GITHUB_ENV
           "APPSETTINGS_FILE=appsettings.preprod.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" >> $env:GITHUB_ENV
+          "AzureKeyVaultURL=${{ secrets.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
         }
 
     - name: Create Identity AppSettings
