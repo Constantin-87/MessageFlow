@@ -24,9 +24,6 @@ var appConfig = new AppConfig
 
 builder.Services.AddSingleton(appConfig);
 
-// Add default HttpClient
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-
 // Add authorization services
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();

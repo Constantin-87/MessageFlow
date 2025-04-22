@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Net.Http.Json;
-using System.Security.Claims;
 
 namespace MessageFlow.Client.Services.Authentication
 {
@@ -36,49 +35,33 @@ namespace MessageFlow.Client.Services.Authentication
 
         public async Task<(bool Success, string RedirectUrl)> LoginAsync(LoginModel loginmodel)
         {
-            _logger.LogInformation("Starting login process...");
-
             var client = _httpClientFactory.CreateClient("IdentityAPI");
             var response = await client.PostAsJsonAsync("api/auth/login", loginmodel);
 
             if (!response.IsSuccessStatusCode)
                 return (false, "/Accounts/Login");
 
-            _logger.LogInformation("Login succeeded. Reading response...");
-
             var result = await response.Content.ReadFromJsonAsync<JWTResponseModel>();
-
-            _logger.LogInformation("Storing tokens in local storage...");
-
 
             await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "authToken", result.Token);
             await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken).AsTask();
 
             if (result?.User != null)
             {
-                _logger.LogInformation("Setting current user: {Username}", result.User.UserName);
-
                 _currentUser.SetUser(result.User);
             }
             else
             {
-                Console.WriteLine("No user info returned from login response.");
+                _logger.LogError("No user info returned from login response.");
             }
 
             // Notify authentication state change
             if (_authStateProvider is PersistentAuthenticationStateProvider authProvider)
             {
-                _logger.LogInformation("Triggering authentication state change...");
-                //await Task.Delay(100);
                 _ = Task.Run(() => authProvider.NotifyAuthenticationStateChanged());
             }
 
-            //// ✅ Get the updated authentication state
-            //var authState = await _authStateProvider.GetAuthenticationStateAsync();
-            //var user = authState.User;
-
             var role = result.User.Role;
-            _logger.LogInformation("User roles after login: {Roles}", role);
 
             string redirectUrl = role switch
             {
@@ -87,27 +70,9 @@ namespace MessageFlow.Client.Services.Authentication
                 _ => "/"
             };
 
-
-            _logger.LogInformation("Will redirect to: {RedirectUrl}", redirectUrl);
-
-            //// ✅ Determine redirect URL based on user's role
-            //var roles = user.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
-
-
-
-
-            //string redirectUrl = roles.Contains("Agent") ? "/AgentWorkspace"
-            //                   : roles.Contains("SuperAdmin") || roles.Contains("Admin") || roles.Contains("Manager") ? "/AgentManagerWorkspace"
-            //                   : "/";
-
-
-
             // Delay heartbeat start to let token settle in storage
             _ = Task.Run(async () =>
             {
-                _logger.LogInformation("Delaying heartbeat start...");
-                /*await Task.Delay(1000);*/ // small delay for localStorage propagation
-                _logger.LogInformation("Starting heartbeat.");
                 _heartbeat.Start();
             });
             await Task.Delay(1000);
@@ -141,16 +106,12 @@ namespace MessageFlow.Client.Services.Authentication
                 {
                     _refreshTask = RefreshTokenInternalAsync();
                 }
-                else
-                {
-                    _logger.LogInformation("Waiting for ongoing refresh...");
-                }
 
                 return await _refreshTask;
             }
-            catch (Exception ex)
+            catch ()
             {
-                _logger.LogError(ex, "Exception during token refresh.");
+                _logger.LogError("Exception during token refresh.");
                 return false;
             }
             finally
@@ -178,7 +139,7 @@ namespace MessageFlow.Client.Services.Authentication
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning($"Refresh failed. Status: {response.StatusCode}");
+                _logger.LogWarning("Token Refresh failed.");
                 return false;
             }
 
@@ -187,7 +148,6 @@ namespace MessageFlow.Client.Services.Authentication
                 var result = await response.Content.ReadFromJsonAsync<JWTResponseModel>();
                 if (result == null || string.IsNullOrEmpty(result.Token) || string.IsNullOrEmpty(result.RefreshToken))
                 {
-                    _logger.LogWarning("Failed to parse refresh response.");
                     return false;
                 }
                 await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "authToken", result.Token);
