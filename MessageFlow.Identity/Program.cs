@@ -37,7 +37,7 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Database connection string is missing from Azure Key Vault.");
 }
 
-// Register DbContext (ensures Identity uses the same DbContext)
+// Register DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
@@ -59,7 +59,6 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddIdentityServices();
 
-
 builder.Services.AddMediatR(cfg =>
 {
     cfg.RegisterServicesFromAssembly(typeof(LoginCommandHandler).Assembly);
@@ -69,10 +68,7 @@ builder.Services.AddMediatorHandlers();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-
 builder.Services.AddCorsPolicy();
-
-
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -87,7 +83,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHsts();
 app.UseHttpsRedirection();
-app.UseRouting(); //Ensure routing is before authentication
+app.UseRouting();
 app.UseCors("AllowBlazorWasm");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -95,6 +91,5 @@ app.UseEndpoints(endpoints =>
 {
     _ = endpoints.MapControllers();
 });
-
 
 app.Run();

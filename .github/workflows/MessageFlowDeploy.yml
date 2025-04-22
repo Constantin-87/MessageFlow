@@ -36,16 +36,7 @@ jobs:
       run: dotnet publish MessageFlow.Identity/MessageFlow.Identity.csproj -c Release -o ${{ github.workspace }}/publish/Identity
 
     - name: Publish Client Project
-      run: dotnet publish MessageFlow.Client/MessageFlow.Client.csproj -c Release -o ${{ github.workspace }}/publish/Client
-
-    - name: Combine Publish Outputs
-      shell: pwsh
-      run: |
-        New-Item -ItemType Directory -Path ${{ github.workspace }}/publish/Combined -Force
-        Copy-Item ${{ github.workspace }}/publish/Server/* -Destination ${{ github.workspace }}/publish/Combined -Recurse -Force
-        Copy-Item ${{ github.workspace }}/publish/Identity/* -Destination ${{ github.workspace }}/publish/Combined -Recurse -Force
-        New-Item -ItemType Directory -Path ${{ github.workspace }}/publish/Combined/wwwroot -Force
-        Copy-Item ${{ github.workspace }}/publish/Client/wwwroot/* -Destination ${{ github.workspace }}/publish/Combined/wwwroot -Recurse -Force
+      run: dotnet publish MessageFlow.Client/MessageFlow.Client.csproj -c Release -o ${{ github.workspace }}/publish/Client    
 
     - name: Set Deployment Environment
       id: set-env
@@ -72,26 +63,70 @@ jobs:
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" >> $env:GITHUB_ENV
         }
 
-    - name: Create Environment-Specific AppSettings
+    - name: Create Identity AppSettings
       shell: pwsh
       run: |
-        $appSettingsPath = "${{ github.workspace }}/publish/Combined/${{ env.APPSETTINGS_FILE }}"
+        $identityAppSettingsPath = "${{ github.workspace }}/publish/Identity/appsettings.${{ env.DEPLOY_ENV }}.json"
         echo '{
           "ConnectionStrings": {
             "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
           },
-          "AzureKeyVault": {
-            "Url": "' + "${{ env.AzureKeyVaultURL }}" + '"
-          },
+          "ServerBaseAddress": "https://${{ env.WEB_DEPLOY_SERVER }}",
+          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
+          "WebHostUrls": [ "http://*:80", "https://*:443" ],
           "Logging": {
             "LogLevel": {
               "Default": "Information",
               "Microsoft.AspNetCore": "Warning"
             }
           },
-          "ServerBaseAddress": "https://${{ env.WEB_DEPLOY_SERVER }}",
-          "WebHostUrls": [ "http://*:80", "https://*:443" ]
-        }' | Out-File -FilePath $appSettingsPath -Encoding utf8 -Force
+          "AllowedHosts": "*"
+        }' | Out-File -FilePath $identityAppSettingsPath -Encoding utf8 -Force
+       
+    - name: Create Server AppSettings
+      shell: pwsh
+      run: |
+        $serverAppSettingsPath = "${{ github.workspace }}/publish/Server/appsettings.${{ env.DEPLOY_ENV }}.json"
+        echo '{
+          "ConnectionStrings": {
+            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
+          },
+          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
+          "WebHostUrls": [ "http://*:80", "https://*:443" ],
+          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}",
+          "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft.EntityFrameworkCore": "Warning",
+              "Microsoft.EntityFrameworkCore.Database.Command": "Error",
+              "Microsoft.EntityFrameworkCore.Model.Validation": "None"
+            }
+          },
+          "AllowedHosts": "*"
+        }' | Out-File -FilePath $serverAppSettingsPath -Encoding utf8 -Force
+
+    - name: Create Client appsettings.json in wwwroot
+      shell: pwsh
+      run: |
+        $clientSettingsPath = "${{ github.workspace }}/publish/Client/wwwroot/appsettings.json"
+        echo '{
+          "Logging": {
+            "LogLevel": {
+              "Default": "Information",
+              "Microsoft.AspNetCore": "Warning"
+            }
+          },
+          "AllowedHosts": "*",
+          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/identity",
+          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/server",
+          "SocialLinks": {
+            "LinkedIn": "https://www.linkedin.com/in/constantin-gavrila-dev/",
+            "Twitter": "https://twitter.com/DontHaveATwitterPage",
+            "GitHub": "https://github.com/Constantin-87",
+            "YouTube": "https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran",
+            "Facebook": "https://www.facebook.com/profile.php?id=61566864236921"
+          }
+        }' | Out-File -FilePath $clientSettingsPath -Encoding utf8 -Force
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
@@ -108,30 +143,32 @@ jobs:
         Write-Host "Stopping IIS to release locked files..."
         iisreset /stop
 
-    - name: Update Web.config with Deployment Environment
-      shell: pwsh
-      run: |
-        $webConfigPath = "${{ github.workspace }}/publish/Combined/Web.config"
-        if (Test-Path $webConfigPath) {
-          (Get-Content $webConfigPath) -replace '<environmentVariable name="ASPNETCORE_ENVIRONMENT" value=".*?" />', '<environmentVariable name="ASPNETCORE_ENVIRONMENT" value="${{ env.DEPLOY_ENV }}" />' | Set-Content $webConfigPath
-        }
-
-
-    - name: Deploy to IIS via Web Deploy
-      env:
-        ASPNETCORE_ENVIRONMENT: ${{ env.DEPLOY_ENV }}
-        WEB_DEPLOY_SERVER: ${{ env.WEB_DEPLOY_SERVER }}
-        WEB_DEPLOY_USER: ${{ env.WEB_DEPLOY_USER }}
-        WEB_DEPLOY_PASSWORD: ${{ env.WEB_DEPLOY_PASSWORD }}
-        WEB_DEPLOY_SITE: ${{ env.WEB_DEPLOY_SITE }}
-        WEB_DEPLOY_PATH: ${{ env.WEB_DEPLOY_PATH }}
-
-      shell: cmd
+    - name: Deploy Client to IIS
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-        -source:contentPath="${{ github.workspace }}/publish/Combined" ^
-        -dest:contentPath="${{ env.WEB_DEPLOY_PATH }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -source:contentPath="${{ github.workspace }}/publish/Client" ^
+        -dest:contentPath="C:\inetpub\MessageFlowClient",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Client",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -allowUntrusted ^
+        -retryAttempts:2 ^
+        -retryInterval:5000
+
+    - name: Deploy Identity to IIS
+      run: |
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
+        -verb:sync ^
+        -source:contentPath="${{ github.workspace }}/publish/Identity" ^
+        -dest:contentPath="C:\inetpub\MessageFlowIdentity",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Identity",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
+        -allowUntrusted ^
+        -retryAttempts:2 ^
+        -retryInterval:5000
+
+    - name: Deploy Server to IIS
+      run: |
+        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
+        -verb:sync ^
+        -source:contentPath="${{ github.workspace }}/publish/Server" ^
+        -dest:contentPath="C:\inetpub\MessageFlowServer",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=MessageFlow.Server",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted ^
         -retryAttempts:2 ^
         -retryInterval:5000

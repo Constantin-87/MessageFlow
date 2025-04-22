@@ -7,10 +7,6 @@ using MessageFlow.Client.Models;
 using MessageFlow.Client.Services.Authentication;
 using System.Text.Json;
 
-//using Blazorise;
-//using Blazorise.Bootstrap5;
-//using Blazorise.Icons.Bootstrap;
-
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.RootComponents.Add<App>("#app");
@@ -28,9 +24,7 @@ var appConfig = new AppConfig
 
 builder.Services.AddSingleton(appConfig);
 
-
-
-// Add default HttpClient for general use (optional, but fine)
+// Add default HttpClient
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // Add authorization services
@@ -57,7 +51,7 @@ builder.Services.AddHttpClient("IdentityAPI", client =>
 }).AddHttpMessageHandler<AuthHttpHandler>();
 
 
-// Configure HTTP Client for Server API (Protected Endpoints)
+// Configure HTTP Client for Server API
 var serverApiUrl = appConfig.ServerApiUrl;
 if (string.IsNullOrEmpty(serverApiUrl))
     throw new InvalidOperationException("ERROR: 'MessageFlow-Server-Uri' is missing in configuration.");
