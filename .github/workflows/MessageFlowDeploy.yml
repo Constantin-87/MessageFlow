@@ -107,7 +107,7 @@ jobs:
     - name: Create Client appsettings.json
       shell: pwsh
       run: |
-        $path = "${{ github.workspace }}/publish/wwwroot/appsettings.json"
+        $path = "${{ github.workspace }}/publish/Client/wwwroot/appsettings.json"
         echo '{
           "Logging": {
             "LogLevel": {
