@@ -148,7 +148,7 @@ jobs:
       run: |
         "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
         -verb:sync ^
-        -source:contentPath="${{ github.workspace }}\publish\Client\" ^
+        -source:contentPath="${{ github.workspace }}\publish\Client\wwwroot" ^
         -dest:contentPath="${{ env.WEB_DEPLOY_SITE }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
         -allowUntrusted
 
