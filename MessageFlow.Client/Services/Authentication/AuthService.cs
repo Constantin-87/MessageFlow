@@ -109,7 +109,7 @@ namespace MessageFlow.Client.Services.Authentication
 
                 return await _refreshTask;
             }
-            catch ()
+            catch (Exception ex)
             {
                 _logger.LogError("Exception during token refresh.");
                 return false;
