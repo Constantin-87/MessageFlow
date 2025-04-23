@@ -17,7 +17,15 @@ namespace MessageFlow.Client.Services
 
         public async Task<FacebookSettingsDTO?> GetFacebookSettingsAsync(string companyId)
         {
-            return await _httpClient.GetFromJsonAsync<FacebookSettingsDTO>($"api/channels/facebook/{companyId}");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<FacebookSettingsDTO>($"api/channels/facebook/{companyId}");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Facebook settings not found for company {CompanyId}", companyId);
+                return null;
+            }
         }
 
         public async Task<bool> SaveFacebookSettingsAsync(string companyId, FacebookSettingsDTO settings)
@@ -28,7 +36,15 @@ namespace MessageFlow.Client.Services
 
         public async Task<WhatsAppSettingsDTO?> GetWhatsAppSettingsAsync(string companyId)
         {
-            return await _httpClient.GetFromJsonAsync<WhatsAppSettingsDTO>($"api/channels/whatsapp/{companyId}");
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<WhatsAppSettingsDTO>($"api/channels/whatsapp/{companyId}");
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Whatsapp settings not found for company {CompanyId}", companyId);
+                return null;
+            }
         }
 
         public async Task<NotificationResult> SaveWhatsCoreAppSettingsAsync(WhatsAppCoreSettingsDTO coreSettings)
