@@ -50,7 +50,7 @@ jobs:
           "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" >> $env:GITHUB_ENV
           "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" >> $env:GITHUB_ENV
           "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
-          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" >> $env:GITHUB_ENV
+          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PRODUCTION }}" >> $env:GITHUB_ENV
           "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
           "WEB_DEPLOY_DOMAIN=${{ vars.WEB_DEPLOY_DOMAIN_PROD }}" >> $env:GITHUB_ENV
         }
