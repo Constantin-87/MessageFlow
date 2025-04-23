@@ -27,13 +27,15 @@ namespace MessageFlow.Server.Controllers
         {
             var settings = await _mediator.Send(new GetFacebookSettingsQuery(companyId));
             if (settings == null)
-                return NotFound();
-
+            {
+                settings = new Shared.DTOs.FacebookSettingsDTO { CompanyId = companyId };
+            }
             return Ok(settings);
+
         }
 
         [HttpPost("facebook/{companyId}")]
-        public async Task<IActionResult> SaveFacebookSettings(string companyId, [FromBody] FacebookSettingsDTO settings)
+        public async Task<IActionResult> SaveFacebookSettings(string companyId, [FromBody] Shared.DTOs.FacebookSettingsDTO settings)
         {
             var (success, message) = await _mediator.Send(new SaveFacebookSettingsCommand(companyId, settings));
             return success ? Ok(message) : BadRequest(message);
@@ -44,8 +46,9 @@ namespace MessageFlow.Server.Controllers
         {
             var settings = await _mediator.Send(new GetWhatsAppSettingsQuery(companyId));
             if (settings == null)
-                return NotFound();
-
+            {
+                settings = new Shared.DTOs.WhatsAppSettingsDTO { CompanyId = companyId };
+            }
             return Ok(settings);
         }
 

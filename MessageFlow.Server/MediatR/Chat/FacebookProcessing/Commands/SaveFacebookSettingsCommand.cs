@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using MessageFlow.Server.DataTransferObjects.Client;
+using MessageFlow.Shared.DTOs;
 
 namespace MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands
 {

@@ -1,5 +1,6 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
 @inject ChannelService ChannelService
+@inject ILogger<FacebookSettingsComponent> Logger
 
 <Notification Result="@Notification" OnClear="ClearNotificationMessage" />
 
@@ -53,8 +54,6 @@ else
                 Message = success ? "Facebook settings saved successfully." : "Failed to save Facebook settings."
             };
     }
-
-
 
     private void ClearNotificationMessage()
     {
