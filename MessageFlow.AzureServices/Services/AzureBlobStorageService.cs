@@ -173,9 +173,19 @@ namespace MessageFlow.AzureServices.Services
                 // Combine all JSON file contents into a single string
                 return string.Join("\n", fileContents);
             }
+            catch (Azure.RequestFailedException ex)
+            {
+                _logger.LogError(ex, "Azure request failed: {Message}, Status: {Status}", ex.Message, ex.Status);
+                return string.Empty;
+            }
+            catch (IOException ex)
+            {
+                _logger.LogError(ex, "IO error while uploading file: {Message}", ex.Message);
+                return string.Empty;
+            }
             catch (Exception ex)
             {
-                _logger.LogError($"Error retrieving files from {companyId}/CompanyRAGData/: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error while uploading file.");
                 return string.Empty;
             }
         }

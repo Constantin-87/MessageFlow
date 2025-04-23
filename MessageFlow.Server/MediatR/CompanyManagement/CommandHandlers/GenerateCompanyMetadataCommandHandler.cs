@@ -46,7 +46,7 @@ namespace MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers
                 if (!isAuthorized)
                     return (false, errorMessage);
 
-                var company = await _unitOfWork.Companies.GetByIdStringAsync(request.CompanyId);
+                var company = await _unitOfWork.Companies.GetCompanyWithDetailsByIdAsync(request.CompanyId);
                 if (company == null)
                     return (false, "Company not found.");
 

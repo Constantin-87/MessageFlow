@@ -134,14 +134,18 @@ namespace MessageFlow.Client.Services
         {
             using var content = new MultipartFormDataContent();
 
+            if (files.Count == 0)
+                return (false, "No files provided.");
+
+            content.Add(new StringContent(files[0].CompanyId), "companyId");
+
             foreach (var file in files)
             {
                 var streamContent = new StreamContent(file.FileContent);
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
 
                 content.Add(streamContent, "files", file.FileName);
-                content.Add(new StringContent(file.CompanyId), "companyId");
-                content.Add(new StringContent(file.FileDescription ?? ""), "descriptions");
+                content.Add(new StringContent(file.FileDescription ?? ""), $"descriptions-{file.FileName}");
             }
 
             var response = await _httpClient.PostAsync("api/company/upload-files", content);

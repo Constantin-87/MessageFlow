@@ -145,10 +145,14 @@ namespace MessageFlow.Server.Controllers
                 await file.CopyToAsync(ms);
                 ms.Position = 0;
 
+                // Get description for this file from the keyed field
+                var descKey = $"descriptions-{file.FileName}";
+                var description = Request.Form[descKey].ToString();
+
                 fileDtos.Add(new PretrainDataFileDTO
                 {
                     FileName = file.FileName,
-                    FileDescription = descriptions,
+                    FileDescription = description,
                     FileContent = ms,
                     CompanyId = companyId
                 });

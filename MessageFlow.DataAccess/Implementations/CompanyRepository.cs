@@ -22,6 +22,7 @@ namespace MessageFlow.DataAccess.Implementations
                     .Include(c => c.Users)
                     .Include(c => c.CompanyEmails)
                     .Include(c => c.CompanyPhoneNumbers)
+                    .Include(c => c.Teams)
                     .FirstOrDefaultAsync(c => c.Id == companyId);
             }
             throw new InvalidOperationException("No available context.");
