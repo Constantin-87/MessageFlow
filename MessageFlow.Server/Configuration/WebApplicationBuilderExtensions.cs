@@ -118,16 +118,6 @@ namespace MessageFlow.Server.Configuration
                 client.BaseAddress = new Uri(builder.Configuration["MessageFlow-Identity-Uri"]);
             });
 
-            builder.Logging.AddDebug();
-
-            // Get the configured URLs from appsettings
-            var urls = builder.Configuration.GetSection("WebHostUrls").Get<string[]>();
-
-            if (urls != null && urls.Length > 0)
-            {
-                builder.WebHost.UseUrls(urls);
-            }
-
             builder.Services.AddSignalR(options =>
             {
                 options.EnableDetailedErrors = true;

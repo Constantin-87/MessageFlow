@@ -130,7 +130,13 @@ namespace MessageFlow.Server.Configuration
 
         public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
         {
-            var allowedOrigins = new[] { "https://localhost:5003", "http://localhost:5004", "https://localhost:7043", "http://localhost:5027" };
+            var allowedOrigins = new[]
+            {
+                "https://localhost:5003",
+                "http://localhost:5004",
+                "https://localhost:7043",
+                "http://localhost:5027",
+                "https://messageflow-preprod.westeurope.cloudapp.azure.com" };
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowBlazorWasm", builder =>
