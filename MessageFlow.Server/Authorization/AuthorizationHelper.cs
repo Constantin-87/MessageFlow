@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Data;
+using System.Security.Claims;
 
 namespace MessageFlow.Server.Authorization
 {
@@ -71,7 +72,14 @@ namespace MessageFlow.Server.Authorization
                 return Task.FromResult((false, "User context not available."));
             }
 
+            var role = user.FindFirstValue(ClaimTypes.Role);
             var userCompanyId = user.FindFirstValue("CompanyId");
+            bool isSuperAdmin = role?.Contains("SuperAdmin") == true;
+
+            if (isSuperAdmin)
+            {
+                return Task.FromResult((true, string.Empty));
+            }
 
             if ( userCompanyId == companyId)
             {
