@@ -99,7 +99,6 @@ jobs:
             "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
           },
           "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}",
-          "WebHostUrls": [ "https://*:443" ],
           "Logging": {
             "LogLevel": {
               "Default": "Information",

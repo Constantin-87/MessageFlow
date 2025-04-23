@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using MessageFlow.Identity.Services;
+﻿using MessageFlow.Identity.Services;
 using MessageFlow.Identity.Services.Interfaces;
 using MessageFlow.Identity.MediatR.Commands;
 using MessageFlow.Identity.MediatR.CommandHandlers;
