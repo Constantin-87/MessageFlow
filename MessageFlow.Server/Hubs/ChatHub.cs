@@ -18,13 +18,13 @@ public class ChatHub : Hub
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IMediator _mediator;
-    private readonly ILogger _logger;
+    private readonly ILogger<ChatHub> _logger;
 
     public ChatHub(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IMediator mediator,
-        ILogger logger)
+        ILogger<ChatHub> logger)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
