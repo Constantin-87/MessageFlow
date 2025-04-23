@@ -33,7 +33,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.FacebookProcessing.Command
         {
             var result = await _handler.Handle(new SaveFacebookSettingsCommand(
                 "",
-                new FacebookSettingsDTO
+                new Shared.DTOs.FacebookSettingsDTO
                 {
                     Id = "dummy",
                     PageId = "pg1",
@@ -51,7 +51,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.FacebookProcessing.Command
             _authMock.Setup(a => a.ChannelSettingsAccess("company1"))
                      .ReturnsAsync((false, "Not allowed"));
 
-            var result = await _handler.Handle(new SaveFacebookSettingsCommand("company1", new FacebookSettingsDTO()), default);
+            var result = await _handler.Handle(new SaveFacebookSettingsCommand("company1", new Shared.DTOs.FacebookSettingsDTO()), default);
 
             Assert.False(result.success);
             Assert.Equal("Not allowed", result.errorMessage);
@@ -60,7 +60,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.FacebookProcessing.Command
         [Fact]
         public async Task Handle_AddsNewSettings_WhenNoneExist()
         {
-            var dto = new FacebookSettingsDTO { PageId = "p", AccessToken = "token" };
+            var dto = new Shared.DTOs.FacebookSettingsDTO { PageId = "p", AccessToken = "token" };
             var model = new FacebookSettingsModel { Id = "new", CompanyId = "company1", PageId = "p", AccessToken = "token" };
 
             _authMock.Setup(a => a.ChannelSettingsAccess("company1"))
@@ -79,7 +79,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.FacebookProcessing.Command
         [Fact]
         public async Task Handle_UpdatesExistingSettings()
         {
-            var dto = new FacebookSettingsDTO { PageId = "updatedPage", AccessToken = "updatedToken" };
+            var dto = new Shared.DTOs.FacebookSettingsDTO { PageId = "updatedPage", AccessToken = "updatedToken" };
             var existing = new FacebookSettingsModel { Id = "123", CompanyId = "company1", PageId = "old", AccessToken = "old" };
 
             _authMock.Setup(a => a.ChannelSettingsAccess("company1"))
@@ -101,7 +101,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.FacebookProcessing.Command
         {
             _authMock.Setup(a => a.ChannelSettingsAccess("company1")).Throws(new Exception("fail"));
 
-            var result = await _handler.Handle(new SaveFacebookSettingsCommand("company1", new FacebookSettingsDTO()), default);
+            var result = await _handler.Handle(new SaveFacebookSettingsCommand("company1", new Shared.DTOs.FacebookSettingsDTO()), default);
 
             Assert.False(result.success);
             Assert.Equal("An error occurred while saving Facebook settings.", result.errorMessage);

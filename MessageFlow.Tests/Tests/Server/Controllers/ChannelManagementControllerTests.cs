@@ -58,7 +58,7 @@ public class ChannelManagementControllerTests
         _mediatorMock.Setup(m => m.Send(It.IsAny<SaveFacebookSettingsCommand>(), default))
             .ReturnsAsync((true, "Saved"));
 
-        var result = await _controller.SaveFacebookSettings("c1", new MessageFlow.Server.DataTransferObjects.Client.FacebookSettingsDTO());
+        var result = await _controller.SaveFacebookSettings("c1", new Shared.DTOs.FacebookSettingsDTO());
 
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal("Saved", ok.Value);
@@ -70,7 +70,7 @@ public class ChannelManagementControllerTests
         _mediatorMock.Setup(m => m.Send(It.IsAny<SaveFacebookSettingsCommand>(), default))
             .ReturnsAsync((false, "Error"));
 
-        var result = await _controller.SaveFacebookSettings("c1", new MessageFlow.Server.DataTransferObjects.Client.FacebookSettingsDTO());
+        var result = await _controller.SaveFacebookSettings("c1", new Shared.DTOs.FacebookSettingsDTO());
 
         var bad = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("Error", bad.Value);
