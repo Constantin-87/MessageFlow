@@ -75,7 +75,7 @@ jobs:
           },
           "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
           "WebHostUrls": [ "https://*:443" ],
-          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}/Identity",
+          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}/identity/",
           "Logging": {
             "LogLevel": {
               "Default": "Information",
@@ -89,11 +89,12 @@ jobs:
       shell: pwsh
       run: |
         $path = "${{ github.workspace }}/publish/Identity/appsettings.${{ env.DEPLOY_ENV }}.json"
-        echo '{
+        $json = @"
+        {
           "ConnectionStrings": {
-            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
+            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
           },
-          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
+          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}",
           "WebHostUrls": [ "https://*:443" ],
           "Logging": {
             "LogLevel": {
@@ -102,7 +103,9 @@ jobs:
             }
           },
           "AllowedHosts": "*"
-        }' | Out-File -FilePath $path -Encoding utf8 -Force
+        }
+        "@
+            $json | Out-File -FilePath $path -Encoding utf8 -Force
 
     - name: Create Client appsettings.json
       shell: pwsh
@@ -116,8 +119,8 @@ jobs:
             }
           },
           "AllowedHosts": "*",
-          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/Identity",
-          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/Server",
+          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/identity/",
+          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/server/",
           "SocialLinks": {
             "LinkedIn": "https://www.linkedin.com/in/constantin-gavrila-dev/",
             "Twitter": "https://twitter.com/DontHaveATwitterPage",
