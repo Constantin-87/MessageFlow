@@ -52,6 +52,7 @@ jobs:
           "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PROD }}" >> $env:GITHUB_ENV
           "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_DOMAIN=${{ vars.WEB_DEPLOY_DOMAIN_PROD }}" >> $env:GITHUB_ENV
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           "DEPLOY_ENV=Preprod" >> $env:GITHUB_ENV
@@ -63,6 +64,7 @@ jobs:
           "APPSETTINGS_FILE=appsettings.preprod.json" >> $env:GITHUB_ENV
           "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PREPROD }}" >> $env:GITHUB_ENV
           "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_DOMAIN=${{ vars.WEB_DEPLOY_DOMAIN_PREPROD }}" >> $env:GITHUB_ENV
         }
 
     - name: Create Server AppSettings
@@ -74,9 +76,8 @@ jobs:
           "ConnectionStrings": {
             "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
           },
-          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}",
-          "WebHostUrls": [ "https://*:443" ],
-          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}/identity/",
+          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}"
+          "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_DOMAIN }}/identity/",
           "Logging": {
             "LogLevel": {
               "Default": "Information",
@@ -122,8 +123,8 @@ jobs:
             }
           },
           "AllowedHosts": "*",
-          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/identity/",
-          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_SERVER }}/server/",
+          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_DOMAIN }}/identity/",
+          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_DOMAIN }}/server/",
           "SocialLinks": {
             "LinkedIn": "https://www.linkedin.com/in/constantin-gavrila-dev/",
             "Twitter": "https://twitter.com/DontHaveATwitterPage",

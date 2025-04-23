@@ -68,7 +68,7 @@ builder.Services.AddMediatorHandlers();
 
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
-builder.Services.AddCorsPolicy();
+builder.Services.AddCorsPolicy(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

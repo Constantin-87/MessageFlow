@@ -7,6 +7,7 @@ using MessageFlow.Identity.MediatR.QueryHandlers;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
 using MediatR;
+using System.Text.Json;
 
 namespace MessageFlow.Identity.Configuration
 {
@@ -44,23 +45,23 @@ namespace MessageFlow.Identity.Configuration
             return services;
         }
 
-        public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
+        public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration config)
         {
-            var allowedOrigins = new[] { "https://localhost:5003", "http://localhost:5004", "https://localhost:7164", "http://localhost:5002", "https://messageflow-preprod.westeurope.cloudapp.azure.com" };
+            var json = config["Cors-AllowedOrigins"];
+            var allowedOrigins = JsonSerializer.Deserialize<string[]>(json ?? "[]");
 
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowBlazorWasm", builder =>
                 {
-                    builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
-                           .WithOrigins(allowedOrigins)
-                           .WithHeaders("Content-Type", "Authorization")
+                    builder.SetIsOriginAllowed(origin =>
+                            allowedOrigins.Any(allowed => origin.Contains(allowed)))
+                           .WithHeaders("Content-Type", "Authorization", "x-requested-with", "x-signalr-user-agent")
                            .WithMethods("GET", "POST", "PUT", "DELETE");
                 });
             });
 
             return services;
         }
-
     }
 }

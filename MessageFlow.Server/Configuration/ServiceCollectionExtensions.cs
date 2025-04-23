@@ -29,6 +29,7 @@ using MessageFlow.AzureServices.Helpers.Interfaces;
 using MessageFlow.AzureServices.Helpers;
 using MessageFlow.Server.Helpers.Interfaces;
 using MessageFlow.Server.Helpers;
+using System.Text.Json;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -128,21 +129,17 @@ namespace MessageFlow.Server.Configuration
             return services;
         }
 
-        public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
+        public static IServiceCollection AddCorsPolicy(this IServiceCollection services, IConfiguration config)
         {
-            var allowedOrigins = new[]
-            {
-                "https://localhost:5003",
-                "http://localhost:5004",
-                "https://localhost:7043",
-                "http://localhost:5027",
-                "https://messageflow-preprod.westeurope.cloudapp.azure.com" };
+            var json = config["Cors-AllowedOrigins"];
+            var allowedOrigins = JsonSerializer.Deserialize<string[]>(json ?? "[]");
+
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowBlazorWasm", builder =>
                 {
-                    builder.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
-                           .WithOrigins(allowedOrigins)
+                    builder.SetIsOriginAllowed(origin =>
+                            allowedOrigins.Any(allowed => origin.Contains(allowed)))
                            .WithHeaders("Content-Type", "Authorization", "x-requested-with", "x-signalr-user-agent")
                            .WithMethods("GET", "POST", "PUT", "DELETE");
                 });

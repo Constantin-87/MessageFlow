@@ -91,7 +91,7 @@ namespace MessageFlow.Server.Configuration
             // Query + Command Handlers
             builder.Services.AddMediatorHandlers();
 
-            builder.Services.AddCorsPolicy();
+            builder.Services.AddCorsPolicy(builder.Configuration);
 
             builder.Services.AddAzureServices(builder.Configuration);
 
