@@ -76,7 +76,7 @@ jobs:
           "ConnectionStrings": {
             "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
           },
-          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}"
+          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}",
           "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_DOMAIN }}/identity/",
           "Logging": {
             "LogLevel": {

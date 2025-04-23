@@ -153,11 +153,11 @@ namespace MessageFlow.Server.Configuration
             app.MapControllers();
 
             // Seed DataBase!!
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                await DatabaseSeeder.SeedSuperAdminAsync(services);
-            }
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    await DatabaseSeeder.SeedSuperAdminAsync(services);
+            //}
         }
     }
 }

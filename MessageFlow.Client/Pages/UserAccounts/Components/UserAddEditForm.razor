@@ -124,6 +124,8 @@
     {
 
         companies = await CompanyManagementService.GetAllCompaniesAsync();
+        var firstCompanyId = companies.First().Id;
+
         // When in edit mode, fetch the user data and prepopulate fields
         if (IsEditMode && !string.IsNullOrEmpty(UserId))
         {
@@ -133,17 +135,17 @@
                 SetErrorMessage(new List<string> { "User not found" });
                 return;
             }
+
+            ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == ApplicationUser.CompanyId);
         }
-        else if (companies.Count == 1)
+        else if (!IsEditMode && !string.IsNullOrEmpty(firstCompanyId))
         {
-            // Auto-select the single available company in create mode
-            ApplicationUser.CompanyId = companies.First().Id;
+            ApplicationUser.CompanyId = firstCompanyId;
             ApplicationUser.CompanyDTO = companies.First();
         }
 
         if (!string.IsNullOrEmpty(ApplicationUser.CompanyId))
         {
-            ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == ApplicationUser.CompanyId);
             UpdateSuperAdminRole();
         }
 
