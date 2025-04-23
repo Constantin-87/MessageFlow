@@ -69,11 +69,12 @@ jobs:
       shell: pwsh
       run: |
         $path = "${{ github.workspace }}/publish/Server/appsettings.${{ env.DEPLOY_ENV }}.json"
-        echo '{
+        $json = @"
+        {
           "ConnectionStrings": {
-            "DBConnectionString": "' + "${{ env.DB_CONNECTION_STRING }}" + '"
+            "DBConnectionString": "${{ env.DB_CONNECTION_STRING }}"
           },
-          "AzureKeyVaultURL": "' + "${{ env.AzureKeyVaultURL }}" + '",
+          "AzureKeyVaultURL": "${{ env.AzureKeyVaultURL }}",
           "WebHostUrls": [ "https://*:443" ],
           "MessageFlow-Identity-Uri": "https://${{ env.WEB_DEPLOY_SERVER }}/identity/",
           "Logging": {
@@ -83,7 +84,10 @@ jobs:
             }
           },
           "AllowedHosts": "*"
-        }' | Out-File -FilePath $path -Encoding utf8 -Force
+        }
+        "@
+        $json | Out-File -FilePath $path -Encoding utf8 -Force
+
 
     - name: Create Identity AppSettings
       shell: pwsh
