@@ -99,7 +99,6 @@
     </EditForm>
 }
 
-
 @code {
 
     [Parameter]
@@ -194,7 +193,7 @@
 
     private void UpdateSuperAdminRole()
     {
-        const string superAdminCompanyId = "e68116f4-1588-4987-b4ab-c3a487200c25"; /// TO BE CHANGED TO GET THE ID FROM AZURE VAULT!!!!!
+        const string superAdminCompanyId = "e68116f4-1588-4987-b4ab-c3a487200c25"; /// TO BE CHANGED TO GET IT FROM BACKEND
 
         displayedRoles = new List<string>(availableRoles);
 
@@ -220,7 +219,6 @@
         ApplicationUser.CompanyDTO = companies.FirstOrDefault(c => c.Id == value);
         UpdateSuperAdminRole();
     }
-
 
     private void SetErrorMessage(IEnumerable<string> errors)
     {

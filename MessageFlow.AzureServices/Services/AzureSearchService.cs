@@ -31,16 +31,6 @@ namespace MessageFlow.AzureServices.Services
         public async Task CreateCompanyIndexAsync(string companyId)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
-
-            //await foreach (var existingIndexName in _searchIndexClient.GetIndexNamesAsync())
-            //{
-            //    if (existingIndexName == indexName)
-            //    {
-            //        // Delete the existing index before proceeding
-            //        await _searchIndexClient.DeleteIndexAsync(indexName);
-            //        break;
-            //    }
-            //}
             var indexClient = GetIndexClient();
 
             await foreach (var existingIndexName in indexClient.GetIndexNamesAsync())

@@ -11,14 +11,11 @@
 <UserAddEditForm IsEditMode="true" UserId="@userId" OnValidSubmit="UpdateUser" />
 
 @code {
-
     [Parameter]
     public string userId { get; set; }
 
-    // Handle form submission for updating the user
     private void UpdateUser()
     {
         NavigationManager.NavigateTo("/Accounts/UserAccounts");
     }
-
 }

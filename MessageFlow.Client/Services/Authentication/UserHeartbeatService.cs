@@ -57,5 +57,4 @@ namespace MessageFlow.Client.Services.Authentication
             _timer?.Dispose();
         }
     }
-
 }

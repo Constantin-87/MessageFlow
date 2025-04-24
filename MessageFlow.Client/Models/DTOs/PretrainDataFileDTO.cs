@@ -8,15 +8,15 @@ namespace MessageFlow.Client.Models.DTOs
         public string Id { get; set; }
 
         [Required]
-        public string FileName { get; set; } // Original file name
+        public string FileName { get; set; }
 
         [Required]
-        public string FileUrl { get; set; } // URL to blob storage
+        public string FileUrl { get; set; }
 
         public string FileDescription { get; set; }
 
         [NotMapped]
-        public Stream FileContent { get; set; } // Holds the file content temporarily before upload
+        public Stream FileContent { get; set; }
 
         public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 

@@ -36,7 +36,7 @@ namespace MessageFlow.Server.Configuration
                 builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
             }
 
-            // Load secrets securely from Azure Key Vault
+            // Load secrets from Azure Key Vault
             var globalSettings = new GlobalChannelSettings
             {
                 AppId = builder.Configuration["meta-app-id"],
@@ -80,7 +80,6 @@ namespace MessageFlow.Server.Configuration
             builder.Services.AddApplicationServices();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
-
 
             // Register MediatR
             builder.Services.AddMediatR(cfg =>
@@ -151,13 +150,6 @@ namespace MessageFlow.Server.Configuration
             app.MapHub<ChatHub>("/chatHub");
 
             app.MapControllers();
-
-            // Seed DataBase!!
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var services = scope.ServiceProvider;
-            //    await DatabaseSeeder.SeedSuperAdminAsync(services);
-            //}
         }
     }
 }

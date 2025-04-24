@@ -25,7 +25,6 @@ namespace MessageFlow.Client.Models.DTOs
         public bool LockoutEnabled { get; set; }
         public DateTime LastActivity { get; set; } = DateTime.UtcNow;
 
-        // Navigation properties
         public ICollection<TeamDTO>? TeamsDTO { get; set; } = null;
 
         public CompanyDTO? CompanyDTO { get; set; } = null;

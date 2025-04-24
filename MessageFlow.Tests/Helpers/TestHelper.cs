@@ -7,11 +7,7 @@ using System.Security.Claims;
 using MessageFlow.DataAccess.Services;
 using MessageFlow.DataAccess.Models;
 using Microsoft.AspNetCore.Authentication;
-using AutoMapper;
-using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using MessageFlow.Server.Authorization;
-using MessageFlow.Tests.Helpers.Stubs;
 
 namespace MessageFlow.Tests.Helpers
 {

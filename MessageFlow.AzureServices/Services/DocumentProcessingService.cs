@@ -24,7 +24,6 @@ namespace MessageFlow.AzureServices.Services
                 throw new InvalidOperationException("Azure Document Intelligence API credentials are missing.");
             }
 
-            // Initialize Azure Document Intelligence client
             _client = new DocumentIntelligenceClient(new Uri(endpoint), new AzureKeyCredential(apiKey));
         }
 

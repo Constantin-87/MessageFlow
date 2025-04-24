@@ -12,8 +12,6 @@ namespace MessageFlow.Client.Services
             _httpClient = httpClientFactory.CreateClient("ServerAPI");
         }
 
-
-        // ✅ Fetch all companies
         public async Task<List<CompanyDTO>> GetAllCompaniesAsync()
         {
             try
@@ -32,10 +30,9 @@ namespace MessageFlow.Client.Services
             }
             catch (Exception ex)
             {
-                return new List<CompanyDTO>(); // Prevents app from crashing
+                return new List<CompanyDTO>();
             }
         }
-
 
         // Get company details by ID
         public async Task<CompanyDTO?> GetCompanyByIdAsync(string companyId)
@@ -183,7 +180,5 @@ namespace MessageFlow.Client.Services
                 ? (true, "Company details updated successfully")
                 : (false, await response.Content.ReadAsStringAsync());
         }
-
     }
-
 }

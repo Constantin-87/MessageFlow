@@ -11,7 +11,6 @@
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
         public string Status { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
-
         public Conversation Conversation { get; set; }
     }
 }

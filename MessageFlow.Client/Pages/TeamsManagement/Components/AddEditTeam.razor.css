@@ -111,9 +111,8 @@ ul.list-group {
 }
 
 .border {
-    border: 3px solid #3a4756 !important; /* reduced from 1px to 0.5px */
+    border: 3px solid #3a4756 !important;
     background-color: #1f2937;
     color: #d1d5db;
     border-radius: 6px;
 }
-

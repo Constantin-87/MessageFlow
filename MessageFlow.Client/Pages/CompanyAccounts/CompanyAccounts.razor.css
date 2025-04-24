@@ -1,11 +1,9 @@
-﻿/* Heading */
-h3 {
+﻿h3 {
     color: #d1d5db;
     margin-top: 1rem;
     margin-bottom: 1.5rem;
 }
 
-/* Create button */
 .btn-primary {
     background-color: #11545F;
     border-color: #166976;
@@ -18,7 +16,6 @@ h3 {
         border-color: #2BA2B5;
     }
 
-/* Table Styling */
 table.table {
     background-color: #2d3748;
     color: #d1d5db;
@@ -71,7 +68,6 @@ button.btn-danger {
         border-color: #c0392b;
     }
 
-/* Modal Styling */
 .modal-content {
     background-color: #1f2937;
     color: #d1d5db;

@@ -1,7 +1,6 @@
 ﻿using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatR.TeamManagement.Commands;
-using System.Net.Http.Headers;
 using MediatR;
 using MessageFlow.Server.MediatR.CompanyManagement.Commands;
 using MessageFlow.Server.MediatR.UserManagement.Commands;

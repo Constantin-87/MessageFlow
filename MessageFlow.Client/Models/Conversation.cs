@@ -10,10 +10,9 @@
         public string CompanyId { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsAssigned { get; set; } = false;
-        public string Source { get; set; } = string.Empty;  // may not be needed!!!!
+        public string Source { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
 
-        // Navigation property for related messages
         public ICollection<Message> Messages { get; set; } = new List<Message>();
 
         public string SourceLabel
@@ -25,7 +24,7 @@
                     "Facebook" => "FB",
                     "WhatsApp" => "WA",
                     "Gateway" => "GW",
-                    _ => "UNK" // Unknown source fallback
+                    _ => "UNK"
                 };
             }
         }

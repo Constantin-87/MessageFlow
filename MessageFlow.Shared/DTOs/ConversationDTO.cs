@@ -16,5 +16,4 @@
         public ICollection<MessageDTO> Messages { get; set; } = new List<MessageDTO>();
 
     }
-
 }

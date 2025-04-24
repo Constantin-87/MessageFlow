@@ -34,14 +34,14 @@ namespace MessageFlow.Client.Services
 
         public async Task<(bool success, string message)> CreateUserAsync(ApplicationUserDTO user)
         {
-            user.CompanyDTO = null; // Ignore it during create/update calls
+            user.CompanyDTO = null;
             var response = await _httpClient.PostAsJsonAsync("api/user-management/create", user);
             return response.IsSuccessStatusCode ? (true, "User created") : (false, await response.Content.ReadAsStringAsync());
         }
 
         public async Task<(bool success, string message)> UpdateUserAsync(ApplicationUserDTO user)
         {
-            user.CompanyDTO = null; // Ignore it during create/update calls
+            user.CompanyDTO = null;
             var response = await _httpClient.PutAsJsonAsync($"api/user-management/update/{user.Id}", user);
             return response.IsSuccessStatusCode ? (true, "User updated") : (false, await response.Content.ReadAsStringAsync());
         }
@@ -63,5 +63,4 @@ namespace MessageFlow.Client.Services
             return await _httpClient.GetFromJsonAsync<List<ApplicationUserDTO>>($"api/user-management/{companyId}") ?? new List<ApplicationUserDTO>();
         }
     }
-
 }

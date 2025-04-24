@@ -61,7 +61,6 @@
         </div>
         <div class="card-body" style="@GetSectionStyle(EmailsExpanded)">
 
-            <!-- Controls at the top -->
             <div class="d-flex gap-2 mb-3">
                 <button type="button" class="btn btn-secondary" @onclick="AddEmail">Add New Email</button>
                 <button type="submit" class="btn btn-primary" @onclick="SaveCompanyEmails">Save All</button>
@@ -88,7 +87,6 @@
         </div>
         <div class="card-body" style="@GetSectionStyle(PhoneNumbersExpanded)">
 
-            <!-- Controls at the top -->
             <div class="d-flex gap-2 mb-3">
                 <button type="button" class="btn btn-secondary" @onclick="AddPhoneNumber">Add New Phone Number</button>
                 <button type="submit" class="btn btn-primary" @onclick="SaveCompanyPhoneNumbers">Save All</button>
@@ -485,5 +483,4 @@
         UploadedFiles.Remove(file);
     }
     #endregion
-
 }

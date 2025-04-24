@@ -167,6 +167,5 @@ namespace MessageFlow.Client.Services.Authentication
 
             return true;
         }
-
     }
 }

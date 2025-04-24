@@ -1,5 +1,4 @@
-﻿/* Notification overlay */
-.notification-overlay {
+﻿.notification-overlay {
     position: fixed;
     top: 60px;
     left: 50%;
@@ -14,7 +13,6 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Success */
 .alert-success {
     background-color: #e6f2ff;
     color: #004085;
@@ -22,7 +20,6 @@
     border-radius: 0.5rem;
 }
 
-/* Error */
 .alert-danger {
     background-color: #f8d7da;
     color: #721c24;
@@ -30,7 +27,6 @@
     border-radius: 0.5rem;
 }
 
-/* Close button */
 .close-btn {
     background: transparent;
     border: none;

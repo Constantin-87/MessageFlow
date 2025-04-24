@@ -4,7 +4,6 @@
     margin-bottom: 1.5rem;
 }
 
-/* Form Styling */
 form {
     background-color: #1f2937;
     padding: 1.5rem;
@@ -14,12 +13,10 @@ form {
     max-width: 600px;
 }
 
-/* Limit width of inputs, selects, and button inside floating containers */
 .form-floating {
     width: 300px;    
 }
 
-/* Floating labels */
 .form-floating > label {
     color: #a0aec0;
 }
@@ -58,13 +55,11 @@ input::placeholder {
     color: #6c757d;
 }
 
-/* Validation messages */
 .text-danger {
     color: #e57373;
     font-size: 0.875rem;
 }
 
-/* Alert messages */
 .alert-success {
     background-color: #22543d;
     color: #c6f6d5;

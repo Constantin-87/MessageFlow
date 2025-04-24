@@ -11,7 +11,6 @@
         public string Status { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation property
         public Conversation Conversation { get; set; }
 
         public string StatusIcon
@@ -25,7 +24,7 @@
                     "delivered" => "images/delivered.png",
                     "read" => "images/read.png",
                     "error" => "images/error.png",
-                    _ => "images/unknown.png", // Default icon if status is unrecognized
+                    _ => "images/unknown.png",
                 };
             }
         }
@@ -41,7 +40,7 @@
                     "delivered" => "Message has been delivered.",
                     "read" => "Message has been read.",
                     "error" => "An error occurred.", 
-                    _ => "Unknown status.", // Default tooltip
+                    _ => "Unknown status.",
                 };
             }
         }

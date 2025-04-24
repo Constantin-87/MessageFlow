@@ -8,15 +8,12 @@ namespace MessageFlow.Shared.DTOs
         public string Id { get; set; }
 
         [Required]
-        public string FileName { get; set; } // Original file name
+        public string FileName { get; set; }
 
         [Required]
-        public string FileUrl { get; set; } // URL to blob storage
+        public string FileUrl { get; set; }
 
         public string FileDescription { get; set; }
-
-        //[Required]
-        //public FileType FileType { get; set; }
 
         [NotMapped]
         public Stream FileContent { get; set; } // Holds the file content temporarily before upload

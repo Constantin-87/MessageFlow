@@ -103,7 +103,6 @@ namespace MessageFlow.Client.Services.Authentication
                 }
             }
 
-
             return response;
         }
 

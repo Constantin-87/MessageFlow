@@ -22,40 +22,31 @@ var appConfig = new AppConfig
     SocialLinks = JsonSerializer.Deserialize<SocialLinks>(configRoot.GetProperty("SocialLinks").GetRawText())
 };
 
-Console.WriteLine("Loaded IdentityApiUrl: " + appConfig.IdentityApiUrl);
-Console.WriteLine("Loaded ServerApiUrl: " + appConfig.ServerApiUrl);
-
 builder.Services.AddSingleton(appConfig);
 
 // Add authorization services
 builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 
-// Register PersistentAuthenticationStateProvider
 builder.Services.AddSingleton<AuthenticationStateProvider, PersistentAuthenticationStateProvider>();
 
 // Register AuthHttpHandler to attach JWT to every API request
 builder.Services.AddScoped<AuthHttpHandler>();
 builder.Services.AddSingleton<SessionExpiredNotifier>();
 
-
-// Configure HTTP Client for Identity API (Login, Logout, Session)
+// Configure HTTP Client for Identity API
 var identityApiUrl = appConfig.IdentityApiUrl;
 if (string.IsNullOrEmpty(identityApiUrl))
-{
     throw new InvalidOperationException("ERROR: 'MessageFlow-Identity-Uri' is missing in configuration.");
-}
 builder.Services.AddHttpClient("IdentityAPI", client =>
 {
     client.BaseAddress = new Uri(identityApiUrl);
 }).AddHttpMessageHandler<AuthHttpHandler>();
 
-
 // Configure HTTP Client for Server API
 var serverApiUrl = appConfig.ServerApiUrl;
 if (string.IsNullOrEmpty(serverApiUrl))
     throw new InvalidOperationException("ERROR: 'MessageFlow-Server-Uri' is missing in configuration.");
-
 builder.Services.AddHttpClient("ServerAPI", client =>
 {
     client.BaseAddress = new Uri(serverApiUrl);
