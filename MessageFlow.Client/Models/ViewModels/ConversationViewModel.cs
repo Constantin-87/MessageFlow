@@ -16,9 +16,9 @@ namespace MessageFlow.Client.Models.ViewModels
         {
             return Conversation.Source switch
             {
-                "Facebook" => "icons/facebook.svg",
-                "WhatsApp" => "icons/whatsapp.svg",
-                "Gateway" => "icons/sms.svg",
+                "Facebook" => "images/facebook.svg",
+                "WhatsApp" => "images/whatsapp.svg",
+                "Gateway" => "images/sms.svg",
                 _ => "icons/red-dot.svg"
             };
         }

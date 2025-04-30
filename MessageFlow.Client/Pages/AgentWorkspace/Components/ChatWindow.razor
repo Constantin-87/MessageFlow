@@ -9,8 +9,8 @@
         {
             <div class="chat-tab @(tab.Conversation.IsActive ? "active-tab" : "")" @onclick="() => SwitchTab(tab)">
                 <span class="tab-sender">
-                    <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="source-icon me-1" />
                     @tab.Conversation.SenderUsername
+                    <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="source-icon me-1" />
                 </span>
                 <button class="close-btn" @onclick:stopPropagation @onclick="() => ConfirmCloseTab(tab)">X</button>
             </div>

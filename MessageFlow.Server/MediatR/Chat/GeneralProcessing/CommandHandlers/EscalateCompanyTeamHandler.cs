@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.SignalR;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
+using MessageFlow.Shared.DTOs;
+using AutoMapper;
 
 namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
 {
@@ -14,17 +16,20 @@ namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
         private readonly IHubContext<ChatHub> _chatHub;
         private readonly ILogger<EscalateCompanyTeamHandler> _logger;
         private readonly IMediator _mediator;
+        private readonly IMapper _mapper;
 
         public EscalateCompanyTeamHandler(
             IUnitOfWork unitOfWork,
             IHubContext<ChatHub> chatHub,
             ILogger<EscalateCompanyTeamHandler> logger,
-            IMediator mediator)
+            IMediator mediator,
+            IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _chatHub = chatHub;
             _logger = logger;
             _mediator = mediator;
+            _mapper = mapper;
         }
 
         public async Task<Unit> Handle(EscalateCompanyTeamCommand request, CancellationToken cancellationToken)
@@ -32,9 +37,9 @@ namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
             request.Conversation.AssignedTeamId = request.TargetTeamId;
             await _unitOfWork.SaveChangesAsync();
 
+            var conversationDto = _mapper.Map<ConversationDTO>(request.Conversation);
             await _chatHub.Clients.Group($"Team_{request.TargetTeamId}")
-                .SendAsync("NewConversationAdded", request.Conversation);
-
+                .SendAsync("NewConversationAdded", conversationDto);
             var escalationMessage = $"Your request is being redirected to the {request.TargetTeamName} team. Please wait for an available agent.";
 
             // Send message using AI response logic
@@ -47,14 +52,11 @@ namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
                 Username = "AI Assistant",
                 Content = escalationMessage,
                 SentAt = DateTime.UtcNow,
-                Status = ""
+                Status = "read"
             };
 
             await _unitOfWork.Messages.AddEntityAsync(aiMessage);
             await _unitOfWork.SaveChangesAsync();
-
-            await _chatHub.Clients.User(request.SenderId)
-                .SendAsync("SendMessageToAssignedUser", request.Conversation, aiMessage);
 
             // Send message to external platform
             switch (request.Conversation.Source)

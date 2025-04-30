@@ -8,6 +8,7 @@ using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
+using AutoMapper;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
 {
@@ -19,6 +20,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
         private readonly Mock<IClientProxy> _clientProxyMock = new();
         private readonly Mock<ILogger<EscalateCompanyTeamHandler>> _loggerMock = new();
         private readonly Mock<IMediator> _mediatorMock = new();
+        private readonly Mock<IMapper> _mapperMock = new();
 
         private readonly EscalateCompanyTeamHandler _handler;
 
@@ -32,7 +34,8 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
                 _unitOfWorkMock.Object,
                 _hubContextMock.Object,
                 _loggerMock.Object,
-                _mediatorMock.Object
+                _mediatorMock.Object,
+                _mapperMock.Object
             );
         }
 
