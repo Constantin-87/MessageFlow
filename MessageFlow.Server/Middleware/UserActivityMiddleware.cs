@@ -17,7 +17,7 @@ namespace MessageFlow.Server.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Skip for specific paths like Webhook or for Static files
+            // Skip for specific paths like Webhook or Static files
             var path = context.Request.Path;
             if (path.StartsWithSegments("/_blazor") || path.StartsWithSegments("/api/webhook"))
             {

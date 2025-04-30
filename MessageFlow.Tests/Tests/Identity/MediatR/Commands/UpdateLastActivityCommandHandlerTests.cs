@@ -8,22 +8,35 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands;
 
 public class UpdateLastActivityCommandHandlerTests
 {
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly UpdateLastActivityCommandHandler _handler;
-
-    public UpdateLastActivityCommandHandlerTests()
+    private UpdateLastActivityCommandHandler CreateHandler(ApplicationUser? user = null, bool updateSucceeds = true)
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-        _handler = new UpdateLastActivityCommandHandler(_userManagerMock.Object);
+        var users = user != null
+            ? new[] { user }.AsQueryable()
+            : Enumerable.Empty<ApplicationUser>().AsQueryable();
+
+        var userManagerMock = TestDbContextFactory.CreateMockUserManager(users);
+
+        if (user != null)
+        {
+            userManagerMock.Setup(x => x.FindByIdAsync(user.Id)).ReturnsAsync(user);
+            userManagerMock.Setup(x => x.UpdateAsync(user))
+                .ReturnsAsync(updateSucceeds ? IdentityResult.Success : IdentityResult.Failed());
+        }
+        else
+        {
+            userManagerMock.Setup(x => x.FindByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser?)null);
+        }
+
+        return new UpdateLastActivityCommandHandler(userManagerMock.Object);
     }
 
     [Fact]
     public async Task Handle_UserNotFound_ReturnsFalse()
     {
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync((ApplicationUser?)null);
+        var handler = CreateHandler();
 
-        var result = await _handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
 
         Assert.False(result);
     }
@@ -33,13 +46,12 @@ public class UpdateLastActivityCommandHandlerTests
     {
         var user = new ApplicationUser { Id = "user123" };
 
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
+        var handler = CreateHandler(user);
 
-        var result = await _handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
 
         Assert.True(result);
-        Assert.True((DateTime.UtcNow - user.LastActivity).TotalSeconds < 5); // Updated timestamp is recent
+        Assert.True((DateTime.UtcNow - user.LastActivity).TotalSeconds < 5);
     }
 
     [Fact]
@@ -47,10 +59,9 @@ public class UpdateLastActivityCommandHandlerTests
     {
         var user = new ApplicationUser { Id = "user123" };
 
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Failed());
+        var handler = CreateHandler(user, updateSucceeds: false);
 
-        var result = await _handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new UpdateLastActivityCommand("user123"), CancellationToken.None);
 
         Assert.False(result);
     }

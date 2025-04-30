@@ -1,4 +1,6 @@
-﻿namespace MessageFlow.Client.Models
+﻿using MessageFlow.Client.Models.ViewModels;
+
+namespace MessageFlow.Client.Models
 {
     public class Message
     {
@@ -11,7 +13,7 @@
         public string Status { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
-        public Conversation Conversation { get; set; }
+        public ConversationViewModel Conversation { get; set; }
 
         public string StatusIcon
         {

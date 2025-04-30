@@ -4,38 +4,34 @@ using MessageFlow.Identity.MediatR.Commands;
 using MessageFlow.Identity.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using MockQueryable;
-using MockQueryable.Moq;
 using Moq;
 
 namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands
 {
     public class LoginCommandHandlerTests
     {
-        private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-        private readonly Mock<ITokenService> _tokenServiceMock;
-        private readonly Mock<ILogger<LoginCommandHandler>> _loggerMock;
+        private readonly Mock<ITokenService> _tokenServiceMock = new();
+        private readonly Mock<ILogger<LoginCommandHandler>> _loggerMock = new();
 
-        private readonly LoginCommandHandler _handler;
-
-        public LoginCommandHandlerTests()
+        private LoginCommandHandler CreateHandler(IQueryable<ApplicationUser> users, Action<Mock<UserManager<ApplicationUser>>, ApplicationUser>? configureMocks = null)
         {
-            var store = new Mock<IUserStore<ApplicationUser>>();
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-            _tokenServiceMock = new Mock<ITokenService>();
-            _loggerMock = new Mock<ILogger<LoginCommandHandler>>();
+            var userManagerMock = TestDbContextFactory.CreateMockUserManager(users);
 
-            _handler = new LoginCommandHandler(_userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object);
+            if (users.Any())
+            {
+                var user = users.First();
+                configureMocks?.Invoke(userManagerMock, user);
+            }
+
+            return new LoginCommandHandler(userManagerMock.Object, _tokenServiceMock.Object, _loggerMock.Object);
         }
 
         [Fact]
         public async Task Handle_UserNotFound_ReturnsFailure()
         {
-            var users = new List<ApplicationUser>().AsQueryable().BuildMock().BuildMockDbSet();
+            var handler = CreateHandler(Enumerable.Empty<ApplicationUser>().AsQueryable());
 
-            _userManagerMock.Setup(x => x.Users).Returns(users.Object);
-
-            var result = await _handler.Handle(new LoginCommand("nonexistent", "pass"), CancellationToken.None);
+            var result = await handler.Handle(new LoginCommand("nonexistent", "pass"), CancellationToken.None);
 
             Assert.False(result.Item1);
             Assert.Equal("Invalid username or password.", result.Item4);
@@ -45,12 +41,13 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands
         public async Task Handle_InvalidPassword_ReturnsFailure()
         {
             var user = new ApplicationUser { UserName = "user1" };
-            var users = new List<ApplicationUser> { user }.AsQueryable().BuildMock().BuildMockDbSet();
 
-            _userManagerMock.Setup(x => x.Users).Returns(users.Object);
-            _userManagerMock.Setup(x => x.CheckPasswordAsync(user, "wrongpass")).ReturnsAsync(false);
+            var handler = CreateHandler(new[] { user }.AsQueryable(), (mock, u) =>
+            {
+                mock.Setup(x => x.CheckPasswordAsync(u, "wrongpass")).ReturnsAsync(false);
+            });
 
-            var result = await _handler.Handle(new LoginCommand("user1", "wrongpass"), CancellationToken.None);
+            var result = await handler.Handle(new LoginCommand("user1", "wrongpass"), CancellationToken.None);
 
             Assert.False(result.Item1);
             Assert.Equal("Invalid username or password.", result.Item4);
@@ -67,16 +64,17 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands
                 Company = new Company { Id = "comp1", CompanyName = "TestCo" }
             };
 
-            var users = new List<ApplicationUser> { user }.AsQueryable().BuildMock().BuildMockDbSet();
+            var handler = CreateHandler(new[] { user }.AsQueryable(), (mock, u) =>
+            {
+                mock.Setup(x => x.CheckPasswordAsync(u, "correct")).ReturnsAsync(true);
+                mock.Setup(x => x.GetRolesAsync(u)).ReturnsAsync(new[] { "Admin" });
+                mock.Setup(x => x.UpdateAsync(u)).ReturnsAsync(IdentityResult.Success);
+            });
 
-            _userManagerMock.Setup(x => x.Users).Returns(users.Object);
-            _userManagerMock.Setup(x => x.CheckPasswordAsync(user, "correct")).ReturnsAsync(true);
-            _userManagerMock.Setup(x => x.GetRolesAsync(user)).ReturnsAsync(new[] { "Admin" });
-            _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
             _tokenServiceMock.Setup(x => x.GenerateJwtTokenAsync(user)).ReturnsAsync("jwt-token");
             _tokenServiceMock.Setup(x => x.SetRefreshTokenAsync(user)).ReturnsAsync("refresh-token");
 
-            var result = await _handler.Handle(new LoginCommand("user1", "correct"), CancellationToken.None);
+            var result = await handler.Handle(new LoginCommand("user1", "correct"), CancellationToken.None);
 
             Assert.True(result.Item1);
             Assert.Equal("jwt-token", result.Item2);

@@ -7,7 +7,6 @@ using MessageFlow.Server.MediatR.UserManagement.Commands;
 using MessageFlow.Shared.DTOs;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.UserManagement.Commands
 {
@@ -20,8 +19,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.UserManagement.Commands
 
         public CreateUserHandlerTests()
         {
-            var store = new Mock<IUserStore<ApplicationUser>>();
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+            _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
             _mapperMock = new Mock<IMapper>();
             _authHelperMock = new Mock<IAuthorizationHelper>();
             _loggerMock = new Mock<ILogger<CreateUserHandler>>();

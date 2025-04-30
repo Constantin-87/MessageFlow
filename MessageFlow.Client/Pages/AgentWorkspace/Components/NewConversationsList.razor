@@ -11,11 +11,12 @@
     else
     {
         <ul>
-            @foreach (var conversation in Conversations)
+            @foreach (var vm in FilteredConversations)
             {
                 <li>
-                    <span>Chat with @conversation.SenderUsername from: @conversation.SourceLabel</span>
-                    <button @onclick="async () => await AssignToSelf(conversation)">Assign to Myself</button>
+                    <img src="@vm.GetSourceIcon()" alt="@vm.GetSourceAltText()" class="me-2 source-icon" />
+                    <span>Chat with @vm.Conversation.SenderUsername</span>
+                    <button @onclick="async () => await AssignToSelf(vm)">Assign to Myself</button>
                 </li>
             }
         </ul>
@@ -28,13 +29,12 @@
     [Parameter, Required] public HubConnection HubConnection { get; set; }
     [Parameter, Required] public ChatWindow ChatWindowRef { get; set; }
 
-    private List<Conversation> Conversations = new();
+    private List<ConversationViewModel> Conversations = new();
     private bool isLoading = true;
-    private IEnumerable<Conversation> FilteredConversations =>
-        string.IsNullOrEmpty(TeamId)
-            ? Conversations
-            : Conversations.Where(c => c.AssignedTeamId == TeamId);
-
+    private IEnumerable<ConversationViewModel> FilteredConversations =>
+    string.IsNullOrEmpty(TeamId)
+        ? Conversations
+        : Conversations.Where(vm => vm.Conversation.AssignedTeamId == TeamId);
 
     protected override void OnParametersSet()
     {
@@ -48,63 +48,63 @@
     {
         if (HubConnection != null)
         {
-            HubConnection.On<Conversation>("NewConversationAdded", (conversation) =>
+            HubConnection.On<ConversationDTO>("NewConversationAdded", (conversation) =>
             {
                 AddConversation(conversation);
             });
 
-            HubConnection.On<Conversation>("RemoveNewConversation", (conversation) =>
+            HubConnection.On<ConversationDTO>("RemoveNewConversation", (conversation) =>
             {
                 RemoveConversation(conversation);
             });
 
-            HubConnection.On<List<Conversation>>("LoadNewConversations", (newConversations) =>
+            HubConnection.On<List<ConversationDTO>>("LoadNewConversations", (newConversations) =>
            {
                LoadNewConversations(newConversations);
            });
         }
     }
 
-    public void LoadNewConversations(List<Conversation> newConversations)
+    public void LoadNewConversations(List<ConversationDTO> dtoList)
     {
         isLoading = true;
         Conversations.Clear();
 
-        foreach (var conversation in newConversations)
+        foreach (var dto in dtoList)
         {
-            AddConversation(conversation);
+            AddConversation(dto);
         }
         isLoading = false;
         StateHasChanged();
     }
 
-    public void AddConversation(Conversation conversation)
+    public void AddConversation(ConversationDTO dto)
     {
-        if (!Conversations.Any(c => c.Id == conversation.Id))
+        if (!Conversations.Any(c => c.Conversation.Id == dto.Id))
         {
-            Conversations.Add(conversation);
+            Conversations.Add(new ConversationViewModel(dto));
         }
         StateHasChanged();
     }
 
-    public void RemoveConversation(Conversation conversation)
+    public void RemoveConversation(ConversationDTO dto)
     {
-        if (conversation != null)
+        if (dto != null)
         {
-            Conversations.RemoveAll(c => c.Id == conversation.Id);
+            Conversations.RemoveAll(c => c.Conversation.Id == dto.Id);
             StateHasChanged();
         }
     }
 
-    private async Task AssignToSelf(Conversation conversation)
+    private async Task AssignToSelf(ConversationViewModel vm)
     {
         if (HubConnection is not null)
         {
-            conversation.IsAssigned = true;
-            conversation.AssignedUserId = UserId;
+            vm.Conversation.IsAssigned = true;
+            vm.Conversation.AssignedUserId = UserId;
 
-            await HubConnection.SendAsync("AssignConversationToUser", conversation.Id);
-            Conversations.Remove(conversation);
+            await HubConnection.SendAsync("AssignConversationToUser", vm.Conversation.Id);
+            Conversations.Remove(vm);
         }
         else
         {

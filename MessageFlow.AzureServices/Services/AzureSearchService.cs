@@ -42,7 +42,7 @@ namespace MessageFlow.AzureServices.Services
                 }
             }
 
-            // Define the index schema explicitly
+            // Define the index schema
             var fields = new List<SearchField>
             {
                 new SearchField("document_id", SearchFieldDataType.String) { IsKey = true, IsFilterable = true },

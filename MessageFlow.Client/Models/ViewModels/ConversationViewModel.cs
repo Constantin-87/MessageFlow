@@ -12,12 +12,26 @@ namespace MessageFlow.Client.Models.ViewModels
             Conversation = conversation;
         }
 
-        public string GetSourceLabel() => Conversation.Source switch
+        public string GetSourceIcon()
         {
-            "Facebook" => "FB",
-            "WhatsApp" => "WA",
-            "Gateway" => "GW",
-            _ => "UNK"
-        };
+            return Conversation.Source switch
+            {
+                "Facebook" => "icons/facebook.svg",
+                "WhatsApp" => "icons/whatsapp.svg",
+                "Gateway" => "icons/sms.svg",
+                _ => "icons/red-dot.svg"
+            };
+        }
+
+        public string GetSourceAltText()
+        {
+            return Conversation.Source switch
+            {
+                "Facebook" => "Facebook",
+                "WhatsApp" => "WhatsApp",
+                "Gateway" => "Gateway",
+                _ => "Unknown"
+            };
+        }
     }
 }

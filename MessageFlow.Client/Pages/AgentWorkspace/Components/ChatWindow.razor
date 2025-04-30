@@ -8,7 +8,10 @@
         @foreach (var tab in ActiveChats)
         {
             <div class="chat-tab @(tab.Conversation.IsActive ? "active-tab" : "")" @onclick="() => SwitchTab(tab)">
-                <span class="tab-sender">[@tab.GetSourceLabel()] @tab.Conversation.SenderUsername</span>
+                <span class="tab-sender">
+                    <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="source-icon me-1" />
+                    @tab.Conversation.SenderUsername
+                </span>
                 <button class="close-btn" @onclick:stopPropagation @onclick="() => ConfirmCloseTab(tab)">X</button>
             </div>
         }

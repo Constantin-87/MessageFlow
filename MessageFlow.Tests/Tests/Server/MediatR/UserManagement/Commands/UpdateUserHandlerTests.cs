@@ -18,8 +18,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.UserManagement.Commands
 
         public UpdateUserHandlerTests()
         {
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
+            _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
             _authHelperMock = new Mock<IAuthorizationHelper>();
             _loggerMock = new Mock<ILogger<UpdateUserHandler>>();
         }

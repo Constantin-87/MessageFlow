@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using MessageFlow.DataAccess.Models;
 using MessageFlow.Infrastructure.Mappings;
-using MessageFlow.Tests.Helpers;
 
 namespace MessageFlow.Tests.Tests
 {
@@ -9,33 +9,30 @@ namespace MessageFlow.Tests.Tests
         [Fact]
         public async Task TestSeeding()
         {
-            // Arrange: Create the UnitOfWork, Mapper, UserManager, and RoleManager
+            // Arrange
             var dbName = "TestDatabaseSeederTestsDb";
-
-            // ✅ Create ApplicationDbContext with the database name
             var context = TestDbContextFactory.CreateDbContext(dbName);
-
-            // ✅ Pass the context to CreateUnitOfWork
             var unitOfWork = TestDbContextFactory.CreateUnitOfWork(context);
 
-            // Create Mapper using a real profile (replace with your actual AutoMapper profile)
             var mapperConfig = new MapperConfiguration(cfg =>
             {
-                cfg.AddProfile<MappingProfile>();  // Replace with your actual profile class name
+                cfg.AddProfile<MappingProfile>();
             });
-
             var mapper = mapperConfig.CreateMapper();
 
-            var userManager = TestHelper.CreateUserManager(unitOfWork);
-            var roleManager = TestHelper.CreateRoleManager(unitOfWork);
+            // ✅ Use mock user manager (empty user list for setup)
+            var userManager = TestDbContextFactory.CreateRealUserManager(context);
 
-            // Ensure the database is clean before seeding
+            // ✅ RoleManager remains the same
+            var roleManager = TestDbContextFactory.CreateRoleManager(unitOfWork);
+
             await unitOfWork.Context.Database.EnsureDeletedAsync();
             await unitOfWork.Context.Database.EnsureCreatedAsync();
 
-            // Act: Seed the database
+            // Act
             await TestDatabaseSeeder.Seed(unitOfWork, mapper, userManager, roleManager);
 
+            // Assert
             Assert.True(context.Users.Any(u => u.UserName == "admin@companya.com"));
             Assert.True(context.Users.Any(u => u.UserName == "superadmin@headcompany.com"));
             Assert.True(context.Users.Any(u => u.UserName == "manager@companya.com"));
@@ -48,7 +45,6 @@ namespace MessageFlow.Tests.Tests
 
             Assert.True(context.Teams.Any(t => t.TeamName == "HQ Dev Team"));
             Assert.True(context.Teams.Any(t => t.TeamName == "A Support Team"));
-
         }
     }
 }
