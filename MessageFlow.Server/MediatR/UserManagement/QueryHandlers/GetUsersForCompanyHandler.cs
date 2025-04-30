@@ -14,6 +14,7 @@ namespace MessageFlow.Server.MediatR.UserManagement.QueryHandlers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<GetUsersForCompanyHandler> _logger;
+        private readonly IAuthorizationHelper _auth;
 
         public GetUsersForCompanyHandler(
             UserManager<ApplicationUser> userManager,
