@@ -24,13 +24,10 @@ public class ChatHubTests
     private readonly Mock<IHubCallerClients> _clientsMock = new();
     private readonly Mock<ILogger<ChatHub>> _loggerMock = new();
     private readonly ChatHub _hub;
-    //private readonly ITestOutputHelper _output;
 
 
-    public ChatHubTests(/*ITestOutputHelper output*/)
+    public ChatHubTests()
     {
-        //_output = output;
-        //Console.SetOut(new TestOutputTextWriter(output));
         _hub = new ChatHub(
             _unitOfWorkMock.Object,
             _mapperMock.Object,
@@ -217,31 +214,6 @@ public class ChatHubTests
         _mediatorMock.Verify(m => m.Send(It.Is<BroadcastTeamMembersCommand>(cmd =>
             cmd.CompanyId == companyId), default), Times.Once);
     }
-
-    /// <summary>
-    /// Helper classes
-    /// </summary>
-    //private class TestOutputTextWriter : TextWriter
-    //{
-    //    private readonly ITestOutputHelper _output;
-
-    //    public TestOutputTextWriter(ITestOutputHelper output)
-    //    {
-    //        _output = output;
-    //    }
-
-    //    public override void WriteLine(string? value)
-    //    {
-    //        _output.WriteLine(value ?? "");
-    //    }
-
-    //    public override void Write(char value)
-    //    {
-    //        _output.WriteLine(value.ToString());
-    //    }
-
-    //    public override Encoding Encoding => Encoding.UTF8;
-    //}
 
     public class TestHubCallerContext : HubCallerContext
     {

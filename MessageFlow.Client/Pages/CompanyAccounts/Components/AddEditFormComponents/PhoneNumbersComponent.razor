@@ -1,0 +1,64 @@
+﻿@inject CompanyManagementService CompanyManagementService
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Company Phone Numbers</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-secondary" @onclick="AddPhoneNumber">Add New Phone Number</button>
+            <button type="submit" class="btn btn-primary" @onclick="SaveCompanyPhoneNumbers">Save All</button>
+        </div>
+
+        <ul class="list-group">
+            @foreach (var phone in CompanyPhoneNumbers)
+            {
+                <li class="list-group-item d-flex align-items-center gap-2">
+                    <InputText @bind-Value="phone.PhoneNumber" class="form-control" placeholder="Phone Number" />
+                    <InputText @bind-Value="phone.Description" class="form-control" placeholder="Description (e.g., Support, Sales)" />
+                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemovePhoneNumber(phone)">Remove</button>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+
+    private List<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(CompanyId)) return;
+
+        var company = await CompanyManagementService.GetCompanyByIdAsync(CompanyId);
+        CompanyPhoneNumbers = company?.CompanyPhoneNumbers?.ToList() ?? new();
+
+        if (CompanyPhoneNumbers.Count == 0)
+            AddPhoneNumber();
+    }
+
+    private void AddPhoneNumber()
+    {
+        CompanyPhoneNumbers.Add(new CompanyPhoneNumberDTO
+            {
+                Id = Guid.NewGuid().ToString(),
+                CompanyId = CompanyId
+            });
+    }
+
+    private void RemovePhoneNumber(CompanyPhoneNumberDTO phone)
+    {
+        CompanyPhoneNumbers.Remove(phone);
+        if (CompanyPhoneNumbers.Count == 0)
+            AddPhoneNumber();
+    }
+
+    private async Task SaveCompanyPhoneNumbers()
+    {
+        var result = await CompanyManagementService.UpdateCompanyPhoneNumbersAsync(CompanyPhoneNumbers);
+        await OnActionCompleted.InvokeAsync(result);
+    }
+}

@@ -1,5 +1,5 @@
 ﻿@page "/AgentWorkspace"
-@attribute [Authorize(Roles = "Agent, Manager, Admin, SuperAdmin")]
+@attribute [Authorize(Roles = "Agent, AgentManager, Admin, SuperAdmin")]
 @layout Pages.Shared.Layout.PrivateSubLayout
 @rendermode RenderMode.InteractiveWebAssembly
 @implements IAsyncDisposable

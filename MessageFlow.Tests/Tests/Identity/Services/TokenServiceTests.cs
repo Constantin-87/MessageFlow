@@ -16,8 +16,7 @@ public class TokenServiceTests
 
     public TokenServiceTests()
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+        _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
         _configMock = new Mock<IConfiguration>();
         _configMock.Setup(x => x["JsonWebToken-Key"]).Returns("very_secret_key_1234567890");
 

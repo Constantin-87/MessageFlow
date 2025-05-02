@@ -1,0 +1,50 @@
+﻿:root {
+    /* Backgrounds */
+    --bg-dark: #1f2937;
+    --bg-mid: #2d3748;
+    --bg-light: #2c3e50;
+    --bg-chat-tab: #434D5F;
+    --bg-hover: #3a4756;
+    --bg-muted: #273140;
+    --bg-danger: #5F1111;
+    --bg-danger-dark: #771515;
+    --bg-success: #14532d;
+    --bg-success-dark: #166534;
+    --bg-warning: #d69e2e;
+    --bg-disabled: #3a3a4d;
+    /* Borders */
+    --border-dark: #3a4756;
+    --border-muted: #34495e;
+    --border-light: #444455;
+    --border-grey: #444;
+    --border-dim: rgba(160, 174, 192, 0.3);
+    --border-accent: rgba(26, 188, 156, 0.5);
+    /* Text */
+    --text-light: #d1d5db;
+    --text-muted: #a0aec0;
+    --text-white: #ffffff;
+    --text-gray: #e0e0e0;
+    --text-info: #1abc9c;
+    --text-placeholder: #6c757d;
+    --text-danger: #e57373;
+    --text-danger-dark: #dc3545;
+    --text-success: #c6f6d5;
+    --text-error: #e50000;
+    /* Buttons */
+    --btn-primary: #11545F;
+    --btn-primary-hover: #166976;
+    --btn-primary-border-hover: #2BA2B5;
+    --btn-danger: #5F1111;
+    --btn-danger-hover: #771515;
+    --btn-danger-border: #531010;
+    --btn-danger-border-hover: #c0392b;
+    --btn-secondary: #4a5568;
+    --btn-secondary-hover: #5c667a;
+    --btn-success: #14532d;
+    --btn-success-hover: #166534;
+    --btn-success-border-hover: #22c55e;
+    --btn-warning: #d69e2e;
+    /* Scrollbar */
+    --scrollbar-thumb: #1abc9c;
+    --scrollbar-track: #2c3e50;
+}

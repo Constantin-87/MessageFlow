@@ -39,7 +39,7 @@ public class ChannelManagementControllerTests
     }
 
     [Fact]
-    public async Task GetFacebookSettings_ReturnsNotFound_WhenNull()
+    public async Task GetFacebookSettings_ReturnsEmptyDTO_WhenNull()
     {
         var companyId = "c1";
 
@@ -49,7 +49,10 @@ public class ChannelManagementControllerTests
 
         var result = await _controller.GetFacebookSettings(companyId);
 
-        Assert.IsType<NotFoundResult>(result);
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedDto = Assert.IsType<Shared.DTOs.FacebookSettingsDTO>(okResult.Value);
+
+        Assert.Equal(companyId, returnedDto.CompanyId);
     }
 
     [Fact]
@@ -89,13 +92,20 @@ public class ChannelManagementControllerTests
     }
 
     [Fact]
-    public async Task GetWhatsAppSettings_ReturnsNotFound_WhenNull()
+    public async Task GetWhatsAppSettings_ReturnsEmptyDTO_WhenNull()
     {
-        _mediatorMock.Setup(m => m.Send(It.IsAny<GetWhatsAppSettingsQuery>(), default)).ReturnsAsync((WhatsAppSettingsDTO?)null);
+        var companyId = "c1";
 
-        var result = await _controller.GetWhatsAppSettings("c1");
+        _mediatorMock
+            .Setup(m => m.Send(It.Is<GetWhatsAppSettingsQuery>(q => q.CompanyId == companyId), default))
+            .ReturnsAsync((WhatsAppSettingsDTO?)null);
 
-        Assert.IsType<NotFoundResult>(result);
+        var result = await _controller.GetWhatsAppSettings(companyId);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var returnedDto = Assert.IsType<WhatsAppSettingsDTO>(okResult.Value);
+
+        Assert.Equal(companyId, returnedDto.CompanyId);
     }
 
     [Fact]

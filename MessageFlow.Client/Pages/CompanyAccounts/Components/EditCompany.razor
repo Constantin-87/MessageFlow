@@ -12,12 +12,12 @@
 <CompanyAddEditForm IsEditMode="true" CompanyId="@companyId" OnActionCompleted="HandleActionCompleted" />
 
 @code {
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
     [Parameter]
     public string companyId { get; set; }
 
-    private Task HandleActionCompleted(NotificationResult result)
+    private Task HandleActionCompleted(ApiNotificationResultVM result)
     {
         Notification = result;
         StateHasChanged();

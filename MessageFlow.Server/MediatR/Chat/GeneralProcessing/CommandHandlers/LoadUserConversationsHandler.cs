@@ -21,10 +21,19 @@ public class LoadUserConversationsHandler : IRequestHandler<LoadUserConversation
     public async Task<Unit> Handle(LoadUserConversationsCommand request, CancellationToken cancellationToken)
     {
         var assigned = await _unitOfWork.Conversations.GetAssignedConversationsAsync(request.UserId, request.CompanyId);
-        var unassigned = await _unitOfWork.Conversations.GetUnassignedConversationsAsync(request.CompanyId);
+        var allUnassigned = await _unitOfWork.Conversations.GetUnassignedConversationsAsync(request.CompanyId);
+
+
+        // Filter to include only conversations assigned to a team the user is part of
+        var user = await _unitOfWork.ApplicationUsers.GetUserByIdAsync(request.UserId);
+        var userTeamIds = user?.Teams.Select(t => t.Id).ToList() ?? new List<string>();
+        var filteredUnassigned = allUnassigned
+            .Where(c =>
+                userTeamIds.Contains(c.AssignedTeamId))
+            .ToList();
 
         var assignedDto = _mapper.Map<List<ConversationDTO>>(assigned);
-        var unassignedDto = _mapper.Map<List<ConversationDTO>>(unassigned);
+        var unassignedDto = _mapper.Map<List<ConversationDTO>>(filteredUnassigned);
 
         await request.Caller.SendAsync("LoadAssignedConversations", assignedDto, cancellationToken);
         await request.Caller.SendAsync("LoadNewConversations", unassignedDto, cancellationToken);

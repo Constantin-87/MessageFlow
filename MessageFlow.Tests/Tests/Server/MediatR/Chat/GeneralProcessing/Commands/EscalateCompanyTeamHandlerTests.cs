@@ -8,6 +8,8 @@ using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 using MessageFlow.Server.MediatR.Chat.FacebookProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.WhatsappProcessing.Commands;
+using AutoMapper;
+using MessageFlow.Shared.DTOs;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
 {
@@ -19,6 +21,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
         private readonly Mock<IClientProxy> _clientProxyMock = new();
         private readonly Mock<ILogger<EscalateCompanyTeamHandler>> _loggerMock = new();
         private readonly Mock<IMediator> _mediatorMock = new();
+        private readonly Mock<IMapper> _mapperMock = new();
 
         private readonly EscalateCompanyTeamHandler _handler;
 
@@ -32,7 +35,8 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
                 _unitOfWorkMock.Object,
                 _hubContextMock.Object,
                 _loggerMock.Object,
-                _mediatorMock.Object
+                _mediatorMock.Object,
+                _mapperMock.Object
             );
         }
 
@@ -57,6 +61,9 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
                 TargetTeamName: "Sales"
             );
 
+            var conversationDto = new ConversationDTO { Id = conversation.Id };
+            _mapperMock.Setup(m => m.Map<ConversationDTO>(conversation)).Returns(conversationDto);
+
             _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).Returns(Task.CompletedTask);
             _unitOfWorkMock.Setup(u => u.Messages.AddEntityAsync(It.IsAny<Message>())).Returns(Task.CompletedTask);
 
@@ -68,16 +75,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands
             _clientProxyMock.Verify(p =>
                 p.SendCoreAsync(
                     "NewConversationAdded",
-                    It.Is<object[]>(args => args.Length == 1 && args[0] == conversation),
-                    default),
-                Times.Once);
-
-            _clientProxyMock.Verify(p =>
-                p.SendCoreAsync(
-                    "SendMessageToAssignedUser",
-                    It.Is<object[]>(args => args.Length == 2 &&
-                        args[0] == conversation &&
-                        args[1] is Message),
+                    It.Is<object[]>(args => args.Length == 1 && args[0] == conversationDto),
                     default),
                 Times.Once);
 

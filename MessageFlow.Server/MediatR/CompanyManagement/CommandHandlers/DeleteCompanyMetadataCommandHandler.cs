@@ -2,7 +2,6 @@
 using MessageFlow.DataAccess.Services;
 using MessageFlow.Server.Authorization;
 using MessageFlow.AzureServices.Interfaces;
-using Microsoft.Extensions.Logging;
 using MediatR;
 using MessageFlow.Server.MediatR.CompanyManagement.Commands;
 

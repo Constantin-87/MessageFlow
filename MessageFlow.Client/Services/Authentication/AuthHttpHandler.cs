@@ -36,20 +36,18 @@ namespace MessageFlow.Client.Services.Authentication
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri?.AbsolutePath ?? "";
-            var isRefreshOrLogin = path.EndsWith("/api/auth/refresh-token", StringComparison.OrdinalIgnoreCase)
-                         || path.EndsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase);
 
-            var token = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");
-                        
+            var isLogin = path.EndsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase);
+            var isRefresh = path.EndsWith("/api/auth/refresh-token", StringComparison.OrdinalIgnoreCase);
+            var isRefreshOrLogin = isLogin || isRefresh;
+            var token = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");                        
             if (!string.IsNullOrEmpty(token) && !isRefreshOrLogin)
             {
                 // Check expiration BEFORE sending the request
                 if (IsTokenExpiring(token))
                 {
                     var refreshToken = await _jsRuntime.InvokeAsync<string>("localStorage.getItem", "refreshToken");
-
                     var refreshed = await _authService.TryRefreshTokenAsync();
-
                     if (refreshed)
                     {
                         token = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");
@@ -59,7 +57,6 @@ namespace MessageFlow.Client.Services.Authentication
                         _logger.LogWarning("Token refresh failed. Removing tokens and logging out.");
                         await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", "authToken");
                         await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
-
                         if (_authStateProvider is PersistentAuthenticationStateProvider authProvider)
                         {
                             authProvider.NotifyAuthenticationStateChanged();
@@ -67,30 +64,24 @@ namespace MessageFlow.Client.Services.Authentication
                         _sessionNotifier.Trigger();
                     }
                 }
-
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
             else if (string.IsNullOrEmpty(token) && !isRefreshOrLogin)
             {
                 _logger.LogWarning("No authentication token found in local storage.");
             }
-
             var response = await base.SendAsync(request, cancellationToken);
-
             // If we get a 401, logout the user
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && !isLogin)
             {
                 _logger.LogWarning("Unauthorized request. Removing token and triggering logout.");
-
                 await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", "authToken");
                 await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "refreshToken");
-
                 if (_authStateProvider is PersistentAuthenticationStateProvider authProvider)
                 {
                     authProvider.NotifyAuthenticationStateChanged();
                 }
             }
-
             if (response.IsSuccessStatusCode && _currentUser.IsLoggedIn)
             {
                 var isSelfUpdateOrRefresh =
@@ -102,8 +93,6 @@ namespace MessageFlow.Client.Services.Authentication
                     await _heartbeat.ForceRefreshAsync();
                 }
             }
-
-
             return response;
         }
 

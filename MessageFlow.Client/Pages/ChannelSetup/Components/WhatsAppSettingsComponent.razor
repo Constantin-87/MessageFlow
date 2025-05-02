@@ -81,7 +81,7 @@ else
 
     [Inject] private ChannelService ChannelService { get; set; }
 
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,5 +133,3 @@ else
         Notification = null;
     }
 }
-
-

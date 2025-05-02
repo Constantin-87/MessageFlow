@@ -90,21 +90,34 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.CommandHandlers
             }
         }
 
-        private static (bool Redirect, string? TeamId, string? TeamName) TryExtractRedirect(string json)
+        private static (bool Redirect, string? TeamId, string? TeamName) TryExtractRedirect(string input)
         {
             try
             {
+                // Attempt to locate a JSON object in the input
+                int start = input.IndexOf('{');
+                int end = input.LastIndexOf('}');
+                if (start == -1 || end == -1 || end <= start)
+                    return (false, null, null);
+
+                var json = input.Substring(start, end - start + 1);
+
                 var parsed = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-                if (parsed?["redirect"].GetBoolean() == true)
+                if (parsed != null && parsed.TryGetValue("redirect", out var redirectFlag) && redirectFlag.GetBoolean())
                 {
-                    var id = parsed["teamId"].GetString();
+                    var id = parsed.TryGetValue("teamId", out var idElement) ? idElement.GetString() : null;
                     var name = parsed.TryGetValue("teamName", out var nameElement) ? nameElement.GetString() : null;
                     return (true, id, name);
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // optional: log error
+            }
+
             return (false, null, null);
         }
+
 
         private static string FormatChatHistory(IEnumerable<Message> msgs)
         {

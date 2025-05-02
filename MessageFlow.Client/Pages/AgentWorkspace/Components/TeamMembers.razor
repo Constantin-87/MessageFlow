@@ -1,8 +1,12 @@
 ﻿@rendermode RenderMode.InteractiveWebAssembly
 
-<div class="team-members">
+<div class="team-members scrollable">
     <h4>Teams:</h4>
-    @if (GroupedTeamMembers != null && GroupedTeamMembers.Any())
+    @if (!isInitialized)
+    {
+        <LoadingIndicator Message="Loading teams..." IsDark="false" />
+    }
+    else if (GroupedTeamMembers != null && GroupedTeamMembers.Any())
     {
         @foreach (var team in GroupedTeamMembers.Keys)
         {
@@ -35,13 +39,13 @@
 </div>
 
 @code {
-    private Dictionary<string, List<ApplicationUserDTO>> GroupedTeamMembers = new();
-    private HashSet<string> ExpandedTeams = new();
-
-    [Parameter] 
+    [Parameter]
     public HubConnection HubConnection { get; set; }
     [Parameter]
     public string? CurrentUserName { get; set; }
+    private Dictionary<string, List<ApplicationUserDTO>> GroupedTeamMembers = new();
+    private HashSet<string> ExpandedTeams = new();
+    private bool isInitialized = false;
 
     protected override void OnParametersSet()
     {
@@ -55,7 +59,13 @@
     {
         if (HubConnection != null)
         {
-            HubConnection.On<ApplicationUserDTO>("AddTeamMember", AddTeamMember);
+            HubConnection.On<ApplicationUserDTO>("AddTeamMember", (member) =>
+            {
+                AddTeamMember(member);
+                isInitialized = true;
+                StateHasChanged();
+            });
+
             HubConnection.On<ApplicationUserDTO>("RemoveTeamMember", RemoveTeamMember);
         }
     }

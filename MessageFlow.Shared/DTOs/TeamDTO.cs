@@ -8,11 +8,8 @@
 
         public string TeamDescription { get; set; }
 
-        // Foreign key for Company
         public string CompanyId { get; set; }
 
-        // Navigation properties
         public ICollection<ApplicationUserDTO> AssignedUsersDTO { get; set; } = new List<ApplicationUserDTO>();
-
     }
 }

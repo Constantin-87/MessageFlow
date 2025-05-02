@@ -1,0 +1,6 @@
+﻿/* Read-only textarea */
+textarea.form-control {
+    background-color: #2d3748;
+    color: #d1d5db;
+    border: 1px solid #3a4756;
+}

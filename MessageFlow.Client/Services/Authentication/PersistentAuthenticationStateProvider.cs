@@ -46,7 +46,7 @@ namespace MessageFlow.Client.Services.Authentication
 
                 var claims = jwtToken.Claims.ToList();
 
-                // Extract roles properly
+                // Extract roles
                 var roles = claims
                     .Where(c => c.Type == ClaimTypes.Role)
                     .Select(c => c.Value)
@@ -64,7 +64,7 @@ namespace MessageFlow.Client.Services.Authentication
                         UserName = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "",
                         CompanyId = claims.FirstOrDefault(c => c.Type == "CompanyId")?.Value ?? "",
                         Role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "",
-                        LockoutEnabled = bool.TryParse(claims.FirstOrDefault(c => c.Type == "LockoutEnabled")?.Value, out var locked) && locked, // or true, if you add this claim
+                        LockoutEnabled = bool.TryParse(claims.FirstOrDefault(c => c.Type == "LockoutEnabled")?.Value, out var locked) && locked,
                         LastActivity = DateTime.TryParse(claims.FirstOrDefault(c => c.Type == "LastActivity")?.Value, out var last) ? last : DateTime.UtcNow,
                         PhoneNumber = "",
                         UserEmail = ""

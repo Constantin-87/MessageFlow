@@ -10,7 +10,7 @@ public class AddUserToGroupsHandler : IRequestHandler<AddUserToGroupsCommand, Un
 {
     private readonly IHubContext<ChatHub> _hubContext;
 
-    // Must be static to match usage in ChatHub
+    // Static member from ChatHub
     private static readonly ConcurrentDictionary<string, ApplicationUserDTO> OnlineUsers = ChatHub.OnlineUsers;
 
     public AddUserToGroupsHandler(IHubContext<ChatHub> hubContext)

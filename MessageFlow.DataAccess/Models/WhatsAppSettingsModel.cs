@@ -16,5 +16,5 @@ namespace MessageFlow.DataAccess.Models
         public string BusinessAccountId { get; set; } = string.Empty;
 
         public List<PhoneNumberInfo> PhoneNumbers { get; set; } = new();
-    }   
+    }
 }

@@ -9,23 +9,38 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands;
 
 public class LogoutCommandHandlerTests
 {
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly LogoutCommandHandler _handler;
-
-    public LogoutCommandHandlerTests()
+    private LogoutCommandHandler CreateHandlerWithUser(
+        string? userId = null,
+        ApplicationUser? user = null,
+        bool updateSuccess = true)
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-        _handler = new LogoutCommandHandler(_userManagerMock.Object);
+        var users = user != null
+            ? new[] { user }.AsQueryable()
+            : Enumerable.Empty<ApplicationUser>().AsQueryable();
+
+        var userManagerMock = TestDbContextFactory.CreateMockUserManager(users);
+
+        if (userId != null)
+        {
+            userManagerMock
+                .Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            userManagerMock
+                .Setup(x => x.UpdateAsync(It.IsAny<ApplicationUser>()))
+                .ReturnsAsync(updateSuccess ? IdentityResult.Success : IdentityResult.Failed());
+        }
+
+        return new LogoutCommandHandler(userManagerMock.Object);
     }
 
     [Fact]
     public async Task Handle_NoUserId_ReturnsFalse()
     {
+        var handler = CreateHandlerWithUser();
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity()); // no NameIdentifier
-        var command = new LogoutCommand(claimsPrincipal);
 
-        var result = await _handler.Handle(command, default);
+        var result = await handler.Handle(new LogoutCommand(claimsPrincipal), default);
 
         Assert.False(result);
     }
@@ -36,9 +51,10 @@ public class LogoutCommandHandlerTests
         var userId = "123";
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims));
-        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync((ApplicationUser?)null);
 
-        var result = await _handler.Handle(new LogoutCommand(claimsPrincipal), default);
+        var handler = CreateHandlerWithUser(userId: userId, user: null);
+
+        var result = await handler.Handle(new LogoutCommand(claimsPrincipal), default);
 
         Assert.False(result);
     }
@@ -57,10 +73,9 @@ public class LogoutCommandHandlerTests
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
-        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
+        var handler = CreateHandlerWithUser(userId, user);
 
-        var result = await _handler.Handle(new LogoutCommand(claimsPrincipal), default);
+        var result = await handler.Handle(new LogoutCommand(claimsPrincipal), default);
 
         Assert.True(result);
         Assert.Null(user.RefreshToken);
@@ -76,10 +91,9 @@ public class LogoutCommandHandlerTests
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
-        _userManagerMock.Setup(x => x.FindByIdAsync(userId)).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Failed());
+        var handler = CreateHandlerWithUser(userId, user, updateSuccess: false);
 
-        var result = await _handler.Handle(new LogoutCommand(claimsPrincipal), default);
+        var result = await handler.Handle(new LogoutCommand(claimsPrincipal), default);
 
         Assert.False(result);
     }

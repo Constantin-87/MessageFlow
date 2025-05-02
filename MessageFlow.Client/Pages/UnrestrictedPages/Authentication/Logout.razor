@@ -17,10 +17,10 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Logout request error: {ex.Message}");
+            Console.WriteLine($"Logout request error.");
         }
 
-        // Redirect to home or login page after logout
-        NavigationManager.NavigateTo("/"/* , forceLoad: true */);
+        // Redirect to home page after logout
+        NavigationManager.NavigateTo("/");
     }
 }

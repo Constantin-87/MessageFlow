@@ -49,7 +49,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.CompanyManagement.Commands
             _authHelperMock.Setup(x => x.CompanyAccess(companyId))
                 .ReturnsAsync((true, null, false, ""));
 
-            _unitOfWorkMock.Setup(u => u.Companies.GetByIdStringAsync(companyId))
+            _unitOfWorkMock.Setup(u => u.Companies.GetCompanyWithDetailsByIdAsync(companyId))
                 .ReturnsAsync(company);
 
             _unitOfWorkMock.Setup(u => u.ProcessedPretrainData
@@ -148,7 +148,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.CompanyManagement.Commands
             _authHelperMock.Setup(x => x.CompanyAccess(companyId))
                 .ReturnsAsync((true, null, false, ""));
 
-            _unitOfWorkMock.Setup(u => u.Companies.GetByIdStringAsync(companyId))
+            _unitOfWorkMock.Setup(u => u.Companies.GetCompanyWithDetailsByIdAsync(companyId))
                 .ReturnsAsync(company);
 
             _unitOfWorkMock.Setup(u => u.ProcessedPretrainData

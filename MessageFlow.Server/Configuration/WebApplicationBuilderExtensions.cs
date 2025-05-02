@@ -36,7 +36,7 @@ namespace MessageFlow.Server.Configuration
                 builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
             }
 
-            // Load secrets securely from Azure Key Vault
+            // Load secrets from Azure Key Vault
             var globalSettings = new GlobalChannelSettings
             {
                 AppId = builder.Configuration["meta-app-id"],
@@ -81,7 +81,6 @@ namespace MessageFlow.Server.Configuration
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-
             // Register MediatR
             builder.Services.AddMediatR(cfg =>
             {
@@ -107,6 +106,10 @@ namespace MessageFlow.Server.Configuration
                 options.Password.RequireUppercase = true;
                 options.Password.RequireLowercase = true;
                 options.Password.RequiredUniqueChars = 1;
+
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.AllowedForNewUsers = true;
             })
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -151,13 +154,6 @@ namespace MessageFlow.Server.Configuration
             app.MapHub<ChatHub>("/chatHub");
 
             app.MapControllers();
-
-            // Seed DataBase!!
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var services = scope.ServiceProvider;
-            //    await DatabaseSeeder.SeedSuperAdminAsync(services);
-            //}
         }
     }
 }

@@ -1,0 +1,171 @@
+﻿@inject CompanyManagementService CompanyManagementService
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Pretraining Files</h5>
+    </div>
+    <div class="card-body">
+        <h6>Upload new files:</h6>
+        <InputFile multiple OnChange="HandleFileSelection" class="form-control mb-3" />
+
+        @if (UploadedFiles.Count > 0)
+        {
+            <table class="table table-bordered mt-3">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Description</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var file in UploadedFiles)
+                    {
+                        <tr>
+                            <td>@file.FileName</td>
+                            <td>
+                                <InputText @bind-Value="file.FileDescription" class="form-control" placeholder="Enter Description" />
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemovePendingFile(file)">Remove</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <button class="btn btn-success mt-3 mb-4" @onclick="UploadAllFiles">Save All Files</button>
+        }
+
+        @if (IsLoadingFiles)
+        {
+            <LoadingIndicator Message="Loading company files..." IsDark="false" />
+        }
+        else if (ExistingFiles.Any())
+        {
+            <h6>Existing files in storage:</h6>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Added On</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var file in ExistingFiles)
+                    {
+                        <tr>
+                            <td title="@file.FileType">@file.FileType</td>
+                            <td title="@file.FileDescription">@file.FileDescription</td>
+                            <td title="@file.FileUrl">@file.FileUrl</td>
+                            <td title="@file.ProcessedAt">@file.ProcessedAt</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm" @onclick="() => DeleteExistingFile(file)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No pre-training files uploaded.</p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+
+    private bool IsLoadingFiles = false;
+    private List<PretrainDataFileDTO> UploadedFiles { get; set; } = new();
+    private List<ProcessedPretrainDataDTO> ExistingFiles { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadExistingFiles();
+    }
+
+    private async Task HandleFileSelection(InputFileChangeEventArgs e)
+    {
+        var allowedExtensions = new[] { ".json", ".csv", ".txt", ".xlsx", ".pdf", ".xml", ".docx", ".md", ".log" };
+        const long maxFileSize = 5 * 1024 * 1024;
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            if (!allowedExtensions.Contains(ext) || file.Size > maxFileSize)
+            {
+                await OnActionCompleted.InvokeAsync(new ApiNotificationResultVM
+                    {
+                        Message = $"File '{file.Name}' is not allowed.",
+                        IsSuccess = false
+                    });
+                continue;
+            }
+
+            using var stream = file.OpenReadStream(maxFileSize);
+            var fileData = new MemoryStream();
+            await stream.CopyToAsync(fileData);
+            fileData.Position = 0;
+
+            if (!UploadedFiles.Any(f => f.FileName == file.Name))
+            {
+                UploadedFiles.Add(new PretrainDataFileDTO
+                    {
+                        CompanyId = CompanyId,
+                        FileName = file.Name,
+                        FileDescription = string.Empty,
+                        FileContent = fileData
+                    });
+            }
+        }
+    }
+
+    private async Task UploadAllFiles()
+    {
+        var result = await CompanyManagementService.UploadCompanyFilesAsync(UploadedFiles);
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess)
+        {
+            UploadedFiles.Clear();
+            await LoadExistingFiles();
+        }
+    }
+
+    private async Task LoadExistingFiles()
+    {
+        IsLoadingFiles = true;
+        var (result, files) = await CompanyManagementService.GetCompanyPretrainingFilesAsync(CompanyId);
+        IsLoadingFiles = false;
+
+        if (result.IsSuccess)
+        {
+            ExistingFiles = files;
+        }
+        else if (!string.IsNullOrWhiteSpace(result.Message))
+        {
+            await OnActionCompleted.InvokeAsync(result);
+        }
+    }
+
+    private async Task DeleteExistingFile(ProcessedPretrainDataDTO file)
+    {
+        var result = await CompanyManagementService.DeleteCompanyFileAsync(file);
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess)
+        {
+            ExistingFiles.Remove(file);
+        }
+    }
+
+    private void RemovePendingFile(PretrainDataFileDTO file)
+    {
+        UploadedFiles.Remove(file);
+    }
+}

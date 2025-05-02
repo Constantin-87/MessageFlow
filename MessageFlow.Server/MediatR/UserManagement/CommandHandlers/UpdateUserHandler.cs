@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Server.MediatR.UserManagement.Commands;
 using MediatR;

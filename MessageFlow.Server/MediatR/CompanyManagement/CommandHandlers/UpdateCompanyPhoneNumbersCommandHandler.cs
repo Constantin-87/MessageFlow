@@ -4,8 +4,6 @@ using MessageFlow.DataAccess.Services;
 using MediatR;
 using MessageFlow.Server.Authorization;
 using MessageFlow.Server.MediatR.CompanyManagement.Commands;
-using MessageFlow.Shared.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers
 {

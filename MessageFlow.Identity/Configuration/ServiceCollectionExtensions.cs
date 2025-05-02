@@ -8,6 +8,7 @@ using MessageFlow.Shared.DTOs;
 using MessageFlow.DataAccess.Models;
 using MediatR;
 using System.Text.Json;
+using MessageFlow.Identity.Models;
 
 namespace MessageFlow.Identity.Configuration
 {
@@ -21,25 +22,12 @@ namespace MessageFlow.Identity.Configuration
 
         public static IServiceCollection AddMediatorHandlers(this IServiceCollection services)
         {
-            // Login
-            services.AddScoped<IRequestHandler<LoginCommand, (bool, string, string, string, ApplicationUserDTO?)>, LoginCommandHandler>();
-
-            // Logout
+            services.AddScoped<IRequestHandler<LoginCommand, LoginResultDTO>, LoginCommandHandler>();
             services.AddScoped<IRequestHandler<LogoutCommand, bool>, LogoutCommandHandler>();
-
-            // Refresh Token
             services.AddScoped<IRequestHandler<RefreshTokenCommand, (bool, string, string, string)>, RefreshTokenCommandHandler>();
-
-            // Revoke Refresh Token
             services.AddScoped<IRequestHandler<RevokeRefreshTokenCommand, bool>, RevokeRefreshTokenCommandHandler>();
-
-            // Update Last Activity
             services.AddScoped<IRequestHandler<UpdateLastActivityCommand, bool>, UpdateLastActivityCommandHandler>();
-
-            // Validate Session
             services.AddScoped<IRequestHandler<ValidateSessionQuery, (bool, ApplicationUser?)>, ValidateSessionQueryHandler>();
-
-            // Get Current User
             services.AddScoped<IRequestHandler<GetCurrentUserQuery, ApplicationUserDTO?>, GetCurrentUserQueryHandler>();
 
             return services;

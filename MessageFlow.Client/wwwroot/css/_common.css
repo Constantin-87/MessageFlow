@@ -1,0 +1,70 @@
+﻿/* === _common.css (using CSS variables) === */
+
+/* Universal Headings */
+h3, h4 {
+    color: var(--text-light);
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Common scrollbars */
+.scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+    .scrollable::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .scrollable::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+        border-radius: 5px;
+    }
+
+    .scrollable::-webkit-scrollbar-thumb {
+        background-color: var(--scrollbar-thumb);
+        border-radius: 5px;
+        border: 2px solid var(--scrollbar-track);
+    }
+
+/* Common list item */
+.list-group-item {
+    background-color: var(--bg-mid);
+    border: 1px solid var(--border-dark);
+    color: var(--text-light);
+    cursor: pointer;
+    text-align: center;
+}
+
+    .list-group-item.active {
+        background-color: rgba(26, 188, 156, 0.2); /* fallback for var */
+        color: var(--bg-dark);
+        font-weight: bold;
+    }
+
+    .list-group-item:hover {
+        background-color: var(--bg-hover);
+    }
+
+/* Shared status icon */
+.status-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    padding-bottom: 2px;
+    cursor: default;
+}
+
+/* Generic buttons (fallback if not using .btn classes) */
+button {
+    background-color: var(--btn-primary);
+    color: var(--text-white);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    button:hover {
+        background-color: var(--btn-primary-hover);
+    }

@@ -26,7 +26,7 @@
                 <!-- Available Users -->
                 <div class="d-flex flex-column col-4">
                     <label class="form-label">Available Users:</label>
-                    <div class="border p-2 scrollable-list-container">
+                    <div class="border p-2 scrollable-list-container scrollable">
                         <ul class="list-group">
                             @foreach (var user in availableUsers)
                             {
@@ -76,11 +76,11 @@
     [Parameter] public string CompanyId { get; set; }
     [Parameter] public bool NewTeam { get; set; }
     [Parameter] public TeamDTO? Team { get; set; }
-    [Parameter] public EventCallback<NotificationResult> OnClose { get; set; }
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnClose { get; set; }
 
     private string teamName = string.Empty;
     private string teamDescription = string.Empty;
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
     private List<ApplicationUserDTO> availableUsers = new();
     private List<ApplicationUserDTO> assignedUsers = new();

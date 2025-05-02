@@ -18,9 +18,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.UserManagement.Commands
 
         public DeleteUserHandlerTests()
         {
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null
-            );
+            _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
             _teamRepoMock = new Mock<ITeamRepository>();
             _authHelperMock = new Mock<IAuthorizationHelper>();
             _loggerMock = new Mock<ILogger<DeleteUserHandler>>();

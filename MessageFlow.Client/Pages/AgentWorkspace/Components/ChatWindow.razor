@@ -2,57 +2,79 @@
 @inject IJSRuntime JSRuntime
 @inject CurrentUserService CurrentUser
 
-<div class="chat-window-container">
-    <!-- Tabs Navigation -->
-    <div class="chat-tabs">
-        @foreach (var tab in ActiveChats)
+<!-- Notification Modal -->
+<Notification Result="@Notification" OnClear="ClearNotification" />
+
+<!-- Confirmation Modal -->
+<ConfirmationModal IsVisible="@showCloseConfirmation"
+                   Title="Close Conversation"
+                   Message="@($"Are you sure you want to close this chat?{(conversationToClose?.Conversation.SenderUsername is not null ? $" ({conversationToClose.Conversation.SenderUsername})" : "")}")"
+                   OnConfirm="ConfirmCloseTabAsync"
+                   OnCancel="CancelClose" />
+
+@if (!isInitialized)
+{
+    <LoadingIndicator Message="Loading conversations..." IsDark="false" />
+}
+else
+{
+    <div class="chat-window-container">
+        <!-- Tabs Navigation -->
+        <div class="chat-tabs">
+            @foreach (var tab in ActiveChats)
+            {
+                <div class="chat-tab @(tab.Conversation.IsActive ? "active-tab" : "")" @onclick="() => SwitchTab(tab)">
+                    <span class="tab-sender">
+                        @tab.Conversation.SenderUsername
+                        <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="source-icon me-1" />
+                    </span>
+                    <button class="close-btn" @onclick:stopPropagation @onclick="() => ConfirmCloseTab(tab)">X</button>
+                </div>
+            }
+        </div>
+
+        <!-- Chat Window -->
+        @if (ActiveChats.Any(c => c.Conversation.IsActive))
         {
-            <div class="chat-tab @(tab.Conversation.IsActive ? "active-tab" : "")" @onclick="() => SwitchTab(tab)">
-                <span class="tab-sender">[@tab.GetSourceLabel()] @tab.Conversation.SenderUsername</span>
-                <button class="close-btn" @onclick:stopPropagation @onclick="() => ConfirmCloseTab(tab)">X</button>
+            var activeChat = ActiveChats.First(c => c.Conversation.IsActive);
+            <div class="chat-window">
+                <h5>Conversation with: @activeChat.Conversation.SenderUsername</h5>
+                <div class="chat-history scrollable" @ref="ChatHistoryDiv">
+                    @foreach (var message in activeChat.Conversation.Messages)
+                    {
+                        <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message") @(message.UserId == "AI" ? "ai-message" : "")">
+                            <span>@message.Content</span>
+                            @if (message.UserId != activeChat.Conversation.SenderId)
+                            {
+                                <span class="delivery-time"> @message.SentAt.ToString("HH:mm") </span>
+                                <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="status-icon" />
+                            }
+                            else
+                            {
+                                <span class="delivery-time">@message.SentAt.ToString("HH:mm")</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="chat-input-area">
+                    <input @bind="MessageText" @bind:event="oninput" placeholder="Type a message..." @onkeydown="HandleEnterKey" />
+                    <button @onclick="() => SendMessage(activeChat)">Send</button>
+                </div>
             </div>
         }
     </div>
-
-    <!-- Chat Window -->
-    @if (ActiveChats.Any(c => c.Conversation.IsActive))
-    {
-        var activeChat = ActiveChats.First(c => c.Conversation.IsActive);
-        <div class="chat-window">
-            <h5>Conversation with: @activeChat.Conversation.SenderUsername</h5>
-            <div class="chat-history" @ref="ChatHistoryDiv">
-                @foreach (var message in activeChat.Conversation.Messages)
-                {
-                    <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message") @(message.UserId == "AI" ? "ai-message" : "")">
-                        <span>@message.Content</span>
-                        @if (message.UserId != activeChat.Conversation.SenderId)
-                        {
-                            <span class="delivery-time"> @message.SentAt.ToString("HH:mm") </span>
-                            <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="status-icon" />
-                        }
-                        else
-                        {
-                            <span class="delivery-time">@message.SentAt.ToString("HH:mm")</span>
-                        }
-                    </div>
-                }
-            </div>
-
-            <div class="chat-input-area">
-                <input @bind="MessageText" @bind:event="oninput" placeholder="Type a message..." @onkeydown="HandleEnterKey" />
-                <button @onclick="() => SendMessage(activeChat)">Send</button>
-            </div>
-        </div>
-    }
-</div>
-
+}
 @code {
     [Parameter] public HubConnection HubConnection { get; set; }
-
     private ElementReference ChatHistoryDiv;
-    private List<ConversationViewModel> ActiveChats = new();
+    private List<ConversationVM> ActiveChats = new();
     private string MessageText = string.Empty;
     private bool _handlersRegistered = false;
+    private ApiNotificationResultVM? Notification;
+    private bool showCloseConfirmation = false;
+    private ConversationVM? conversationToClose;
+    private bool isInitialized = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -62,7 +84,7 @@
         }
     }
 
-    protected override  void OnParametersSet()
+    protected override void OnParametersSet()
     {
         if (HubConnection == null)
         {
@@ -100,6 +122,8 @@
             HubConnection.On<List<ConversationDTO>>("LoadAssignedConversations", (assignedConversations) =>
             {
                 LoadAssignedConversations(assignedConversations);
+                isInitialized = true;
+                StateHasChanged();
             });
 
             HubConnection.On<string, string>("MessageStatusUpdated", (messageId, status) =>
@@ -129,7 +153,7 @@
         foreach (var conversation in assignedConversations)
         {
             conversation.Messages = conversation.Messages.OrderBy(m => m.SentAt).ToList();
-            ActiveChats.Add(new ConversationViewModel(conversation));
+            ActiveChats.Add(new ConversationVM(conversation));
         }
 
         if (ActiveChats.Any())
@@ -150,16 +174,36 @@
         }
     }
 
-    private async Task ConfirmCloseTab(ConversationViewModel tab)
+    private Task ConfirmCloseTab(ConversationVM tab)
     {
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirmClose", $"Are you sure you want to close the chat with {tab.Conversation.SenderUsername}?");
-        if (confirmed)
-        {
-            await CloseTabAsync(tab);
-        }
+        conversationToClose = tab;
+        showCloseConfirmation = true;
+        return Task.CompletedTask;
     }
 
-    private async Task CloseTabAsync(ConversationViewModel tab)
+    private async Task ConfirmCloseTabAsync()
+    {
+        if (conversationToClose is not null)
+        {
+            await CloseTabAsync(conversationToClose);
+            conversationToClose = null;
+            Notification = new ApiNotificationResultVM
+                {
+                    IsSuccess = true,
+                    Message = "Conversation closed."
+                };
+        }
+
+        showCloseConfirmation = false;
+    }
+
+    private void CancelClose()
+    {
+        conversationToClose = null;
+        showCloseConfirmation = false;
+    }
+
+    private async Task CloseTabAsync(ConversationVM tab)
     {
         ActiveChats.Remove(tab);
         if (ActiveChats.Any())
@@ -191,7 +235,7 @@
         {
             // If the conversation does not exist in ActiveChats, add it
             incomingConversation.Messages.Add(message);
-            var newConversationVm = new ConversationViewModel(incomingConversation);
+            var newConversationVm = new ConversationVM(incomingConversation);
             ActiveChats.Add(newConversationVm);
         }
 
@@ -202,13 +246,13 @@
     {
         if (!ActiveChats.Any(c => c.Conversation.Id == conversation.Id))
         {
-            ActiveChats.Add(new ConversationViewModel(conversation));
+            ActiveChats.Add(new ConversationVM(conversation));
         }
 
         SwitchTab(ActiveChats.First(c => c.Conversation.Id == conversation.Id));
     }
 
-    private void SwitchTab(ConversationViewModel tab)
+    private void SwitchTab(ConversationVM tab)
     {
         foreach (var chat in ActiveChats)
         {
@@ -218,7 +262,7 @@
         StateHasChanged();
     }
 
-    private void CloseTab(ConversationViewModel tab)
+    private void CloseTab(ConversationVM tab)
     {
         ActiveChats.Remove(tab);
         if (ActiveChats.Any())
@@ -228,7 +272,7 @@
         StateHasChanged();
     }
 
-    private async Task SendMessage(ConversationViewModel chatVm)
+    private async Task SendMessage(ConversationVM chatVm)
     {
         var chat = chatVm.Conversation;
         var userId = CurrentUser.UserId;
@@ -256,17 +300,15 @@
 
             await ScrollToBottom();
         }
-        else
-        {
-            Console.WriteLine("Message text is empty.");
-        }
+    }
+
+    private Task ClearNotification()
+    {
+        Notification = null;
+        return Task.CompletedTask;
     }
 }
 <script>
-    function confirmClose(message) {
-        return confirm(message);
-    }
-
     function scrollToBottom(element) {
         if (element && element.scrollHeight) {
             setTimeout(() => {
@@ -274,5 +316,4 @@
             }, 50);
         }
     }
-
 </script>

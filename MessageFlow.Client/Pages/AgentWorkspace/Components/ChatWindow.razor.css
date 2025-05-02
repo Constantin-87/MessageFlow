@@ -91,13 +91,6 @@
     text-align: right;
 }
 
-.status-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 8px;
-    vertical-align: middle;
-}
-
 .delivery-time {
     font-size: 0.8rem;
     color: gray;
@@ -159,4 +152,10 @@
 
 .ai-message {
     font-style: italic !important;
+}
+
+.source-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
 }

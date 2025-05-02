@@ -20,9 +20,7 @@ namespace MessageFlow.Tests.Tests.Server.MediatR.UserManagement.Queries
 
         public GetUsersByIdsHandlerTests()
         {
-            _userManagerMock = new Mock<UserManager<ApplicationUser>>(
-                Mock.Of<IUserStore<ApplicationUser>>(), null, null, null, null, null, null, null, null);
-
+            _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
             _mapperMock = new Mock<IMapper>();
             _authHelperMock = new Mock<IAuthorizationHelper>();
             _loggerMock = new Mock<ILogger<GetUsersByIdsHandler>>();

@@ -1,4 +1,4 @@
-﻿using MessageFlow.Client.Models;
+﻿using MessageFlow.Client.Models.DTOs;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Net.Http.Json;
@@ -33,15 +33,26 @@ namespace MessageFlow.Client.Services.Authentication
             _heartbeat = heartbeat;
         }
 
-        public async Task<(bool Success, string RedirectUrl)> LoginAsync(LoginModel loginmodel)
+        public async Task<(bool Success, string RedirectUrl, string ErrorMessage)> LoginAsync(LoginDTO loginmodel)
         {
             var client = _httpClientFactory.CreateClient("IdentityAPI");
             var response = await client.PostAsJsonAsync("api/auth/login", loginmodel);
 
+            var result = await response.Content.ReadFromJsonAsync<LoginResultDTO>();
             if (!response.IsSuccessStatusCode)
-                return (false, "/Accounts/Login");
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.Locked)
+                {
+                    if (result?.LockoutEnd != null)
+                    {
+                        var unixLockout = ((DateTimeOffset)result.LockoutEnd).ToUnixTimeSeconds();
+                        await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "lockoutUntil", unixLockout.ToString());
+                    }
+                    return (false, "/Accounts/Lockout", result?.ErrorMessage ?? "Account is locked.");
+                }
 
-            var result = await response.Content.ReadFromJsonAsync<JWTResponseModel>();
+                return (false, "/Accounts/Login", result?.ErrorMessage ?? "Login failed.");
+            }
 
             await _jsRuntime.InvokeVoidAsync("sessionStorage.setItem", "authToken", result.Token);
             await _jsRuntime.InvokeVoidAsync("localStorage.setItem", "refreshToken", result.RefreshToken).AsTask();
@@ -66,7 +77,7 @@ namespace MessageFlow.Client.Services.Authentication
             string redirectUrl = role switch
             {
                 "Agent" => "/AgentWorkspace",
-                "SuperAdmin" or "Admin" or "Manager" => "/AgentManagerWorkspace",
+                "SuperAdmin" or "Admin" or "AgentManager" => "/AgentManagerWorkspace",
                 _ => "/"
             };
 
@@ -76,7 +87,7 @@ namespace MessageFlow.Client.Services.Authentication
                 _heartbeat.Start();
             });
             await Task.Delay(1000);
-            return (true, redirectUrl);
+            return (true, redirectUrl, "");
         }
 
         public async Task LogoutAsync()
@@ -145,7 +156,7 @@ namespace MessageFlow.Client.Services.Authentication
 
             try
             {
-                var result = await response.Content.ReadFromJsonAsync<JWTResponseModel>();
+                var result = await response.Content.ReadFromJsonAsync<LoginResultDTO>();
                 if (result == null || string.IsNullOrEmpty(result.Token) || string.IsNullOrEmpty(result.RefreshToken))
                 {
                     return false;
@@ -167,6 +178,5 @@ namespace MessageFlow.Client.Services.Authentication
 
             return true;
         }
-
     }
 }

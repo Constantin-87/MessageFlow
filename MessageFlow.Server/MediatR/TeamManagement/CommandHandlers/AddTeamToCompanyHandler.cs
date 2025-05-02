@@ -45,7 +45,6 @@ namespace MessageFlow.Server.MediatR.TeamManagement.CommandHandlers
                     _logger.LogError("Identity Service returned null users list.");
                     return (false, "An error occurred while retrieving the users.");
                 }
-
             }
 
             var team = new Team

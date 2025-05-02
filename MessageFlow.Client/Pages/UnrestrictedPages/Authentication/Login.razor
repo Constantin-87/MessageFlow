@@ -24,16 +24,17 @@
 
             <EditForm Model="loginModel" OnValidSubmit="LoginUser">
                 <DataAnnotationsValidator />
-                <ValidationSummary />
 
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
                     <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+                    <ValidationMessage For="() => loginModel.Username" class="text-danger" />
                 </div>
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
                     <InputText type="password" id="password" class="form-control" @bind-Value="loginModel.Password" />
+                    <ValidationMessage For="() => loginModel.Password" class="text-danger" />
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100">Login</button>
@@ -44,7 +45,7 @@
 </section>
 
 @code {
-    private LoginModel loginModel = new();
+    private LoginDTO loginModel = new();
     private string errorMessage = "";
     private bool isLoggingIn = false;
 
@@ -52,15 +53,22 @@
     {
         isLoggingIn = true;
         errorMessage = "";
-        var (success, redirectUrl) = await AuthService.LoginAsync(loginModel);
+
+
+
+        var (success, redirectUrl, err) = await AuthService.LoginAsync(loginModel);
 
         if (success)
         {
             Navigation.NavigateTo(redirectUrl);
         }
+        else if (!string.IsNullOrEmpty(redirectUrl) && redirectUrl != "/Accounts/Login")
+        {
+            Navigation.NavigateTo(redirectUrl);
+        }
         else
         {
-            errorMessage = "Invalid username or password.";
+            errorMessage = err;
             isLoggingIn = false;
         }
     }

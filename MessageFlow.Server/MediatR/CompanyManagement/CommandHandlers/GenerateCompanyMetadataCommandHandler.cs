@@ -6,7 +6,6 @@ using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Shared.Enums;
 using System.Text;
-using MessageFlow.AzureServices.Helpers;
 using MediatR;
 using MessageFlow.Server.MediatR.CompanyManagement.Commands;
 using MessageFlow.AzureServices.Helpers.Interfaces;

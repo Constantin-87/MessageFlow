@@ -8,22 +8,35 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands;
 
 public class RevokeRefreshTokenCommandHandlerTests
 {
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
-    private readonly RevokeRefreshTokenCommandHandler _handler;
-
-    public RevokeRefreshTokenCommandHandlerTests()
+    private RevokeRefreshTokenCommandHandler CreateHandler(ApplicationUser? user = null, bool updateSucceeds = true)
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-        _handler = new RevokeRefreshTokenCommandHandler(_userManagerMock.Object);
+        var users = user != null
+            ? new[] { user }.AsQueryable()
+            : Enumerable.Empty<ApplicationUser>().AsQueryable();
+
+        var userManagerMock = TestDbContextFactory.CreateMockUserManager(users);
+
+        if (user != null)
+        {
+            userManagerMock.Setup(x => x.FindByIdAsync(user.Id)).ReturnsAsync(user);
+            userManagerMock.Setup(x => x.UpdateAsync(user))
+                .ReturnsAsync(updateSucceeds ? IdentityResult.Success : IdentityResult.Failed());
+        }
+        else
+        {
+            userManagerMock.Setup(x => x.FindByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((ApplicationUser?)null);
+        }
+
+        return new RevokeRefreshTokenCommandHandler(userManagerMock.Object);
     }
 
     [Fact]
     public async Task Handle_UserNotFound_ReturnsFalse()
     {
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync((ApplicationUser?)null);
+        var handler = CreateHandler(user: null);
 
-        var result = await _handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
 
         Assert.False(result);
     }
@@ -38,10 +51,9 @@ public class RevokeRefreshTokenCommandHandlerTests
             RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7)
         };
 
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
+        var handler = CreateHandler(user);
 
-        var result = await _handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
 
         Assert.True(result);
         Assert.Null(user.RefreshToken);
@@ -53,10 +65,9 @@ public class RevokeRefreshTokenCommandHandlerTests
     {
         var user = new ApplicationUser { Id = "user123" };
 
-        _userManagerMock.Setup(x => x.FindByIdAsync("user123")).ReturnsAsync(user);
-        _userManagerMock.Setup(x => x.UpdateAsync(user)).ReturnsAsync(IdentityResult.Failed());
+        var handler = CreateHandler(user, updateSucceeds: false);
 
-        var result = await _handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
+        var result = await handler.Handle(new RevokeRefreshTokenCommand("user123"), CancellationToken.None);
 
         Assert.False(result);
     }

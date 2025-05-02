@@ -7,6 +7,7 @@ using MessageFlow.DataAccess.Services;
 using MessageFlow.Shared.DTOs;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
+using MessageFlow.DataAccess.Repositories;
 
 namespace MessageFlow.Tests.Tests.Server.MediatR.Chat.GeneralProcessing.Commands;
 
@@ -32,9 +33,18 @@ public class LoadUserConversationsHandlerTests
         var userId = "user1";
         var companyId = "comp1";
         var assigned = new List<Conversation> { new() { Id = "a1" } };
-        var unassigned = new List<Conversation> { new() { Id = "u1" } };
+        var unassigned = new List<Conversation> { new() { Id = "u1", AssignedTeamId = "team1" } };
         var assignedDto = new List<ConversationDTO> { new() { Id = "a1" } };
         var unassignedDto = new List<ConversationDTO> { new() { Id = "u1" } };
+        // Mock user repo
+        var appUserRepoMock = new Mock<IApplicationUserRepository>();
+        appUserRepoMock.Setup(r => r.GetUserByIdAsync(userId))
+            .ReturnsAsync(new ApplicationUser
+            {
+                Id = userId,
+                Teams = new List<Team> { new() { Id = "team1" } }
+            });
+        _unitOfWorkMock.Setup(u => u.ApplicationUsers).Returns(appUserRepoMock.Object);
 
         _unitOfWorkMock.Setup(u => u.Conversations.GetAssignedConversationsAsync(userId, companyId))
             .ReturnsAsync(assigned);

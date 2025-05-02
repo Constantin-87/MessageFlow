@@ -1,0 +1,13 @@
+﻿.modal {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #1f2937;
+    color: #d1d5db;
+    border: 1px solid #3a4756;
+}
+
+.modal-header .modal-title {
+    color: #cbd5e0;
+}

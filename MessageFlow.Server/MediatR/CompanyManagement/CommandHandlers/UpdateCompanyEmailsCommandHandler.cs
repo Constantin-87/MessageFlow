@@ -52,7 +52,6 @@ namespace MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers
                 await _unitOfWork.CompanyEmails.UpdateEmailsAsync(companyId, companyEmails);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation($"Company emails updated for Company id: {companyId}.");
                 return (true, "Company emails updated successfully.");
             }
             catch (Exception ex)

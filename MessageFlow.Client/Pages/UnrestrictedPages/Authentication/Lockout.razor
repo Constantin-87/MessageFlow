@@ -1,10 +1,46 @@
 ﻿@page "/Accounts/Lockout"
 @layout Pages.Shared.Layout.PublicSubLayout
-@rendermode RenderMode.InteractiveWebAssembly
+@implements IDisposable
+@inject IJSRuntime JS
 
 <PageTitle>Locked out</PageTitle>
 
-<header>
-    <h1 class="text-danger">Locked out</h1>
-    <p class="text-danger">This account has been locked out, please try again later.</p>
-</header>
+<section class="page-lockout">
+    <h1 class="text-danger">Account Locked</h1>
+    <p class="text-danger">Too many failed login attempts. Try again in:</p>
+    <h2>@remainingTime</h2>
+</section>
+
+@code {
+    private string remainingTime = "";
+
+    private Timer? timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var untilUnix = await JS.InvokeAsync<string>("sessionStorage.getItem", "lockoutUntil");
+        if (long.TryParse(untilUnix, out var lockoutUntilSeconds))
+        {
+            var lockoutUntil = DateTimeOffset.FromUnixTimeSeconds(lockoutUntilSeconds);
+            timer = new Timer(_ =>
+            {
+                var remaining = lockoutUntil - DateTimeOffset.UtcNow;
+                if (remaining.TotalSeconds <= 0)
+                {
+                    remainingTime = "You can try again now.";
+                    timer?.Dispose();
+                }
+                else
+                {
+                    remainingTime = $"{remaining.Minutes:D2}:{remaining.Seconds:D2}";
+                }
+                InvokeAsync(StateHasChanged);
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

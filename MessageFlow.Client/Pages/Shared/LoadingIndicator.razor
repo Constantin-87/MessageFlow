@@ -1,8 +1,8 @@
 ﻿<div class="loading-indicator">
-    <div class="spinner-border" role="status">
+    <div class="spinner-border @SpinnerColorClass" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>
-    <span>@Message</span>
+    <span class="@($"{TextColorClass} loading-text")">@Message</span>
 </div>
 
 @code {
@@ -11,5 +11,6 @@
     [Parameter]
     public bool IsDark { get; set; } = true;
 
-    private string TextColorClass => IsDark ? "text-light" : "text-dark";
+    private string TextColorClass => IsDark ? "text-dark" : "text-light";
+    private string SpinnerColorClass => IsDark ? "spinner-blue" : "spinner-green";
 }

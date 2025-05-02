@@ -84,7 +84,6 @@ namespace MessageFlow.Infrastructure.Mappings
             CreateMap<Message, MessageDTO>()
                 .ForMember(dest => dest.Conversation, opt => opt.Ignore())
                 .ReverseMap();
-
         }
     }
 }

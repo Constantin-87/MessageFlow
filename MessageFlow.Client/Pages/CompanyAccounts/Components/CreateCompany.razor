@@ -12,9 +12,9 @@
 <CompanyAddEditForm IsEditMode="false" OnActionCompleted="HandleActionCompleted" />
 
 @code {
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
-    private async Task HandleActionCompleted(NotificationResult result)
+    private async Task HandleActionCompleted(ApiNotificationResultVM result)
     {
         Notification = result;
         StateHasChanged();

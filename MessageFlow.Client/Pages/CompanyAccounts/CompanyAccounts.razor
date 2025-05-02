@@ -5,9 +5,17 @@
 @inject CompanyManagementService CompanyManagementService
 @inject NavigationManager NavigationManager
 
-<h3>Company Accounts</h3>
-
+<!-- Notification Modal -->
 <Notification Result="@Notification" />
+
+<!-- Confirmation Modal -->
+<ConfirmationModal IsVisible="@isDeleteConfirmationVisible"
+                   Title="Confirm Deletion"
+                   Message="@($"Are you sure you want to delete the company {companyToDeleteName}?")"
+                   OnConfirm="ConfirmDelete"
+                   OnCancel="HideDeleteConfirmation" />
+
+<h3>Company Accounts</h3>
 
 <button class="btn btn-primary mb-3" @onclick="NavigateToCreateCompany">Create New Company Account</button>
 
@@ -46,27 +54,6 @@ else
         </tbody>
     </table>
 }
-<!-- Confirmation Modal -->
-@if (isDeleteConfirmationVisible)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Deletion</h5>
-                    <button type="button" class="btn-close" @onclick="HideDeleteConfirmation"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete the company <strong>@companyToDeleteName</strong>?</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary" @onclick="HideDeleteConfirmation">Cancel</button>
-                    <button class="btn btn-danger" @onclick="ConfirmDelete">Delete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
 @code {
     private List<CompanyDTO> companies = new(); 
@@ -74,7 +61,7 @@ else
     private string? companyToDeleteId;
     private string? companyToDeleteName;
     private bool isDataLoaded = false;
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,17 +86,13 @@ else
     private async Task ConfirmDelete()
     {
         isDeleteConfirmationVisible = false;
-        var (success, errorMessage) = await CompanyManagementService.DeleteCompanyAsync(companyToDeleteId);
+        var result = await CompanyManagementService.DeleteCompanyAsync(companyToDeleteId);
 
-        if (success)
+        if (result.IsSuccess)
         {
             companies = companies.Where(c => c.Id != companyToDeleteId).ToList();
-            Notification = new NotificationResult { Message = "Company deleted successfully.", IsSuccess = true };
         }
-        else
-        {
-            Notification = new NotificationResult { Message = $"Failed to delete company: {errorMessage}", IsSuccess = false };
-        }
+        Notification = result;
     }
 
     private void NavigateToCreateCompany()

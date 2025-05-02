@@ -15,8 +15,7 @@ public class GetCurrentUserQueryHandlerTests
 
     public GetCurrentUserQueryHandlerTests()
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
+        _userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
         _handler = new GetCurrentUserQueryHandler(_userManagerMock.Object);
     }
 

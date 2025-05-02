@@ -28,6 +28,5 @@ namespace MessageFlow.Server.Helpers
                 }
             }
         }
-
     }
 }

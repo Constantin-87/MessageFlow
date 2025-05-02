@@ -14,24 +14,28 @@ namespace MessageFlow.Tests.Tests.Identity.MediatR.Commands;
 
 public class RefreshTokenCommandHandlerTests
 {
-    private readonly Mock<UserManager<ApplicationUser>> _userManagerMock;
     private readonly Mock<IConfiguration> _configMock = new();
     private readonly Mock<ITokenService> _tokenServiceMock = new();
-
-    private readonly RefreshTokenCommandHandler _handler;
     private readonly string _jwtKey = "this-is-a-test-key-for-jwt-token";
 
     public RefreshTokenCommandHandlerTests()
     {
-        var store = new Mock<IUserStore<ApplicationUser>>();
-        _userManagerMock = new Mock<UserManager<ApplicationUser>>(store.Object, null, null, null, null, null, null, null, null);
-
         _configMock.Setup(c => c["JsonWebToken-Key"]).Returns(_jwtKey);
+    }
 
-        _handler = new RefreshTokenCommandHandler(
-            _userManagerMock.Object,
+    private RefreshTokenCommandHandler CreateHandler(ApplicationUser user)
+    {
+        var users = new[] { user }.AsQueryable();
+        var userManagerMock = TestDbContextFactory.CreateMockUserManager(users);
+
+        userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
+        userManagerMock.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
+
+        return new RefreshTokenCommandHandler(
+            userManagerMock.Object,
             _configMock.Object,
-            _tokenServiceMock.Object);
+            _tokenServiceMock.Object
+        );
     }
 
     private string GenerateExpiredToken(string userId)
@@ -43,8 +47,8 @@ public class RefreshTokenCommandHandlerTests
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[] {
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        }),
+                new Claim(ClaimTypes.NameIdentifier, userId)
+            }),
             NotBefore = now.AddMinutes(-10),
             Expires = now.AddMinutes(-5),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -65,17 +69,13 @@ public class RefreshTokenCommandHandlerTests
             LastActivity = DateTime.UtcNow
         };
 
-        var expiredAccessToken = GenerateExpiredToken(user.Id);
-
-        _userManagerMock.Setup(m => m.FindByIdAsync(user.Id)).ReturnsAsync(user);
-        _userManagerMock.Setup(m => m.UpdateAsync(user)).ReturnsAsync(IdentityResult.Success);
+        var handler = CreateHandler(user);
+        var expiredToken = GenerateExpiredToken(user.Id);
 
         _tokenServiceMock.Setup(t => t.GenerateJwtTokenAsync(user)).ReturnsAsync("new-jwt");
         _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("new-refresh");
 
-        var command = new RefreshTokenCommand(expiredAccessToken, "old-token");
-
-        var result = await _handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(new RefreshTokenCommand(expiredToken, "old-token"), default);
 
         Assert.True(result.Item1);
         Assert.Equal("new-jwt", result.Item2);
@@ -85,8 +85,9 @@ public class RefreshTokenCommandHandlerTests
     [Fact]
     public async Task Handle_InvalidAccessToken_ReturnsFalse()
     {
-        var cmd = new RefreshTokenCommand("invalid-token", "irrelevant");
-        var result = await _handler.Handle(cmd, default);
+        var handler = CreateHandler(new ApplicationUser { Id = "unused" });
+
+        var result = await handler.Handle(new RefreshTokenCommand("invalid-token", "irrelevant"), default);
 
         Assert.False(result.Item1);
         Assert.Equal("Invalid access token", result.Item4);
@@ -95,11 +96,12 @@ public class RefreshTokenCommandHandlerTests
     [Fact]
     public async Task Handle_UserNotFound_ReturnsFalse()
     {
-        var expiredToken = GenerateExpiredToken("userX");
-        _userManagerMock.Setup(x => x.FindByIdAsync("userX")).ReturnsAsync((ApplicationUser?)null);
+        var token = GenerateExpiredToken("userX");
 
-        var cmd = new RefreshTokenCommand(expiredToken, "any");
-        var result = await _handler.Handle(cmd, default);
+        var userManagerMock = TestDbContextFactory.CreateMockUserManager(Enumerable.Empty<ApplicationUser>().AsQueryable());
+        var handler = new RefreshTokenCommandHandler(userManagerMock.Object, _configMock.Object, _tokenServiceMock.Object);
+
+        var result = await handler.Handle(new RefreshTokenCommand(token, "any"), default);
 
         Assert.False(result.Item1);
         Assert.Equal("User not found", result.Item4);
@@ -111,14 +113,15 @@ public class RefreshTokenCommandHandlerTests
         var user = new ApplicationUser
         {
             Id = "user2",
-            LastActivity = DateTime.UtcNow.AddHours(-1)
+            RefreshToken = "token",
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(1),
+            LastActivity = DateTime.UtcNow.AddHours(-2)
         };
 
-        var expiredToken = GenerateExpiredToken("user2");
-        _userManagerMock.Setup(x => x.FindByIdAsync("user2")).ReturnsAsync(user);
+        var handler = CreateHandler(user);
+        var token = GenerateExpiredToken(user.Id);
 
-        var cmd = new RefreshTokenCommand(expiredToken, "any");
-        var result = await _handler.Handle(cmd, default);
+        var result = await handler.Handle(new RefreshTokenCommand(token, "token"), default);
 
         Assert.False(result.Item1);
         Assert.Equal("Session expired due to inactivity", result.Item4);
@@ -130,16 +133,15 @@ public class RefreshTokenCommandHandlerTests
         var user = new ApplicationUser
         {
             Id = "user3",
-            LastActivity = DateTime.UtcNow,
-            RefreshToken = "correct",
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1)
+            RefreshToken = "correct-token",
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1),
+            LastActivity = DateTime.UtcNow
         };
 
-        var expiredToken = GenerateExpiredToken("user3");
-        _userManagerMock.Setup(x => x.FindByIdAsync("user3")).ReturnsAsync(user);
+        var handler = CreateHandler(user);
+        var token = GenerateExpiredToken(user.Id);
 
-        var cmd = new RefreshTokenCommand(expiredToken, "wrong");
-        var result = await _handler.Handle(cmd, default);
+        var result = await handler.Handle(new RefreshTokenCommand(token, "wrong-token"), default);
 
         Assert.False(result.Item1);
         Assert.Equal("Invalid refresh token", result.Item4);
@@ -151,16 +153,15 @@ public class RefreshTokenCommandHandlerTests
         var user = new ApplicationUser
         {
             Id = "user4",
-            LastActivity = DateTime.UtcNow,
-            RefreshToken = "expired",
-            RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(-1)
+            RefreshToken = "expired-token",
+            RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(-5),
+            LastActivity = DateTime.UtcNow
         };
 
-        var expiredToken = GenerateExpiredToken("user4");
-        _userManagerMock.Setup(x => x.FindByIdAsync("user4")).ReturnsAsync(user);
+        var handler = CreateHandler(user);
+        var token = GenerateExpiredToken(user.Id);
 
-        var cmd = new RefreshTokenCommand(expiredToken, "expired");
-        var result = await _handler.Handle(cmd, default);
+        var result = await handler.Handle(new RefreshTokenCommand(token, "expired-token"), default);
 
         Assert.False(result.Item1);
         Assert.Equal("Invalid refresh token", result.Item4);
