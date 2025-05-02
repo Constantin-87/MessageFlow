@@ -5,6 +5,16 @@
 @inject NavigationManager NavigationManager
 @inject UserManagementService UserManagementService
 
+<!-- Notification Modal -->
+<Notification Result="@Notification" />
+
+<!-- Confirmation Modal -->
+<ConfirmationModal IsVisible="@showDeleteConfirmation"
+                   Title="Confirm Delete"
+                   Message="@($"Are you sure you want to delete the user {userNameToDelete}?")"
+                   OnConfirm="DeleteUser"
+                   OnCancel="CancelDelete" />
+
 <h3>User Accounts</h3>
 
 <!-- Button to create a new user account -->
@@ -53,31 +63,8 @@ else
     </table>
 }
 
-<!-- Delete confirmation -->
-@if (showDeleteConfirmation)
-{
-    <div class="modal show" tabindex="-1" role="dialog" style="display:block;">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirm Delete</h5>
-                    <button type="button" class="close" aria-label="Close" @onclick="CancelDelete">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete the user @userNameToDelete?</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" @onclick="DeleteUser">Delete</button>
-                    <button type="button" class="btn btn-secondary" @onclick="CancelDelete">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @code {
+    private ApiNotificationResultVM? Notification;
     private List<ApplicationUserDTO> users;
     private bool showDeleteConfirmation = false;
     private string? userIdToDelete;
@@ -115,14 +102,19 @@ else
     }
 
     private async Task DeleteUser()
-    {        
-        if (await UserManagementService.DeleteUserAsync(userIdToDelete))
+    {
+        showDeleteConfirmation = false;
+
+        var result = await UserManagementService.DeleteUserAsync(userIdToDelete);
+
+        if (result.IsSuccess)
         {
-            // Remove user from the list after deletion
-            users.Remove(users.FirstOrDefault(u => u.Id == userIdToDelete));
+            users = users.Where(u => u.Id != userIdToDelete).ToList();
         }
 
-        // Hide the confirmation dialog
-        CancelDelete();
+        Notification = result;
+
+        userIdToDelete = null;
+        userNameToDelete = null;
     }
 }

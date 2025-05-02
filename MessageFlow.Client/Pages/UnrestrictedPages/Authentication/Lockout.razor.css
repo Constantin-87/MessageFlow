@@ -1,0 +1,26 @@
+﻿.page-lockout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+    text-align: center;
+}
+
+    .page-lockout h1 {
+        font-size: 2.5rem;
+        color: #dc3545;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-lockout p {
+        color: #dc3545;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .page-lockout h2 {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #212529;
+    }

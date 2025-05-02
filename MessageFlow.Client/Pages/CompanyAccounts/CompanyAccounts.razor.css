@@ -67,21 +67,3 @@ button.btn-danger {
         background-color: #771515;
         border-color: #c0392b;
     }
-
-.modal-content {
-    background-color: #1f2937;
-    color: #d1d5db;
-    border: 1px solid #3a4756;
-}
-
-.modal-header .modal-title {
-    color: #cbd5e0;
-}
-
-.modal-footer .btn-secondary {
-    background-color: #4a5568;
-}
-
-.modal-footer .btn-danger {
-    background-color: #9b2c2c;
-}

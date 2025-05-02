@@ -33,7 +33,7 @@ else
 @code {
     [Parameter] public string CompanyId { get; set; }
 
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
 
     private FacebookSettingsDTO facebookSettings = new();
     private bool isLoading = true;
@@ -48,7 +48,7 @@ else
     {
         var success = await ChannelService.SaveFacebookSettingsAsync(CompanyId, facebookSettings);
 
-        Notification = new NotificationResult
+        Notification = new ApiNotificationResultVM
             {
                 IsSuccess = success,
                 Message = success ? "Facebook settings saved successfully." : "Failed to save Facebook settings."

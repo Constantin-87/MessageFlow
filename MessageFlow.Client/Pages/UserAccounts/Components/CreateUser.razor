@@ -6,12 +6,24 @@
 
 <PageTitle>Create User</PageTitle>
 
+<!-- Notification Modal -->
+<Notification Result="@Notification" />
+
 <!-- Call the UserForm component and handle submission within the form -->
 <UserAddEditForm IsEditMode="false" OnValidSubmit="AddUser" />
 
 @code {
-    private void AddUser()
+    private ApiNotificationResultVM? Notification;
+
+    private async Task AddUser(ApiNotificationResultVM result)
     {
-        NavigationManager.NavigateTo("/Accounts/UserAccounts");
+        Notification = result;
+        StateHasChanged();
+
+        if (Notification.IsSuccess)
+        {
+            await Task.Delay(3000);
+            NavigationManager.NavigateTo("/Accounts/UserAccounts");
+        }
     }
 }

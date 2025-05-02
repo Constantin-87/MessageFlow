@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using MediatR;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Agent,Manager,Admin,SuperAdmin")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Agent,AgentManager,Admin,SuperAdmin")]
 public class ChatHub : Hub
 {
     // Track online users with company and team info
@@ -146,7 +146,7 @@ public class ChatHub : Hub
 
     private bool IsAuthorized(ClaimsPrincipal? user)
     {
-        return user?.IsInRole("Agent") == true || user?.IsInRole("Manager") == true ||
+        return user?.IsInRole("Agent") == true || user?.IsInRole("AgentManager") == true ||
                user?.IsInRole("Admin") == true || user?.IsInRole("SuperAdmin") == true;
     }
 }

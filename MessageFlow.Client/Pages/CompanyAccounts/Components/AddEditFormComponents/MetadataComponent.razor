@@ -1,0 +1,95 @@
+﻿@inject CompanyManagementService CompanyManagementService
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Metadata Management</h5>
+    </div>
+    <div class="card-body">
+        <button class="btn btn-primary" @onclick="UpdateMetadata" title="Create pre-training metadata from company details.">
+            Update Company Metadata
+        </button>
+        <button class="btn btn-danger" @onclick="DeleteMetadata" title="Permanently remove the metadata associated with this company.">
+            Delete Company Metadata
+        </button>
+        <button class="btn btn-secondary" @onclick="ToggleMetadataView" title="View the currently stored metadata.">
+            Show Metadata
+        </button>
+        <button class="btn btn-warning" @onclick="CreateCompanyIndex" title="Create or rebuild the Azure Search index for this company.">
+            Create Search Index
+        </button>
+
+        @if (IsCreatingIndex)
+        {
+            <LoadingIndicator Message="Creating search index..." IsDark="false" />
+        }
+        @if (IsMetadataBusy)
+        {
+            <LoadingIndicator Message="Creating pre-training metadata..." IsDark="false" />
+        }
+
+        @if (ShowMetadata)
+        {
+            <textarea class="form-control mt-2" rows="10" readonly>@CurrentMetadata</textarea>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+
+    private bool IsCreatingIndex = false;
+    private bool IsMetadataBusy = false;
+    private bool ShowMetadata = false;
+    private string CurrentMetadata = string.Empty;
+
+    private async Task UpdateMetadata()
+    {
+        IsMetadataBusy = true;
+        var result = await CompanyManagementService.GenerateAndUploadCompanyMetadataAsync(CompanyId);
+        IsMetadataBusy = false;
+        await OnActionCompleted.InvokeAsync(result);
+    }
+
+    private async Task DeleteMetadata()
+    {
+        var result = await CompanyManagementService.DeleteCompanyMetadataAsync(CompanyId);
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess)
+            CurrentMetadata = string.Empty;
+    }
+
+    private async Task ToggleMetadataView()
+    {
+        ShowMetadata = !ShowMetadata;
+        if (ShowMetadata)
+        {
+            await LoadMetadata();
+        }
+    }
+
+    private async Task LoadMetadata()
+    {
+        IsMetadataBusy = true;
+        var (result, metadata) = await CompanyManagementService.GetCompanyMetadataAsync(CompanyId);
+        IsMetadataBusy = false;
+
+        if (result.IsSuccess)
+        {
+            CurrentMetadata = metadata;
+        }
+        else if (!string.IsNullOrWhiteSpace(result.Message))
+        {
+            await OnActionCompleted.InvokeAsync(result);
+        }
+    }
+
+    private async Task CreateCompanyIndex()
+    {
+        IsCreatingIndex = true;
+        var result = await CompanyManagementService.CreateAzureAiSearchIndexAndUploadFilesAsync(CompanyId);
+        IsCreatingIndex = false;
+        await OnActionCompleted.InvokeAsync(result);
+    }
+}

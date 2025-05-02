@@ -20,13 +20,16 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var (success, token, refreshToken, errorMessage, userDto) =
-            await _mediator.Send(new LoginCommand(request.Username, request.Password));
+        var loginResult = await _mediator.Send(new LoginCommand(request));
 
-        if (!success)
-            return Unauthorized(errorMessage);
+        if (!loginResult.Success)
+        {
+            if (loginResult.LockoutEnd != null)
+                return StatusCode(423, loginResult); // 423 Locked
+            return Unauthorized(loginResult);        // 401 Unauthorized
+        }
 
-        return Ok(new { Token = token, RefreshToken = refreshToken, User = userDto });
+        return Ok(loginResult);
     }
 
     [HttpPost("logout")]

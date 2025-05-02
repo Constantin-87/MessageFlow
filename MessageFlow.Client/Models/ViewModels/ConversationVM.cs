@@ -2,12 +2,12 @@
 
 namespace MessageFlow.Client.Models.ViewModels
 {
-    public class ConversationViewModel
+    public class ConversationVM
     {
         public ConversationDTO Conversation { get; set; }
         public bool IsActiveTab { get; set; } = false;
 
-        public ConversationViewModel(ConversationDTO conversation)
+        public ConversationVM(ConversationDTO conversation)
         {
             Conversation = conversation;
         }

@@ -9,5 +9,25 @@
     .loading-indicator .spinner-border {
         width: 2rem;
         height: 2rem;
-        color: #f8f9fa;
+        /*color: #f8f9fa;*/
     }
+
+    .loading-indicator .loading-text {
+        font-size: 1rem;
+    }
+
+.loading-text.text-light {
+    color: #f8f9fa !important; /* or white */
+}
+
+.loading-text.text-dark {
+    color: #212529 !important;
+}
+
+.spinner-blue {
+    color: #0d6efd; /* Bootstrap primary blue */
+}
+
+.spinner-green {
+    color: #198754; /* Bootstrap success green */
+}

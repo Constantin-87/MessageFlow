@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using MessageFlow.Client.Models.DTOs;
+using MessageFlow.Client.Models.ViewModels;
 
 namespace MessageFlow.Client.Services
 {
@@ -20,7 +21,6 @@ namespace MessageFlow.Client.Services
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Failed to get users. Status: {response.StatusCode}, Content: {errorContent}");
                 throw new HttpRequestException($"Failed to get users. Status: {response.StatusCode}");
             }
 
@@ -32,24 +32,24 @@ namespace MessageFlow.Client.Services
             return await _httpClient.GetFromJsonAsync<ApplicationUserDTO>($"api/user-management/user/{userId}");
         }
 
-        public async Task<(bool success, string message)> CreateUserAsync(ApplicationUserDTO user)
+        public async Task<ApiNotificationResultVM> CreateUserAsync(ApplicationUserDTO user)
         {
             user.CompanyDTO = null;
             var response = await _httpClient.PostAsJsonAsync("api/user-management/create", user);
-            return response.IsSuccessStatusCode ? (true, "User created") : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response, "User created successfully.");
         }
 
-        public async Task<(bool success, string message)> UpdateUserAsync(ApplicationUserDTO user)
+        public async Task<ApiNotificationResultVM> UpdateUserAsync(ApplicationUserDTO user)
         {
             user.CompanyDTO = null;
             var response = await _httpClient.PutAsJsonAsync($"api/user-management/update/{user.Id}", user);
-            return response.IsSuccessStatusCode ? (true, "User updated") : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response, "User updated successfully.");
         }
 
-        public async Task<bool> DeleteUserAsync(string userId)
+        public async Task<ApiNotificationResultVM> DeleteUserAsync(string userId)
         {
             var response = await _httpClient.DeleteAsync($"api/user-management/delete/{userId}");
-            return response.IsSuccessStatusCode;
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response, "User deleted successfully.");
         }
 
         public async Task<List<string>> GetAvailableRolesAsync()

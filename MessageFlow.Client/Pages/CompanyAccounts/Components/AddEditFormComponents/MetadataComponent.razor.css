@@ -1,0 +1,72 @@
+﻿.card {
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(160, 174, 192, 0.3);
+}
+
+.card-header {
+    background-color: #1f2937;
+    color: #a0aec0;
+    cursor: pointer;
+}
+
+    .card-header:hover {
+        background-color: #2d3748;
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-weight: bold;
+    }
+
+.card-body {
+    background-color: #1f2937;
+    color: #d1d5db;
+}
+
+/* Button styles */
+button.btn-primary {
+    background-color: #11545F;
+    border-color: #166976;
+    color: #d1d5db;
+    font-weight: bold;
+}
+
+    button.btn-primary:hover {
+        background-color: #166976;
+        border-color: #2BA2B5;
+    }
+
+button.btn-danger {
+    background-color: #9b2c2c;
+    border-color: #9b2c2c;
+    color: #fff;
+}
+
+    button.btn-danger:hover {
+        background-color: #c53030;
+    }
+
+button.btn-secondary {
+    background-color: #4a5568;
+    border-color: #4a5568;
+    color: #d1d5db;
+}
+
+    button.btn-secondary:hover {
+        background-color: #5c667a;
+    }
+
+button.btn-warning {
+    background-color: #d69e2e;
+    border-color: #d69e2e;
+    color: #1a202c;
+}
+
+/* Read-only textarea */
+textarea.form-control {
+    background-color: #2d3748;
+    color: #d1d5db;
+    border: 1px solid #3a4756;
+}

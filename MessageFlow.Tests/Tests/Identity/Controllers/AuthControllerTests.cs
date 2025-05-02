@@ -40,9 +40,14 @@ public class AuthControllerTests
     public async Task Login_ReturnsOk_WhenCredentialsAreValid()
     {
         var request = new LoginRequest { Username = "user", Password = "pass" };
-        _mediatorMock.Setup(m => m.Send(It.IsAny<LoginCommand>(), default)).ReturnsAsync((
-            true, "token123", "refresh456", null,
-            new ApplicationUserDTO { Id = "u1", UserName = "user" }));
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LoginCommand>(), default)).ReturnsAsync(
+             new LoginResultDTO
+             {
+                 Success = true,
+                 Token = "token123",
+                 RefreshToken = "refresh456",
+                 User = new ApplicationUserDTO { Id = "u1", UserName = "user" }
+             });
 
         var result = await _controller.Login(request);
 
@@ -54,12 +59,38 @@ public class AuthControllerTests
     public async Task Login_ReturnsUnauthorized_WhenInvalid()
     {
         _mediatorMock.Setup(m => m.Send(It.IsAny<LoginCommand>(), default))
-            .ReturnsAsync((false, null, null, "Invalid", null));
+            .ReturnsAsync(new LoginResultDTO
+            {
+                Success = false,
+                ErrorMessage = "Invalid"
+            });
 
         var result = await _controller.Login(new LoginRequest());
 
         var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
-        Assert.Equal("Invalid", unauthorized.Value);
+        var dto = Assert.IsType<LoginResultDTO>(unauthorized.Value);
+        Assert.Equal("Invalid", dto.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task Login_ReturnsLocked_WhenUserLockedOut()
+    {
+        var lockoutEnd = DateTimeOffset.UtcNow.AddMinutes(5);
+
+        _mediatorMock.Setup(m => m.Send(It.IsAny<LoginCommand>(), default))
+            .ReturnsAsync(new LoginResultDTO
+            {
+                Success = false,
+                ErrorMessage = "Account is locked.",
+                LockoutEnd = lockoutEnd
+            });
+
+        var result = await _controller.Login(new LoginRequest());
+
+        var locked = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(423, locked.StatusCode);
+        var dto = Assert.IsType<LoginResultDTO>(locked.Value);
+        Assert.Equal(lockoutEnd, dto.LockoutEnd);
     }
 
     [Fact]

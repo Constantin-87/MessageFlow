@@ -7,60 +7,68 @@
 
 <h3>Channel Setup</h3>
 
-@if (CurrentUser.IsSuperAdmin)
+
+@if (isLoading)
 {
-    <div class="mb-3">
-        <label>Select Company</label>
-        <select class="form-select" @onchange="HandleCompanyChange">
-            @foreach (var company in companies)
+    <LoadingIndicator Message="Loading company data..." IsDark="false" />
+}
+else
+{
+    @if (CurrentUser.IsSuperAdmin)
+    {
+        <div class="mb-3">
+            <label>Select Company</label>
+            <select class="form-select" @onchange="HandleCompanyChange">
+                @foreach (var company in companies)
+                {
+                    <option value="@company.Id" selected="@((selectedCompany != null && selectedCompany.Id == company.Id) ? "selected" : null)">
+                        @company.CompanyName
+                    </option>
+                }
+            </select>
+        </div>
+    }
+    else if (selectedCompany != null)
+    {
+        <p>Managing channels for: @selectedCompany?.CompanyName</p>
+    }
+
+    @if (selectedCompany != null)
+    {
+        <div class="container">
+            @foreach (var channel in channels)
             {
-                <option value="@company.Id" selected="@((selectedCompany != null && selectedCompany.Id == company.Id) ? "selected" : null)">
-                    @company.CompanyName
-                </option>
-            }
-        </select>
-    </div>
-}
-else if (selectedCompany != null)
-{
-    <p>Managing channels for: @selectedCompany?.CompanyName</p>
-}
+                <div class="mb-3 d-flex flex-column">
 
-@if (selectedCompany != null)
-{
-    <div class="container">
-        @foreach (var channel in channels)
-        {
-            <div class="mb-3 d-flex flex-column">
+                    <div class="card @(IsExpanded(channel.Name) ? "expanded-card" : "collapsed-card")">
 
-                <div class="card @(IsExpanded(channel.Name) ? "expanded-card" : "collapsed-card")">
+                        <div class="card-body">
 
-                    <div class="card-body">
+                            <div class="channel-title" @onclick="() => ToggleChannel(channel.Name)">
+                                <h5>@channel.Name</h5>
+                                <img src="@channel.Icon" alt="Channel logo" />
+                            </div>
 
-                        <div class="channel-title" @onclick="() => ToggleChannel(channel.Name)">
-                            <h5>@channel.Name</h5>
-                            <img src="@channel.Icon" alt="Channel logo"/>
+                            @if (channel.Name == "Facebook" && showFacebook)
+                            {
+                                <div class="settings-form">
+                                    <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
+                                </div>
+                            }
+
+                            @if (channel.Name == "WhatsApp" && showWhatsApp)
+                            {
+                                <div class="settings-form">
+                                    <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
+                                </div>
+                            }
                         </div>
-
-                        @if (channel.Name == "Facebook" && showFacebook)
-                        {
-                            <div class="settings-form">
-                                <FacebookSettingsComponent CompanyId="@selectedCompany.Id" />
-                            </div>
-                        }
-
-                        @if (channel.Name == "WhatsApp" && showWhatsApp)
-                        {
-                            <div class="settings-form">
-                                <WhatsAppSettingsComponent CompanyId="@selectedCompany.Id" />
-                            </div>
-                        }
                     </div>
                 </div>
-            </div>
-        }
-    </div>}
-
+            }
+        </div>
+    }
+}
 @code {
     private CompanyDTO? selectedCompany;
     private List<CompanyDTO> companies = new();
@@ -69,14 +77,15 @@ else if (selectedCompany != null)
         new Channel { Name = "Facebook", Icon = "images/facebook.svg" },
         new Channel { Name = "WhatsApp", Icon = "images/whatsapp.svg" }
     };
-
     private bool showFacebook = false;
     private bool showWhatsApp = false;
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
         companies = await CompanyService.GetAllCompaniesAsync();
         selectedCompany = companies.FirstOrDefault();
+        isLoading = false;
         StateHasChanged();
     }
 

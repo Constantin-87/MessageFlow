@@ -1,0 +1,60 @@
+﻿@inject CompanyManagementService CompanyManagementService
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Company Emails</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-2 mb-3">
+            <button type="button" class="btn btn-secondary" @onclick="AddEmail">Add New Email</button>
+            <button type="submit" class="btn btn-primary" @onclick="SaveCompanyEmails">Save All</button>
+        </div>
+
+        <ul class="list-group">
+            @foreach (var email in CompanyEmails)
+            {
+                <li class="list-group-item d-flex align-items-center gap-2">
+                    <InputText @bind-Value="email.EmailAddress" class="form-control" placeholder="Email Address" />
+                    <InputText @bind-Value="email.Description" class="form-control" placeholder="Description (e.g., Support, Sales)" />
+                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveEmail(email)">Remove</button>
+                </li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+
+    private List<CompanyEmailDTO> CompanyEmails { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await CompanyManagementService.GetCompanyByIdAsync(CompanyId);
+        CompanyEmails = result?.CompanyEmails?.ToList() ?? new();
+        if (CompanyEmails.Count == 0) AddEmail();
+    }
+
+    private void AddEmail()
+    {
+        CompanyEmails.Add(new CompanyEmailDTO
+            {
+                Id = Guid.NewGuid().ToString(),
+                CompanyId = CompanyId
+            });
+    }
+
+    private void RemoveEmail(CompanyEmailDTO email)
+    {
+        CompanyEmails.Remove(email);
+        if (CompanyEmails.Count == 0)
+            AddEmail();
+    }
+
+    private async Task SaveCompanyEmails()
+    {
+        var result = await CompanyManagementService.UpdateCompanyEmailsAsync(CompanyEmails);
+        await OnActionCompleted.InvokeAsync(result);
+    }
+}

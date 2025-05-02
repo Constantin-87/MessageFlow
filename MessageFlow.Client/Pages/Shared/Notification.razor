@@ -7,7 +7,7 @@
 }
 
 @code {
-    [Parameter] public NotificationResult? Result { get; set; }
+    [Parameter] public ApiNotificationResultVM? Result { get; set; }
 
     [Parameter] public EventCallback OnClear { get; set; }
 
@@ -16,7 +16,14 @@
     protected override void OnParametersSet()
     {
         if (!string.IsNullOrWhiteSpace(Result?.Message))
+        {
             isVisible = true;
+
+            if (Result?.IsSuccess == true)
+            {
+                _ = AutoClearAsync();
+            }
+        }
     }
 
     private async Task ClearNotification()
@@ -24,6 +31,15 @@
         isVisible = false;
         if (OnClear.HasDelegate)
             await OnClear.InvokeAsync();
+    }
+
+    private async Task AutoClearAsync()
+    {
+        await Task.Delay(3000); // wait 3 seconds
+        if (isVisible && Result?.IsSuccess == true)
+        {
+            await ClearNotification();
+        }
     }
 
     private string GetAlertClass() => Result?.IsSuccess == false

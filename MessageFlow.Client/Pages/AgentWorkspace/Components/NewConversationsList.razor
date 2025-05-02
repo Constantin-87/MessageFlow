@@ -8,7 +8,7 @@
     {
         <LoadingIndicator Message="Loading conversations..." IsDark="false" />
     }
-    else
+    else if (FilteredConversations != null && FilteredConversations.Any())
     {
         <ul>
             @foreach (var vm in FilteredConversations)
@@ -22,6 +22,10 @@
             }
         </ul>
     }
+    else
+    {
+    <p>No new conversations.</p>
+    }
 </div>
 
 @code {
@@ -30,9 +34,9 @@
     [Parameter, Required] public HubConnection HubConnection { get; set; }
     [Parameter, Required] public ChatWindow ChatWindowRef { get; set; }
 
-    private List<ConversationViewModel> Conversations = new();
+    private List<ConversationVM> Conversations = new();
     private bool isLoading = true;
-    private IEnumerable<ConversationViewModel> FilteredConversations =>
+    private IEnumerable<ConversationVM> FilteredConversations =>
     string.IsNullOrEmpty(TeamId)
         ? Conversations
         : Conversations.Where(vm => vm.Conversation.AssignedTeamId == TeamId);
@@ -86,7 +90,7 @@
     {
         if (!Conversations.Any(c => c.Conversation.Id == dto.Id))
         {
-            Conversations.Add(new ConversationViewModel(dto));
+            Conversations.Add(new ConversationVM(dto));
         }
         StateHasChanged();
     }
@@ -100,7 +104,7 @@
         }
     }
 
-    private async Task AssignToSelf(ConversationViewModel vm)
+    private async Task AssignToSelf(ConversationVM vm)
     {
         if (HubConnection is not null)
         {

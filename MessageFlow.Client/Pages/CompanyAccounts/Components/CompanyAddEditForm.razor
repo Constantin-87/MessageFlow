@@ -5,8 +5,43 @@
 
 <h3>@Title</h3>
 
+
+<div class="mt-4 mb-3">
+    <button class="btn btn-outline-secondary me-2"
+            @onclick="() => ToggleSection(nameof(ShowDetails))">
+        Details
+    </button>
+    <button class="btn btn-outline-secondary me-2"
+            @onclick="() => ToggleSection(nameof(ShowEmails))"
+            disabled="@(IsEditMode == false)">
+        Emails
+    </button>
+    <button class="btn btn-outline-secondary me-2"
+            @onclick="() => ToggleSection(nameof(ShowPhones))"
+            disabled="@(IsEditMode == false)">
+        Phones
+    </button>
+    <button class="btn btn-outline-secondary me-2"
+            @onclick="() => ToggleSection(nameof(ShowFiles))"
+            disabled="@(IsEditMode == false)">
+        Files
+    </button>
+    <button class="btn btn-outline-secondary"
+            @onclick="() => ToggleSection(nameof(ShowMetadata))"
+            disabled="@(IsEditMode == false)">
+        Metadata
+    </button>
+</div>
+
+
 <!-- Company Details Section -->
-<div class="card @(CompanyDetailsExpanded ? "" : "collapsed") mt-3">
+@if (ShowDetails)
+{
+    <DetailsComponent Company="Company"
+                      IsEditMode="IsEditMode"
+                      OnActionCompleted="OnActionCompleted" />
+}
+@* <div class="card @(CompanyDetailsExpanded ? "" : "collapsed") mt-3">
     <div class="card-header" @onclick="() => ToggleSection(nameof(CompanyDetailsExpanded))">
         <h5>Company Details</h5>
     </div>
@@ -50,11 +85,34 @@
 
         </EditForm>
     </div>
-</div>
+</div> *@
 
 @if (IsEditMode)
 {
-    <!-- Company Emails Section -->
+
+
+    @if (ShowEmails)
+    {
+        <EmailsComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
+    }
+
+    @if (ShowPhones)
+    {
+        <PhoneNumbersComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
+    }
+
+    @if (ShowFiles)
+    {
+        <FilesUploadComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
+    }
+
+    @if (ShowMetadata)
+    {
+        <MetadataComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
+    }
+
+
+   @*  <!-- Company Emails Section -->
     <div class="card @(EmailsExpanded ? "" : "collapsed") mt-3">
         <div class="card-header" @onclick="() => ToggleSection(nameof(EmailsExpanded))">
             <h5>Company Emails</h5>
@@ -104,10 +162,10 @@
                 }
             </ul>
         </div>
-    </div>
+    </div> *@
 
     <!-- Pretraining Files Section -->
-    <div class="card @(FilesExpanded ? "" : "collapsed") mt-3">
+    @* <div class="card @(FilesExpanded ? "" : "collapsed") mt-3">
         <div class="card-header" @onclick="() => ToggleSection(nameof(FilesExpanded))">
             <h5>Pretraining Files</h5>
         </div>
@@ -146,52 +204,80 @@
             }
 
             <!-- Display Existing Files -->
-            <h6>Existing files in storage:</h6>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>File Name</th>
-                        <th>Description</th>
-                        <th>Location</th>
-                        <th>Added On</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var file in ExistingFiles)
-                    {
+            @if (IsLoadingFiles)
+            {
+                <LoadingIndicator Message="Loading company files..." IsDark="false" />
+            }
+            else if (ExistingFiles.Any())
+            {
+                <h6>Existing files in storage:</h6>
+                <table class="table table-bordered">
+                    <thead>
                         <tr>
-                            <td title="@file.FileType">@file.FileType</td>
-                            <td title="@file.FileDescription">@file.FileDescription</td>
-                            <td title="@file.FileUrl">@file.FileUrl</td>
-                            <td title="@file.ProcessedAt">@file.ProcessedAt</td>
-                            <td class="text-center">
-                                <button class="btn btn-danger btn-sm" @onclick="() => DeleteExistingFile(file)">Delete</button>
-                            </td>
+                            <th>File Name</th>
+                            <th>Description</th>
+                            <th>Location</th>
+                            <th>Added On</th>
+                            <th class="text-center">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var file in ExistingFiles)
+                        {
+                            <tr>
+                                <td title="@file.FileType">@file.FileType</td>
+                                <td title="@file.FileDescription">@file.FileDescription</td>
+                                <td title="@file.FileUrl">@file.FileUrl</td>
+                                <td title="@file.ProcessedAt">@file.ProcessedAt</td>
+                                <td class="text-center">
+                                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteExistingFile(file)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <p>No pre-training files uploaded.</p>
+            }
         </div>
-    </div>
+    </div> *@
 
     <!-- Metadata Section -->
-    <div class="card @(MetadataExpanded ? "" : "collapsed") mt-3">
+    @* <div class="card @(MetadataExpanded ? "" : "collapsed") mt-3">
         <div class="card-header" @onclick="() => ToggleSection(nameof(MetadataExpanded))">
             <h5>Metadata Management</h5>
         </div>
         <div class="card-body" style="@GetSectionStyle(MetadataExpanded)">
-            <button class="btn btn-primary" @onclick="UpdateMetadata">Update Company Metadata</button>
-            <button class="btn btn-danger" @onclick="DeleteMetadata">Delete Company Metadata</button>
-            <button class="btn btn-secondary" @onclick="ToggleMetadataView">Show Metadata</button>
-            <button class="btn btn-warning" @onclick="CreateCompanyIndex">Create Search Index</button>
+            <button class="btn btn-primary" @onclick="UpdateMetadata" title="Create pre-training metadata from company details.">
+                Update Company Metadata
+            </button>
+            <button class="btn btn-danger" @onclick="DeleteMetadata" title="Permanently remove the metadata associated with this company.">
+                Delete Company Metadata
+            </button>
+            <button class="btn btn-secondary" @onclick="ToggleMetadataView" title="View the currently stored metadata.">
+                Show Metadata
+            </button>
+            <button class="btn btn-warning" @onclick="CreateCompanyIndex" title="Create or rebuild the Azure Search index for this company.">
+                Create Search Index
+            </button>
+
+            @if (IsCreatingIndex)
+            {
+                <LoadingIndicator Message="Creating search index..." IsDark="false" />
+            }
+            @if (IsMetadataBusy)
+            {
+                <LoadingIndicator Message="Creating pre-training metadata..." IsDark="false" />
+            }
 
             @if (ShowMetadata)
             {
                 <textarea class="form-control mt-2" rows="10" readonly>@CurrentMetadata</textarea>
             }
         </div>
-    </div>    
+    </div>     *@
 }
 
 @code {
@@ -200,27 +286,36 @@
     [Parameter]
     public string CompanyId { get; set; }
     [Parameter]
-    public EventCallback<NotificationResult> OnActionCompleted { get; set; }
+    public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
     private string Title => IsEditMode ? $"Edit {Company.CompanyName} Details" : "Create New Company";
     private string GetSectionStyle(bool isExpanded) => isExpanded ? "display: block;" : "display: none;";
     private bool CompanyDetailsExpanded { get; set; } = true;
-    private bool EmailsExpanded { get; set; } = false;
-    private bool PhoneNumbersExpanded { get; set; } = false;
-    private bool FilesExpanded { get; set; } = false;
-    private bool MetadataExpanded { get; set; } = false;
 
+    private bool ShowEmails { get; set; } = false;
+    private bool ShowPhones { get; set; } = false;
+    private bool ShowFiles { get; set; } = false;
     private bool ShowMetadata { get; set; } = false;
+    private bool ShowDetails { get; set; } = true;
+
+    // private bool EmailsExpanded { get; set; } = false;
+    // private bool PhoneNumbersExpanded { get; set; } = false;
+    // private bool FilesExpanded { get; set; } = false;
+    // private bool MetadataExpanded { get; set; } = false;
+    // private bool ShowMetadata { get; set; } = false;
+
     private string CurrentMetadata { get; set; } = string.Empty;
 
     private CompanyDTO Company = new CompanyDTO();
     private List<CompanyEmailDTO> CompanyEmails { get; set; } = new();
     private List<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new();
-
     private List<PretrainDataFileDTO> UploadedFiles { get; set; } = new();
     private List<ProcessedPretrainDataDTO> ExistingFiles { get; set; } = new();
 
     private bool _isInitialized = false;
+    private bool IsCreatingIndex = false;
+    private bool IsMetadataBusy = false;
+    private bool IsLoadingFiles = false;
 
     private InputFile fileInput;
 
@@ -242,28 +337,49 @@
         await base.OnParametersSetAsync();
     }
 
-    private async Task ToggleSection(string section)
+    private void ToggleSection(string section)
     {
+        // Clear all
+        ShowDetails = false;
+        ShowEmails = false;
+        ShowPhones = false;
+        ShowFiles = false;
+        ShowMetadata = false;
+
+        // Activate requested one
         switch (section)
         {
-            case nameof(CompanyDetailsExpanded):
-                CompanyDetailsExpanded = !CompanyDetailsExpanded;
-                break;
-            case nameof(EmailsExpanded):
-                EmailsExpanded = !EmailsExpanded;
-                break;
-            case nameof(PhoneNumbersExpanded):
-                PhoneNumbersExpanded = !PhoneNumbersExpanded;
-                break;
-            case nameof(FilesExpanded):
-                FilesExpanded = !FilesExpanded;
-                await LoadExistingFiles();
-                break;
-            case nameof(MetadataExpanded):
-                MetadataExpanded = !MetadataExpanded;
-                break;
+            case nameof(ShowDetails): ShowDetails = true; break;
+            case nameof(ShowEmails): ShowEmails = true; break;
+            case nameof(ShowPhones): ShowPhones = true; break;
+            case nameof(ShowFiles): ShowFiles = true; break;
+            case nameof(ShowMetadata): ShowMetadata = true; break;
         }
     }
+
+
+    // private async Task ToggleSection(string section)
+    // {
+    //     switch (section)
+    //     {
+    //         case nameof(CompanyDetailsExpanded):
+    //             CompanyDetailsExpanded = !CompanyDetailsExpanded;
+    //             break;
+    //         case nameof(EmailsExpanded):
+    //             EmailsExpanded = !EmailsExpanded;
+    //             break;
+    //         case nameof(PhoneNumbersExpanded):
+    //             PhoneNumbersExpanded = !PhoneNumbersExpanded;
+    //             break;
+    //         case nameof(FilesExpanded):
+    //             FilesExpanded = !FilesExpanded;
+    //             await LoadExistingFiles();
+    //             break;
+    //         case nameof(MetadataExpanded):
+    //             MetadataExpanded = !MetadataExpanded;
+    //             break;
+    //     }
+    // }
 
     #region Create or Update Company Logic
     private async Task HandleCompanySubmit()
@@ -272,11 +388,7 @@
             ? await CompanyManagementService.UpdateCompanyDetailsAsync(Company)
             : await CompanyManagementService.CreateCompanyAsync(Company);
 
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
+        await OnActionCompleted.InvokeAsync(result);
     }
     #endregion
 
@@ -302,11 +414,7 @@
     private async Task SaveCompanyEmails()
     {
         var result = await CompanyManagementService.UpdateCompanyEmailsAsync(CompanyEmails);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
+        await OnActionCompleted.InvokeAsync(result);
 
         StateHasChanged();
     }
@@ -334,11 +442,8 @@
     private async Task SaveCompanyPhoneNumbers()
     {
         var result = await CompanyManagementService.UpdateCompanyPhoneNumbersAsync(CompanyPhoneNumbers);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
+        await OnActionCompleted.InvokeAsync(result);
+
         StateHasChanged();
     }
     #endregion
@@ -356,58 +461,60 @@
 
     private async Task LoadMetadata()
     {
-        var result = await CompanyManagementService.GetCompanyMetadataAsync(Company.Id);
-        if (result.success)
+
+        IsMetadataBusy = true;
+        var (result, metadata) = await CompanyManagementService.GetCompanyMetadataAsync(Company.Id);
+        IsMetadataBusy = false;
+        if (result.IsSuccess)
         {
-            CurrentMetadata = result.metadata;
+            CurrentMetadata = metadata;
         }
-        else
+        else if (!string.IsNullOrWhiteSpace(result.Message))
         {
-            await OnActionCompleted.InvokeAsync(new NotificationResult
-                {
-                    Message = result.message,
-                    IsSuccess = result.success
-                });
+            await OnActionCompleted.InvokeAsync(result);
         }
     }
 
     private async Task UpdateMetadata()
     {
+        IsMetadataBusy = true;
         var result = await CompanyManagementService.GenerateAndUploadCompanyMetadataAsync(Company.Id);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
+        IsMetadataBusy = false;
+        await OnActionCompleted.InvokeAsync(result);
     }
 
     private async Task DeleteMetadata()
     {
         var result = await CompanyManagementService.DeleteCompanyMetadataAsync(Company.Id);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
-        if (result.success) CurrentMetadata = string.Empty;
+
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess) CurrentMetadata = string.Empty;
     }
 
     private async Task CreateCompanyIndex()
     {
+        IsCreatingIndex = true;
         var result = await CompanyManagementService.CreateAzureAiSearchIndexAndUploadFilesAsync(Company.Id);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
+        IsCreatingIndex = false;
+        await OnActionCompleted.InvokeAsync(result);
     }
     #endregion
 
     #region Company FileHandling Logic
     private async Task LoadExistingFiles()
     {
-        var result = await CompanyManagementService.GetCompanyPretrainingFilesAsync(Company.Id);
-        if (result.success) ExistingFiles = result.files;
+        IsLoadingFiles = true;
+        var (result, files) = await CompanyManagementService.GetCompanyPretrainingFilesAsync(Company.Id);
+        IsLoadingFiles = false;
+        if (result.IsSuccess)
+        {
+            ExistingFiles = files;
+        }
+        else if (!string.IsNullOrWhiteSpace(result.Message))
+        {
+            await OnActionCompleted.InvokeAsync(result);
+        }
     }
 
     private async Task HandleFileSelection(InputFileChangeEventArgs e)
@@ -421,7 +528,7 @@
             var ext = Path.GetExtension(file.Name).ToLowerInvariant();
             if (!allowedExtensions.Contains(ext) || file.Size > maxFileSize)
             {
-                await OnActionCompleted.InvokeAsync(new NotificationResult
+                await OnActionCompleted.InvokeAsync(new ApiNotificationResultVM
                     {
                         Message = $"File '{file.Name}' is not allowed.",
                         IsSuccess = false
@@ -450,13 +557,10 @@
     private async Task UploadAllFiles()
     {
         var result = await CompanyManagementService.UploadCompanyFilesAsync(UploadedFiles);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result.message,
-                IsSuccess = result.success
-            });
 
-        if (result.success)
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess)
         {
             UploadedFiles.Clear();
             await LoadExistingFiles();
@@ -466,13 +570,10 @@
     private async Task DeleteExistingFile(ProcessedPretrainDataDTO file)
     {
         var result = await CompanyManagementService.DeleteCompanyFileAsync(file);
-        await OnActionCompleted.InvokeAsync(new NotificationResult
-            {
-                Message = result ? "File deleted successfully." : "Error deleting file.",
-                IsSuccess = result
-            });
 
-        if (result)
+        await OnActionCompleted.InvokeAsync(result);
+
+        if (result.IsSuccess)
         {
             ExistingFiles.Remove(file);
         }

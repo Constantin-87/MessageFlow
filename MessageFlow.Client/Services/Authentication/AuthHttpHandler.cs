@@ -36,8 +36,10 @@ namespace MessageFlow.Client.Services.Authentication
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var path = request.RequestUri?.AbsolutePath ?? "";
-            var isRefreshOrLogin = path.EndsWith("/api/auth/refresh-token", StringComparison.OrdinalIgnoreCase)
-                         || path.EndsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase);
+
+            var isLogin = path.EndsWith("/api/auth/login", StringComparison.OrdinalIgnoreCase);
+            var isRefresh = path.EndsWith("/api/auth/refresh-token", StringComparison.OrdinalIgnoreCase);
+            var isRefreshOrLogin = isLogin || isRefresh;
             var token = await _jsRuntime.InvokeAsync<string>("sessionStorage.getItem", "authToken");                        
             if (!string.IsNullOrEmpty(token) && !isRefreshOrLogin)
             {
@@ -70,7 +72,7 @@ namespace MessageFlow.Client.Services.Authentication
             }
             var response = await base.SendAsync(request, cancellationToken);
             // If we get a 401, logout the user
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized && !isLogin)
             {
                 _logger.LogWarning("Unauthorized request. Removing token and triggering logout.");
                 await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", "authToken");

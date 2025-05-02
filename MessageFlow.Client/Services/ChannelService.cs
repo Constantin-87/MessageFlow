@@ -1,6 +1,6 @@
 ﻿using System.Net.Http.Json;
-using MessageFlow.Client.Models;
 using MessageFlow.Client.Models.DTOs;
+using MessageFlow.Client.Models.ViewModels;
 
 namespace MessageFlow.Client.Services
 {
@@ -63,25 +63,25 @@ namespace MessageFlow.Client.Services
             }
         }
 
-        public async Task<NotificationResult> SaveWhatsCoreAppSettingsAsync(WhatsAppCoreSettingsDTO coreSettings)
+        public async Task<ApiNotificationResultVM> SaveWhatsCoreAppSettingsAsync(WhatsAppCoreSettingsDTO coreSettings)
         {
             var response = await _httpClient.PostAsJsonAsync("api/channels/whatsapp/settings", coreSettings);
             var message = await response.Content.ReadAsStringAsync();
-            return new NotificationResult
+            return new ApiNotificationResultVM
             {
                 IsSuccess = response.IsSuccessStatusCode,
                 Message = message
             };
         }
 
-        public async Task<NotificationResult> SavePhoneNumbersAsync(List<PhoneNumberInfoDTO> numbers)
+        public async Task<ApiNotificationResultVM> SavePhoneNumbersAsync(List<PhoneNumberInfoDTO> numbers)
         {
             var response = await _httpClient.PostAsJsonAsync("api/channels/whatsapp/numbers", numbers);
 
 
             var message = await response.Content.ReadAsStringAsync();
 
-            return new NotificationResult
+            return new ApiNotificationResultVM
             {
                 IsSuccess = response.IsSuccessStatusCode,
                 Message = message

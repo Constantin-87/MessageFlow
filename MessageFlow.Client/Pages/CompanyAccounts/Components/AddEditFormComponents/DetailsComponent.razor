@@ -1,0 +1,54 @@
+﻿@inject CompanyManagementService CompanyManagementService
+
+<EditForm Model="Company" OnValidSubmit="HandleCompanySubmit">
+    <DataAnnotationsValidator />
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Company.AccountNumber" class="form-control" placeholder="Company Account Number" />
+        <label for="accountNumber">Company Account Number</label>
+        <ValidationMessage For="() => Company.AccountNumber" class="text-danger" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Company.CompanyName" class="form-control" placeholder="Company Name" />
+        <label for="companyName">Company Name</label>
+        <ValidationMessage For="() => Company.CompanyName" class="text-danger" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputTextArea @bind-Value="Company.Description" class="form-control" placeholder="Company Description" />
+        <label for="companyDescription">Company Description</label>
+        <ValidationMessage For="() => Company.Description" class="text-danger" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Company.IndustryType" class="form-control" placeholder="Industry Type" />
+        <label for="industryType">Industry Type</label>
+        <ValidationMessage For="() => Company.IndustryType" class="text-danger" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Company.WebsiteUrl" class="form-control" placeholder="Website URL" />
+        <label for="websiteUrl">Website URL</label>
+        <ValidationMessage For="() => Company.WebsiteUrl" class="text-danger" />
+    </div>
+
+    <button type="submit" class="btn btn-primary @(IsEditMode ? "" : "w-100 btn-lg")">
+        @(IsEditMode ? "Update Details" : "Create Company")
+    </button>
+</EditForm>
+
+@code {
+    [Parameter] public CompanyDTO Company { get; set; } = new();
+    [Parameter] public bool IsEditMode { get; set; }
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+
+    private async Task HandleCompanySubmit()
+    {
+        var result = IsEditMode
+            ? await CompanyManagementService.UpdateCompanyDetailsAsync(Company)
+            : await CompanyManagementService.CreateCompanyAsync(Company);
+
+        await OnActionCompleted.InvokeAsync(result);
+    }
+}

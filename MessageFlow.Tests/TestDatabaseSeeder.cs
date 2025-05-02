@@ -15,7 +15,7 @@ namespace MessageFlow.Tests
             RoleManager<IdentityRole> roleManager)
         {
             // Seed Roles (Using RoleManager)
-            var roles = new List<string> { "SuperAdmin", "Admin", "Manager", "Agent" };
+            var roles = new List<string> { "SuperAdmin", "Admin", "AgentManager", "Agent" };
 
             foreach (var roleName in roles)
             {

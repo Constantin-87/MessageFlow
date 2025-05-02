@@ -1,8 +1,8 @@
 ﻿using MessageFlow.Client.Models.DTOs;
 
-namespace MessageFlow.Client.Models.Extensions
+namespace MessageFlow.Client.Models.ViewModels
 {
-    public static class MessageDTOExtensions
+    public static class MessageVM
     {
         public static string GetStatusIcon(this MessageDTO message)
         {

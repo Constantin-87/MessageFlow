@@ -1,8 +1,7 @@
 ﻿using MediatR;
-using MessageFlow.Shared.DTOs;
+using MessageFlow.Identity.Models;
 
 namespace MessageFlow.Identity.MediatR.Commands
 {
-    public record LoginCommand(string Username, string Password)
-        : IRequest<(bool Success, string Token, string RefreshToken, string ErrorMessage, ApplicationUserDTO? User)>;
+    public record LoginCommand(LoginRequest LoginData) : IRequest<LoginResultDTO>;
 }

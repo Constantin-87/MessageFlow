@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using MessageFlow.Client.Models.DTOs;
+using MessageFlow.Client.Models.ViewModels;
 
 namespace MessageFlow.Client.Services
 {    
@@ -41,30 +42,24 @@ namespace MessageFlow.Client.Services
         }
 
         // Create a new company
-        public async Task<(bool success, string message)> CreateCompanyAsync(CompanyDTO companyDto)
+        public async Task<ApiNotificationResultVM> CreateCompanyAsync(CompanyDTO companyDto)
         {
             var response = await _httpClient.PostAsJsonAsync("api/company/create", companyDto);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Update company details
-        public async Task<(bool success, string message)> UpdateCompanyAsync(CompanyDTO companyDto)
+        public async Task<ApiNotificationResultVM> UpdateCompanyAsync(CompanyDTO companyDto)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update", companyDto);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Delete a company
-        public async Task<(bool success, string message)> DeleteCompanyAsync(string companyId)
+        public async Task<ApiNotificationResultVM> DeleteCompanyAsync(string companyId)
         {
             var response = await _httpClient.DeleteAsync($"api/company/delete/{companyId}");
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Get the logged-in user's company
@@ -74,65 +69,71 @@ namespace MessageFlow.Client.Services
         }        
 
         // Update company emails
-        public async Task<(bool success, string message)> UpdateCompanyEmailsAsync(List<CompanyEmailDTO> emails)
+        public async Task<ApiNotificationResultVM> UpdateCompanyEmailsAsync(List<CompanyEmailDTO> emails)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update-emails", emails);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Update company phone numbers
-        public async Task<(bool success, string message)> UpdateCompanyPhoneNumbersAsync(List<CompanyPhoneNumberDTO> phoneNumbers)
+        public async Task<ApiNotificationResultVM> UpdateCompanyPhoneNumbersAsync(List<CompanyPhoneNumberDTO> phoneNumbers)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update-phone-numbers", phoneNumbers);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Fetch company metadata
-        public async Task<(bool success, string metadata, string message)> GetCompanyMetadataAsync(string companyId)
+        public async Task<(ApiNotificationResultVM result, string metadata)> GetCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.GetAsync($"api/company/{companyId}/metadata");
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync(), "Success")
-                : (false, string.Empty, await response.Content.ReadAsStringAsync());
+
+            var result = await ApiNotificationResultVM.FromHttpResponseAsync(response, "Company metadata retrieved successfully");
+
+            var metadata = result.IsSuccess
+                ? await response.Content.ReadAsStringAsync()
+                : string.Empty;
+
+            return (result, metadata);
         }
 
         // Generate and upload metadata
-        public async Task<(bool success, string message)> GenerateAndUploadCompanyMetadataAsync(string companyId)
+        public async Task<ApiNotificationResultVM> GenerateAndUploadCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.PostAsync($"api/company/{companyId}/generate-metadata", null);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Delete metadata
-        public async Task<(bool success, string message)> DeleteCompanyMetadataAsync(string companyId)
+        public async Task<ApiNotificationResultVM> DeleteCompanyMetadataAsync(string companyId)
         {
             var response = await _httpClient.DeleteAsync($"api/company/{companyId}/delete-metadata");
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Fetch pretraining files
-        public async Task<(bool success, List<ProcessedPretrainDataDTO> files, string message)> GetCompanyPretrainingFilesAsync(string companyId)
+        public async Task<(ApiNotificationResultVM result, List<ProcessedPretrainDataDTO> files)> GetCompanyPretrainingFilesAsync(string companyId)
         {
             var response = await _httpClient.GetAsync($"api/company/{companyId}/pretraining-files");
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadFromJsonAsync<List<ProcessedPretrainDataDTO>>() ?? new List<ProcessedPretrainDataDTO>(), "Success")
-                : (false, new List<ProcessedPretrainDataDTO>(), await response.Content.ReadAsStringAsync());
+
+            var result = await ApiNotificationResultVM.FromHttpResponseAsync(response, "Pretraining files retrieved successfully");
+
+            var files = result.IsSuccess
+                ? await response.Content.ReadFromJsonAsync<List<ProcessedPretrainDataDTO>>() ?? new List<ProcessedPretrainDataDTO>()
+                : new List<ProcessedPretrainDataDTO>();
+
+            return (result, files);;
         }
 
-        public async Task<(bool success, string message)> UploadCompanyFilesAsync(List<PretrainDataFileDTO> files)
+        public async Task<ApiNotificationResultVM> UploadCompanyFilesAsync(List<PretrainDataFileDTO> files)
         {
             using var content = new MultipartFormDataContent();
 
             if (files.Count == 0)
-                return (false, "No files provided.");
+                return new ApiNotificationResultVM
+                {
+                    IsSuccess = false,
+                    Message = "No files provided."
+                };
 
             content.Add(new StringContent(files[0].CompanyId), "companyId");
 
@@ -147,13 +148,11 @@ namespace MessageFlow.Client.Services
 
             var response = await _httpClient.PostAsync("api/company/upload-files", content);
 
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Delete a specific file
-        public async Task<bool> DeleteCompanyFileAsync(ProcessedPretrainDataDTO file)
+        public async Task<ApiNotificationResultVM> DeleteCompanyFileAsync(ProcessedPretrainDataDTO file)
         {
             var request = new HttpRequestMessage(HttpMethod.Delete, "api/company/delete-file")
             {
@@ -161,24 +160,23 @@ namespace MessageFlow.Client.Services
             };
 
             var response = await _httpClient.SendAsync(request);
-            return response.IsSuccessStatusCode;
+
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
         // Create Azure AI Search Index
-        public async Task<(bool success, string message)> CreateAzureAiSearchIndexAndUploadFilesAsync(string companyId)
+        public async Task<ApiNotificationResultVM> CreateAzureAiSearchIndexAndUploadFilesAsync(string companyId)
         {
             var response = await _httpClient.PostAsync($"api/company/{companyId}/create-search-index", null);
-            return response.IsSuccessStatusCode
-                ? (true, await response.Content.ReadAsStringAsync())
-                : (false, await response.Content.ReadAsStringAsync());
+
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
 
-        public async Task<(bool success, string message)> UpdateCompanyDetailsAsync(CompanyDTO companyDto)
+        public async Task<ApiNotificationResultVM> UpdateCompanyDetailsAsync(CompanyDTO companyDto)
         {
             var response = await _httpClient.PutAsJsonAsync("api/company/update", companyDto);
-            return response.IsSuccessStatusCode
-                ? (true, "Company details updated successfully")
-                : (false, await response.Content.ReadAsStringAsync());
+
+            return await ApiNotificationResultVM.FromHttpResponseAsync(response);
         }
     }
 }

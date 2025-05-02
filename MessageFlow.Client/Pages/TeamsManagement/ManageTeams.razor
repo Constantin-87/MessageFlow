@@ -4,9 +4,16 @@
 @rendermode RenderMode.InteractiveWebAssembly
 @inject TeamsManagementService TeamsManagementService
 @inject CurrentUserService CurrentUser
-@inject IJSRuntime JSRuntime
 
+<!-- Notification Modal -->
 <Notification Result="@Notification" />
+
+<!-- Confirmation Modal -->
+<ConfirmationModal IsVisible="@showDeleteConfirmation"
+                   Title="Confirm Delete"
+                   Message="@($"Are you sure you want to delete the team {teamNameToDelete}?")"
+                   OnConfirm="DeleteConfirmedTeam"
+                   OnCancel="CancelDelete" />
 
 <h3>Manage Teams</h3>
 
@@ -54,9 +61,13 @@
 @code {
     private List<TeamDTO> teams = new List<TeamDTO>();
     private TeamDTO? selectedTeam = null;
-    private NotificationResult? Notification;
+    private ApiNotificationResultVM? Notification;
     private bool isNewTeam = true;
     private string companyId;
+
+    private bool showDeleteConfirmation = false;
+    private string? teamIdToDelete;
+    private string? teamNameToDelete;
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,17 +92,34 @@
         }
     }
 
-    private async Task ConfirmDeleteTeam(string teamId)
+    private void ConfirmDeleteTeam(string teamId)
     {
-        if (await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete this team?"))
-        {
-            await DeleteTeam(teamId);
-        }
+        var team = teams.FirstOrDefault(t => t.Id == teamId);
+        if (team is null) return;
+
+        teamIdToDelete = teamId;
+        teamNameToDelete = team.TeamName;
+        showDeleteConfirmation = true;
+    }
+
+    private void CancelDelete()
+    {
+        showDeleteConfirmation = false;
+        teamIdToDelete = null;
+        teamNameToDelete = null;
+    }
+
+    private async Task DeleteConfirmedTeam()
+    {
+        if (!string.IsNullOrWhiteSpace(teamIdToDelete))
+            await DeleteTeam(teamIdToDelete);
+
+        CancelDelete();
     }
 
     private string GetRowClass(TeamDTO team) => selectedTeam?.Id == team.Id ? "table-active" : "";
 
-    private async Task OnAddEditTeamClose(NotificationResult result)
+    private async Task OnAddEditTeamClose(ApiNotificationResultVM result)
     {
         Notification = result;
         teams = await TeamsManagementService.GetTeamsForCompanyAsync(companyId);
