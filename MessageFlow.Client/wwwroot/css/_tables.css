@@ -1,0 +1,64 @@
+﻿/* Base table style */
+.table {
+    background-color: var(--bg-mid);
+    color: var(--text-light);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+}
+
+    /* Table headers */
+    .table thead {
+        background-color: var(--bg-dark);
+        color: var(--text-muted);
+    }
+
+    .table th {
+        color: var(--text-info) !important;
+        background-color: var(--bg-mid);
+    }
+
+    /* Table cells */
+    .table td,
+    .table th {
+        border-color: var(--border-dark);
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+        min-width: 100px;
+    }
+
+    /* Table data text */
+    .table td {
+        color: var(--text-light) !important;
+    }
+
+/* Striped rows */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--bg-muted);
+}
+
+/* Hover state */
+.table tbody tr:hover {
+    background-color: var(--border-dark);
+    cursor: pointer;
+}
+
+/* Active row highlight */
+.table .table-active {
+    background-color: #1abc9c33 !important;
+    border-left: 3px solid var(--text-info);
+}
+
+/* Bordered tables */
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid var(--border-dark);
+}
+
+/* Responsive table wrapper */
+.table-responsive {
+    margin-top: 1rem;
+}

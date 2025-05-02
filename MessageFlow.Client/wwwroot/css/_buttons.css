@@ -1,0 +1,90 @@
+﻿.btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Primary */
+.btn-primary {
+    background-color: var(--btn-primary);
+    border: 1px solid var(--btn-primary-hover);
+    color: var(--text-light);
+}
+
+    .btn-primary:hover {
+        background-color: var(--btn-primary-hover);
+        border-color: var(--btn-primary-border-hover);
+    }
+
+/* Secondary */
+.btn-secondary {
+    background-color: var(--btn-secondary);
+    border: 1px solid var(--btn-secondary);
+    color: var(--text-light);
+}
+
+    .btn-secondary:hover {
+        background-color: var(--btn-secondary-hover);
+    }
+
+/* Success */
+.btn-success {
+    background-color: var(--btn-success);
+    border: 1px solid var(--btn-success);
+    color: var(--text-light);
+}
+
+    .btn-success:hover {
+        background-color: var(--btn-success-hover);
+        border-color: var(--btn-success-border-hover);
+    }
+
+/* Danger */
+.btn-danger {
+    background-color: var(--btn-danger);
+    border: 1px solid var(--btn-danger-border);
+    color: var(--text-light);
+}
+
+    .btn-danger:hover {
+        background-color: var(--btn-danger-hover);
+        border-color: var(--btn-danger-border-hover);
+    }
+
+/* Warning */
+.btn-warning {
+    background-color: var(--btn-warning);
+    border: 1px solid var(--btn-warning);
+    color: #1a202c;
+}
+
+    .btn-warning:hover {
+        opacity: 0.9;
+    }
+
+/* Small variant */
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.2rem;
+}
+
+/* Close Button from confirmation and video modals*/
+.btn-close {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    font-size: 1.25rem;
+}
+
+/* Close Button from notification*/
+.close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: inherit;
+    cursor: pointer;
+    line-height: 1;
+}

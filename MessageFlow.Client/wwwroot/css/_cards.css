@@ -1,0 +1,45 @@
+﻿.card {
+    background-color: var(--bg-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    width: fit-content;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+    .card.collapsed {
+        width: 300px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        background-color: var(--bg-mid);
+    }
+
+        .card.collapsed:hover {
+            background-color: var(--bg-mid);
+            border: 1px solid var(--border-accent);
+        }
+
+.card-header {
+    background-color: var(--bg-dark);
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+    .card-header:hover {
+        background-color: var(--bg-mid);
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-weight: bold;
+    }
+
+.card-body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}

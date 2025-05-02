@@ -26,13 +26,3 @@
     border: 1px solid #f5c6cb;
     border-radius: 0.5rem;
 }
-
-.close-btn {
-    background: transparent;
-    border: none;
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: inherit;
-    cursor: pointer;
-    line-height: 1;
-}

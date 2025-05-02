@@ -1,9 +1,4 @@
-﻿h3 {
-    color: #d1d5db;
-    margin-top: 1rem;
-}
-
-.workspace-container {
+﻿.workspace-container {
     display: flex;
     gap: 1rem;
     height: 85vh;

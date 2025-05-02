@@ -1,0 +1,53 @@
+﻿/* Input and textarea base */
+.form-control,
+textarea.form-control {
+    background-color: var(--bg-mid);
+    border: 1px solid var(--border-dark);
+    color: var(--text-light);
+}
+
+    /* Input focus state */
+    .form-control:focus,
+    textarea.form-control:focus {
+        background-color: var(--bg-mid);
+        border-color: var(--text-info); /* #1abc9c */
+        color: var(--text-white);
+        box-shadow: none;
+        outline: none;
+    }
+
+/* Label */
+label,
+label.form-label {
+    color: var(--text-muted);
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Form floating layout width */
+.form-floating {
+    width: 300px;
+}
+
+    .form-floating > label {
+        color: var(--text-muted);
+    }
+
+/* File input */
+input[type="file"].form-control {
+    background-color: var(--bg-mid);
+    border-color: var(--border-dark);
+    color: var(--text-light);
+}
+
+/* Placeholder */
+input::placeholder {
+    color: var(--text-placeholder);
+}
+
+/* Validation messages */
+.validation-message,
+.text-danger {
+    color: var(--text-error);
+    font-size: 0.875rem;
+}

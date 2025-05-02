@@ -26,24 +26,7 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: #1abc9c #2c3e50;
 }
-    /* Chrome, Edge, Safari */
-    .chat-history::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .chat-history::-webkit-scrollbar-track {
-        background: #2c3e50;
-        border-radius: 5px;
-    }
-
-    .chat-history::-webkit-scrollbar-thumb {
-        background-color: #1abc9c;
-        border-radius: 5px;
-        border: 2px solid #2c3e50;
-    }
 
 .chat-input-area {
     display: flex;
@@ -106,13 +89,6 @@
     background-color: #255F54;
     align-self: flex-end;
     text-align: right;
-}
-
-.status-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 8px;
-    vertical-align: middle;
 }
 
 .delivery-time {

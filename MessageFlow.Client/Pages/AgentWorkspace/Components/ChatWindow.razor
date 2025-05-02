@@ -39,7 +39,7 @@ else
             var activeChat = ActiveChats.First(c => c.Conversation.IsActive);
             <div class="chat-window">
                 <h5>Conversation with: @activeChat.Conversation.SenderUsername</h5>
-                <div class="chat-history" @ref="ChatHistoryDiv">
+                <div class="chat-history scrollable" @ref="ChatHistoryDiv">
                     @foreach (var message in activeChat.Conversation.Messages)
                     {
                         <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message") @(message.UserId == "AI" ? "ai-message" : "")">
