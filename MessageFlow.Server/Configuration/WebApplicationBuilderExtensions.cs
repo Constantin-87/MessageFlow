@@ -45,6 +45,14 @@ namespace MessageFlow.Server.Configuration
                 WhatsAppWebhookVerifyToken = builder.Configuration["whatsapp-webhook-verify-token"]
             };
 
+            var aiConnectionString = builder.Configuration["AppInsights--ConnectionString"];
+            if (!string.IsNullOrEmpty(aiConnectionString))
+            {
+                builder.Services.AddApplicationInsightsTelemetry(options =>
+                {
+                    options.ConnectionString = aiConnectionString;
+                });
+            }
             // Validate Secrets Before Starting
             void ValidateConfig(GlobalChannelSettings settings)
             {

@@ -31,6 +31,15 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
 }
 
+var aiConnectionString = builder.Configuration["AppInsights--ConnectionString"];
+if (!string.IsNullOrEmpty(aiConnectionString))
+{
+    builder.Services.AddApplicationInsightsTelemetry(options =>
+    {
+        options.ConnectionString = aiConnectionString;
+    });
+}
+
 // Retrieve Connection String from Key Vault
 var connectionString = builder.Configuration.GetConnectionString("DBConnectionString");
 if (string.IsNullOrEmpty(connectionString))
