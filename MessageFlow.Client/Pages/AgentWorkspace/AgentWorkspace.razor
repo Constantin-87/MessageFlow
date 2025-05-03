@@ -22,13 +22,12 @@
     </div>
 
     <!-- New Conversations List -->
-    <NewConversationsList UserId="@CurrentUser.UserId" HubConnection="@hubConnection" ChatWindowRef="@ChatWindowRef" />
+    <NewConversationsList UserId="@CurrentUser.UserId" HubConnection="@hubConnection"/>
 
 </div>
 
 @code {
     private HubConnection? hubConnection;
-    private ChatWindow? ChatWindowRef;
 
     protected override async Task OnInitializedAsync()
     {

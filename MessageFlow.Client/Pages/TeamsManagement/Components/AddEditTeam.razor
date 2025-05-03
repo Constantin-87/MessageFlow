@@ -23,19 +23,31 @@
 
         <div class="col-md-6">
             <div class="d-flex gap-3">
+
                 <!-- Available Users -->
                 <div class="d-flex flex-column col-4">
                     <label class="form-label">Available Users:</label>
                     <div class="border p-2 scrollable-list-container scrollable">
-                        <ul class="list-group">
-                            @foreach (var user in availableUsers)
-                            {
-                                <li class="list-group-item @(selectedAvailableUsers.Contains(user) ? "active" : "")"
-                                    @onclick="@(() => ToggleAvailableUserSelection(user))">
-                                    @user.UserName
-                                </li>
-                            }
-                        </ul>
+                        @if (IsLoadingAvailableUsers)
+                        {
+                            <LoadingIndicator Message="Loading users..." IsDark="false" />
+                        }
+                        else if (!availableUsers.Any())
+                        {
+                            <p class="text-muted">No other users.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var user in availableUsers)
+                                {
+                                    <li class="list-group-item @(selectedAvailableUsers.Contains(user) ? "active" : "")"
+                                        @onclick="@(() => ToggleAvailableUserSelection(user))">
+                                        @user.UserName
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                 </div>
 
@@ -49,15 +61,26 @@
                 <div class="d-flex flex-column col-4">
                     <label class="form-label">Assigned Users:</label>
                     <div class="border p-2 scrollable-list-container">
-                        <ul class="list-group">
-                            @foreach (var user in assignedUsers)
-                            {
-                                <li class="list-group-item @(selectedAssignedUsers.Contains(user) ? "active" : "")"
-                                    @onclick="@(() => ToggleAssignedUserSelection(user))">
-                                    @user.UserName
-                                </li>
-                            }
-                        </ul>
+                        @if (IsLoadingAssignedUsers)
+                        {
+                            <LoadingIndicator Message="Loading team members..." IsDark="false" />
+                        }
+                        else if (!assignedUsers.Any())
+                        {
+                            <p class="text-muted">No assigned users.</p>
+                        }
+                        else
+                        {
+                            <ul class="list-group">
+                                @foreach (var user in assignedUsers)
+                                {
+                                    <li class="list-group-item @(selectedAssignedUsers.Contains(user) ? "active" : "")"
+                                        @onclick="@(() => ToggleAssignedUserSelection(user))">
+                                        @user.UserName
+                                    </li>
+                                }
+                            </ul>
+                        }
                     </div>
                 </div>
             </div>
@@ -87,17 +110,22 @@
     private List<ApplicationUserDTO> selectedAvailableUsers = new();
     private List<ApplicationUserDTO> selectedAssignedUsers = new();
 
+    private bool IsLoadingAvailableUsers = false;
+    private bool IsLoadingAssignedUsers = false;
+
     protected override async Task OnInitializedAsync()
     {
+        IsLoadingAssignedUsers = true;
+        IsLoadingAvailableUsers = true;
         if (Team != null && Team.Id != null)
         {
             teamName = Team.TeamName;
             teamDescription = Team.TeamDescription ?? string.Empty;
             assignedUsers = await TeamsManagementService.GetUsersForTeamAsync(Team.Id);
         }
-
+        IsLoadingAssignedUsers = false;
         var allCompanyUsers = await UserManagementService.GetUsersForCompanyAsync(CompanyId);
-
+        IsLoadingAvailableUsers = false;
         availableUsers = allCompanyUsers
             .Where(u => !assignedUsers.Any(au => au.Id == u.Id))
             .ToList();

@@ -22,7 +22,7 @@ public class WhatsAppWebhook : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Verify([FromQuery(Name = "hub.mode")] string hub_mode,
+    public IActionResult Verify([FromQuery(Name = "hub.mode")] string hub_mode,
                                         [FromQuery(Name = "hub.challenge")] string hub_challenge,
                                         [FromQuery(Name = "hub.verify_token")] string hub_verify_token)
     {

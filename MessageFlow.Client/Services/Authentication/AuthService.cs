@@ -82,10 +82,7 @@ namespace MessageFlow.Client.Services.Authentication
             };
 
             // Delay heartbeat start to let token settle in storage
-            _ = Task.Run(async () =>
-            {
-                _heartbeat.Start();
-            });
+            _ = Task.Run(() => _heartbeat.Start());
             await Task.Delay(1000);
             return (true, redirectUrl, "");
         }
@@ -120,7 +117,7 @@ namespace MessageFlow.Client.Services.Authentication
 
                 return await _refreshTask;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _logger.LogError("Exception during token refresh.");
                 return false;

@@ -36,9 +36,17 @@
             <button class="btn btn-success mt-3 mb-4" @onclick="UploadAllFiles">Save All Files</button>
         }
 
-        @if (IsLoadingFiles)
+        @if (CurrentState == FileLoadingState.Loading)
         {
             <LoadingIndicator Message="Loading company files..." IsDark="false" />
+        }
+        else if (CurrentState == FileLoadingState.Uploading)
+        {
+            <LoadingIndicator Message="Uploading company files..." IsDark="false" />
+        }
+        else if (CurrentState == FileLoadingState.Deleting)
+        {
+            <LoadingIndicator Message="Deleting file..." IsDark="false" />
         }
         else if (ExistingFiles.Any())
         {
@@ -80,7 +88,8 @@
     [Parameter] public string CompanyId { get; set; } = string.Empty;
     [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
-    private bool IsLoadingFiles = false;
+    private enum FileLoadingState { None, Loading, Uploading, Deleting }
+    private FileLoadingState CurrentState = FileLoadingState.None;
     private List<PretrainDataFileDTO> UploadedFiles { get; set; } = new();
     private List<ProcessedPretrainDataDTO> ExistingFiles { get; set; } = new();
 
@@ -127,7 +136,9 @@
 
     private async Task UploadAllFiles()
     {
+        CurrentState = FileLoadingState.Uploading;
         var result = await CompanyManagementService.UploadCompanyFilesAsync(UploadedFiles);
+        CurrentState = FileLoadingState.None;
         await OnActionCompleted.InvokeAsync(result);
 
         if (result.IsSuccess)
@@ -139,9 +150,9 @@
 
     private async Task LoadExistingFiles()
     {
-        IsLoadingFiles = true;
+        CurrentState = FileLoadingState.Loading;
         var (result, files) = await CompanyManagementService.GetCompanyPretrainingFilesAsync(CompanyId);
-        IsLoadingFiles = false;
+        CurrentState = FileLoadingState.None;
 
         if (result.IsSuccess)
         {
@@ -155,7 +166,9 @@
 
     private async Task DeleteExistingFile(ProcessedPretrainDataDTO file)
     {
+        CurrentState = FileLoadingState.Deleting;
         var result = await CompanyManagementService.DeleteCompanyFileAsync(file);
+        CurrentState = FileLoadingState.None;
         await OnActionCompleted.InvokeAsync(result);
 
         if (result.IsSuccess)

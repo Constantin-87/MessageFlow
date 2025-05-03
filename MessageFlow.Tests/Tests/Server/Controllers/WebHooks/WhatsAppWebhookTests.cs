@@ -26,24 +26,24 @@ public class WhatsAppWebhookTests
     }
 
     [Fact]
-    public async Task Verify_ReturnsOk_WhenTokenMatches()
+    public void Verify_ReturnsOk_WhenTokenMatches()
     {
-        var result = await _controller.Verify("subscribe", "challenge", "verify_token");
+        var result = _controller.Verify("subscribe", "challenge", "verify_token");
         var ok = Assert.IsType<OkObjectResult>(result);
         Assert.Equal("challenge", ok.Value);
     }
 
     [Fact]
-    public async Task Verify_ReturnsUnauthorized_WhenModeInvalid()
+    public void Verify_ReturnsUnauthorized_WhenModeInvalid()
     {
-        var result = await _controller.Verify("wrong", "challenge", "verify_token");
+        var result = _controller.Verify("wrong", "challenge", "verify_token");
         Assert.IsType<UnauthorizedResult>(result);
     }
 
     [Fact]
-    public async Task Verify_ReturnsUnauthorized_WhenTokenInvalid()
+    public void Verify_ReturnsUnauthorized_WhenTokenInvalid()
     {
-        var result = await _controller.Verify("subscribe", "challenge", "wrong_token");
+        var result = _controller.Verify("subscribe", "challenge", "wrong_token");
         Assert.IsType<UnauthorizedResult>(result);
     }
 

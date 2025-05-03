@@ -37,9 +37,9 @@ namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
                     return false;
                 }
 
-                await UpdateMessageStatusAsync(message, request.StatusElement);
+                UpdateMessageStatus(message, request.StatusElement);
                 message.ChangedAt = timestamp;
-                _unitOfWork.Messages.UpdateEntityAsync(message);
+                await _unitOfWork.Messages.UpdateEntityAsync(message);
                 await _unitOfWork.SaveChangesAsync();
 
                 await NotifyAssignedUserAsync(message, messageId);
@@ -62,7 +62,7 @@ namespace MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers
             return DateTime.UtcNow;
         }
 
-        private async Task UpdateMessageStatusAsync(Message message, JsonElement statusElement)
+        private void UpdateMessageStatus(Message message, JsonElement statusElement)
         {
             var order = new List<string> { "SentToProvider", "sent", "delivered", "read" };
             var status = statusElement.GetProperty("status").GetString();

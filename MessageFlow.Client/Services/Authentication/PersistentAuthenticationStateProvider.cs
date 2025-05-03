@@ -78,7 +78,7 @@ namespace MessageFlow.Client.Services.Authentication
                 await _jsRuntime.InvokeVoidAsync("sessionStorage.removeItem", "authToken");
                 return await DefaultUnauthenticatedTask;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return await DefaultUnauthenticatedTask;
             }

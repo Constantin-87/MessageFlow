@@ -33,7 +33,7 @@ namespace MessageFlow.Server.MediatR.TeamManagement.CommandHandlers
                     return (false, errorMessage);
                 }
 
-                _unitOfWork.Teams.RemoveEntityAsync(team);
+                await _unitOfWork.Teams.RemoveEntityAsync(team);
                 await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation($"Team with ID {request.TeamId} deleted successfully.");

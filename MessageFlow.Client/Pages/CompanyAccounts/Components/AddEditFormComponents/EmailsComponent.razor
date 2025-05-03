@@ -24,16 +24,16 @@
 </div>
 
 @code {
-    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public CompanyDTO Company { get; set; }
     [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
     private List<CompanyEmailDTO> CompanyEmails { get; set; } = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var result = await CompanyManagementService.GetCompanyByIdAsync(CompanyId);
-        CompanyEmails = result?.CompanyEmails?.ToList() ?? new();
-        if (CompanyEmails.Count == 0) AddEmail();
+        CompanyEmails = Company?.CompanyEmails?.ToList() ?? new();
+        if (CompanyEmails.Count == 0)
+            AddEmail();
     }
 
     private void AddEmail()
@@ -41,7 +41,7 @@
         CompanyEmails.Add(new CompanyEmailDTO
             {
                 Id = Guid.NewGuid().ToString(),
-                CompanyId = CompanyId
+                CompanyId = Company.Id
             });
     }
 

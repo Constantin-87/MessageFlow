@@ -29,7 +29,7 @@ namespace MessageFlow.Client.Services
 
                 return await response.Content.ReadFromJsonAsync<List<CompanyDTO>>() ?? new List<CompanyDTO>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return new List<CompanyDTO>();
             }
