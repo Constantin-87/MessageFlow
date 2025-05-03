@@ -37,7 +37,7 @@
                     <ValidationMessage For="() => loginModel.Password" class="text-danger" />
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <button type="submit" class="btn btn-primary">Login</button>
             </EditForm>
         }
 
@@ -53,8 +53,6 @@
     {
         isLoggingIn = true;
         errorMessage = "";
-
-
 
         var (success, redirectUrl, err) = await AuthService.LoginAsync(loginModel);
 

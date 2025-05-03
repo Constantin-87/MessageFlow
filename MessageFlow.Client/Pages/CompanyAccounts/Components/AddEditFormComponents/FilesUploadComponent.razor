@@ -90,6 +90,7 @@
 
     private enum FileLoadingState { None, Loading, Uploading, Deleting }
     private FileLoadingState CurrentState = FileLoadingState.None;
+
     private List<PretrainDataFileDTO> UploadedFiles { get; set; } = new();
     private List<ProcessedPretrainDataDTO> ExistingFiles { get; set; } = new();
 
