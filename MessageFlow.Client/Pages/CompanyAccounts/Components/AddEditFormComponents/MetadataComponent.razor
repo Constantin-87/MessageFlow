@@ -11,25 +11,30 @@
         <button class="btn btn-danger" @onclick="DeleteMetadata" title="Permanently remove the metadata associated with this company.">
             Delete Company Metadata
         </button>
-        <button class="btn btn-secondary" @onclick="ToggleMetadataView" title="View the currently stored metadata.">
-            Show Metadata
-        </button>
         <button class="btn btn-warning" @onclick="CreateCompanyIndex" title="Create or rebuild the Azure Search index for this company.">
             Create Search Index
         </button>
 
-        @if (IsCreatingIndex)
+        @if (CurrentState == LoadingState.CreatingIndex)
         {
             <LoadingIndicator Message="Creating search index..." IsDark="false" />
         }
-        @if (IsMetadataBusy)
+        @if (CurrentState == LoadingState.CreatingMetadata)
         {
             <LoadingIndicator Message="Creating pre-training metadata..." IsDark="false" />
         }
-
-        @if (ShowMetadata)
+        @if (CurrentState == LoadingState.LoadingMetadata)
         {
-            <textarea class="form-control mt-2" rows="10" readonly>@CurrentMetadata</textarea>
+            <LoadingIndicator Message="Loading pre-training metadata..." IsDark="false" />
+        }
+        @if (CurrentState == LoadingState.DeletingMetadata)
+        {
+            <LoadingIndicator Message="Deleting pre-training metadata..." IsDark="false" />
+        }
+
+        @if (!string.IsNullOrWhiteSpace(CurrentMetadata))
+        {
+            <textarea class="form-control mt-2 scrollable" rows="10" readonly>@CurrentMetadata</textarea>
         }
     </div>
 </div>
@@ -38,42 +43,40 @@
     [Parameter] public string CompanyId { get; set; } = string.Empty;
     [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
-    private bool IsCreatingIndex = false;
-    private bool IsMetadataBusy = false;
-    private bool ShowMetadata = false;
+    private enum LoadingState { None, CreatingIndex, CreatingMetadata, LoadingMetadata, DeletingMetadata }
+    private LoadingState CurrentState = LoadingState.None;
     private string CurrentMetadata = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMetadata();
+    }
 
     private async Task UpdateMetadata()
     {
-        IsMetadataBusy = true;
+        CurrentState =  LoadingState.CreatingMetadata;
         var result = await CompanyManagementService.GenerateAndUploadCompanyMetadataAsync(CompanyId);
-        IsMetadataBusy = false;
+        CurrentState = LoadingState.None;
+        await LoadMetadata();
         await OnActionCompleted.InvokeAsync(result);
     }
 
     private async Task DeleteMetadata()
     {
+        CurrentState = LoadingState.DeletingMetadata;
         var result = await CompanyManagementService.DeleteCompanyMetadataAsync(CompanyId);
+        CurrentState = LoadingState.None;
         await OnActionCompleted.InvokeAsync(result);
 
         if (result.IsSuccess)
             CurrentMetadata = string.Empty;
     }
 
-    private async Task ToggleMetadataView()
-    {
-        ShowMetadata = !ShowMetadata;
-        if (ShowMetadata)
-        {
-            await LoadMetadata();
-        }
-    }
-
     private async Task LoadMetadata()
     {
-        IsMetadataBusy = true;
+        CurrentState = LoadingState.LoadingMetadata;
         var (result, metadata) = await CompanyManagementService.GetCompanyMetadataAsync(CompanyId);
-        IsMetadataBusy = false;
+        CurrentState = LoadingState.None;
 
         if (result.IsSuccess)
         {
@@ -87,9 +90,9 @@
 
     private async Task CreateCompanyIndex()
     {
-        IsCreatingIndex = true;
+        CurrentState = LoadingState.CreatingIndex;
         var result = await CompanyManagementService.CreateAzureAiSearchIndexAndUploadFilesAsync(CompanyId);
-        IsCreatingIndex = false;
+        CurrentState = LoadingState.None;
         await OnActionCompleted.InvokeAsync(result);
     }
 }

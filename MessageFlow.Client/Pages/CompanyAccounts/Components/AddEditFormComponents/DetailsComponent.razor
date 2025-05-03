@@ -16,7 +16,7 @@
     </div>
 
     <div class="form-floating mb-3">
-        <InputTextArea @bind-Value="Company.Description" class="form-control" placeholder="Company Description" />
+        <InputTextArea @bind-Value="Company.Description" class="form-control scrollable" placeholder="Company Description" />
         <label for="companyDescription">Company Description</label>
         <ValidationMessage For="() => Company.Description" class="text-danger" />
     </div>
@@ -33,7 +33,7 @@
         <ValidationMessage For="() => Company.WebsiteUrl" class="text-danger" />
     </div>
 
-    <button type="submit" class="btn btn-primary @(IsEditMode ? "" : "w-100 btn-lg")">
+    <button type="submit" class="btn btn-primary ">
         @(IsEditMode ? "Update Details" : "Create Company")
     </button>
 </EditForm>

@@ -46,8 +46,8 @@ else
                     <td>@company.Description</td>
                     <td>@company.TotalUsers</td>
                     <td>
-                        <button class="btn btn-primary" @onclick="() => NavigateToEditCompany(company.Id)">Edit</button>
-                        <button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(company.Id, company.CompanyName)">Delete</button>
+                        <button class="btn btn-sm btn-primary" @onclick="() => NavigateToEditCompany(company.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteConfirmation(company.Id, company.CompanyName)">Delete</button>
                     </td>
                 </tr>
             }

@@ -24,18 +24,16 @@
 </div>
 
 @code {
-    [Parameter] public string CompanyId { get; set; } = string.Empty;
+    [Parameter] public CompanyDTO Company { get; set; }
     [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
     private List<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new();
 
     protected override async Task OnParametersSetAsync()
     {
-        if (string.IsNullOrWhiteSpace(CompanyId)) return;
+        if (string.IsNullOrWhiteSpace(Company.Id)) return;
 
-        var company = await CompanyManagementService.GetCompanyByIdAsync(CompanyId);
-        CompanyPhoneNumbers = company?.CompanyPhoneNumbers?.ToList() ?? new();
-
+        CompanyPhoneNumbers = Company?.CompanyPhoneNumbers?.ToList() ?? new();
         if (CompanyPhoneNumbers.Count == 0)
             AddPhoneNumber();
     }
@@ -45,7 +43,7 @@
         CompanyPhoneNumbers.Add(new CompanyPhoneNumberDTO
             {
                 Id = Guid.NewGuid().ToString(),
-                CompanyId = CompanyId
+                CompanyId = Company.Id
             });
     }
 

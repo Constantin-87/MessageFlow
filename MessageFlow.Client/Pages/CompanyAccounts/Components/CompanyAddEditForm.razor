@@ -1,587 +1,63 @@
 ﻿@attribute [Authorize(Roles = "SuperAdmin, Admin")]
 @rendermode RenderMode.InteractiveWebAssembly
 @inject CompanyManagementService CompanyManagementService
-@inject IJSRuntime JS
 
 <h3>@Title</h3>
 
-
 <div class="mt-4 mb-3">
-    <button class="btn btn-outline-secondary me-2"
-            @onclick="() => ToggleSection(nameof(ShowDetails))">
-        Details
-    </button>
-    <button class="btn btn-outline-secondary me-2"
-            @onclick="() => ToggleSection(nameof(ShowEmails))"
-            disabled="@(IsEditMode == false)">
-        Emails
-    </button>
-    <button class="btn btn-outline-secondary me-2"
-            @onclick="() => ToggleSection(nameof(ShowPhones))"
-            disabled="@(IsEditMode == false)">
-        Phones
-    </button>
-    <button class="btn btn-outline-secondary me-2"
-            @onclick="() => ToggleSection(nameof(ShowFiles))"
-            disabled="@(IsEditMode == false)">
-        Files
-    </button>
-    <button class="btn btn-outline-secondary"
-            @onclick="() => ToggleSection(nameof(ShowMetadata))"
-            disabled="@(IsEditMode == false)">
-        Metadata
-    </button>
+    @foreach (var sec in Enum.GetValues<Section>())
+    {
+        <button class="btn btn-outline-secondary me-2"
+                @onclick="() => ToggleSection(sec)"
+                disabled="@(!IsEditMode && sec != Section.Details)">
+            @sec
+        </button>
+    }
 </div>
 
-
-<!-- Company Details Section -->
-@if (ShowDetails)
+@if (ActiveSection == Section.Details)
 {
-    <DetailsComponent Company="Company"
-                      IsEditMode="IsEditMode"
-                      OnActionCompleted="OnActionCompleted" />
+    <DetailsComponent Company="Company" IsEditMode="IsEditMode" OnActionCompleted="OnActionCompleted" />
 }
-@* <div class="card @(CompanyDetailsExpanded ? "" : "collapsed") mt-3">
-    <div class="card-header" @onclick="() => ToggleSection(nameof(CompanyDetailsExpanded))">
-        <h5>Company Details</h5>
-    </div>
-    <div class="card-body" style="@GetSectionStyle(CompanyDetailsExpanded)">
-        <EditForm Model="Company" OnValidSubmit="HandleCompanySubmit">
-            <DataAnnotationsValidator />
-
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Company.AccountNumber" class="form-control" placeholder="Company Account Number" />
-                <label for="accountNumber">Company Account Number</label>
-                <ValidationMessage For="() => Company.AccountNumber" class="text-danger" />
-            </div>
-
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Company.CompanyName" class="form-control" placeholder="Company Name" />
-                <label for="companyName">Company Name</label>
-                <ValidationMessage For="() => Company.CompanyName" class="text-danger" />
-            </div>
-
-            <div class="form-floating mb-3">
-                <InputTextArea @bind-Value="Company.Description" class="form-control" placeholder="Company Description" />
-                <label for="companyDescription">Company Description</label>
-                <ValidationMessage For="() => Company.Description" class="text-danger" />
-            </div>
-
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Company.IndustryType" class="form-control" placeholder="Industry Type" />
-                <label for="industryType">Industry Type</label>
-                <ValidationMessage For="() => Company.IndustryType" class="text-danger" />
-            </div>
-
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Company.WebsiteUrl" class="form-control" placeholder="Website URL" />
-                <label for="websiteUrl">Website URL</label>
-                <ValidationMessage For="() => Company.WebsiteUrl" class="text-danger" />
-            </div>
-
-            <button type="submit" class="btn btn-primary @(IsEditMode ? "" : "w-100 btn-lg")">
-                @(IsEditMode ? "Update Details" : "Create Company")
-            </button>
-
-        </EditForm>
-    </div>
-</div> *@
-
-@if (IsEditMode)
+@if (IsEditMode && ActiveSection == Section.Emails)
 {
-
-
-    @if (ShowEmails)
-    {
-        <EmailsComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
-    }
-
-    @if (ShowPhones)
-    {
-        <PhoneNumbersComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
-    }
-
-    @if (ShowFiles)
-    {
-        <FilesUploadComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
-    }
-
-    @if (ShowMetadata)
-    {
-        <MetadataComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
-    }
-
-
-   @*  <!-- Company Emails Section -->
-    <div class="card @(EmailsExpanded ? "" : "collapsed") mt-3">
-        <div class="card-header" @onclick="() => ToggleSection(nameof(EmailsExpanded))">
-            <h5>Company Emails</h5>
-        </div>
-        <div class="card-body" style="@GetSectionStyle(EmailsExpanded)">
-
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-secondary" @onclick="AddEmail">Add New Email</button>
-                <button type="submit" class="btn btn-primary" @onclick="SaveCompanyEmails">Save All</button>
-            </div>
-
-            <!-- Input fields for existing & new emails -->
-            <ul class="list-group">
-                @foreach (var email in CompanyEmails)
-                {
-                    <li class="list-group-item d-flex align-items-center gap-2">
-                        <InputText @bind-Value="email.EmailAddress" class="form-control" placeholder="Email Address" />
-                        <InputText @bind-Value="email.Description" class="form-control" placeholder="Description (e.g., Support, Sales)" />
-                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemoveEmail(email)">Remove</button>
-                    </li>
-                }
-            </ul>
-        </div>
-    </div>
-
-    <!-- Company Phone Numbers Section -->
-    <div class="card @(PhoneNumbersExpanded ? "" : "collapsed") mt-3">
-        <div class="card-header" @onclick="() => ToggleSection(nameof(PhoneNumbersExpanded))">
-            <h5>Company Phone Numbers</h5>
-        </div>
-        <div class="card-body" style="@GetSectionStyle(PhoneNumbersExpanded)">
-
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-secondary" @onclick="AddPhoneNumber">Add New Phone Number</button>
-                <button type="submit" class="btn btn-primary" @onclick="SaveCompanyPhoneNumbers">Save All</button>
-            </div>
-
-            <!-- Input fields for existing & new phone numbers -->
-            <ul class="list-group">
-                @foreach (var phone in CompanyPhoneNumbers)
-                {
-                    <li class="list-group-item d-flex align-items-center gap-2">
-                        <InputText @bind-Value="phone.PhoneNumber" class="form-control" placeholder="Phone Number" />
-                        <InputText @bind-Value="phone.Description" class="form-control" placeholder="Description (e.g., Support, Sales)" />
-                        <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemovePhoneNumber(phone)">Remove</button>
-                    </li>
-                }
-            </ul>
-        </div>
-    </div> *@
-
-    <!-- Pretraining Files Section -->
-    @* <div class="card @(FilesExpanded ? "" : "collapsed") mt-3">
-        <div class="card-header" @onclick="() => ToggleSection(nameof(FilesExpanded))">
-            <h5>Pretraining Files</h5>
-        </div>
-        <div class="card-body" style="@GetSectionStyle(FilesExpanded)">
-
-            <!-- Display Selected Files -->
-            <h6>Upload new files:</h6>
-            <InputFile multiple OnChange="HandleFileSelection" class="form-control mb-3" />
-
-            @if (UploadedFiles.Count > 0)
-            {
-                <table class="table table-bordered" style="margin-top: 15px;">
-                    <thead>
-                        <tr>
-                            <th>File Name</th>
-                            <th>Description</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var file in UploadedFiles)
-                        {
-                            <tr>
-                                <td>@file.FileName</td>
-                                <td>
-                                    <InputText @bind-Value="file.FileDescription" class="form-control" placeholder="Enter Description" />
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-danger btn-sm" @onclick="() => RemovePendingFile(file)">Remove</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-                <button class="btn btn-success mt-3 mb-4" @onclick="UploadAllFiles">Save All Files</button>
-            }
-
-            <!-- Display Existing Files -->
-            @if (IsLoadingFiles)
-            {
-                <LoadingIndicator Message="Loading company files..." IsDark="false" />
-            }
-            else if (ExistingFiles.Any())
-            {
-                <h6>Existing files in storage:</h6>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>File Name</th>
-                            <th>Description</th>
-                            <th>Location</th>
-                            <th>Added On</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var file in ExistingFiles)
-                        {
-                            <tr>
-                                <td title="@file.FileType">@file.FileType</td>
-                                <td title="@file.FileDescription">@file.FileDescription</td>
-                                <td title="@file.FileUrl">@file.FileUrl</td>
-                                <td title="@file.ProcessedAt">@file.ProcessedAt</td>
-                                <td class="text-center">
-                                    <button class="btn btn-danger btn-sm" @onclick="() => DeleteExistingFile(file)">Delete</button>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            }
-            else
-            {
-                <p>No pre-training files uploaded.</p>
-            }
-        </div>
-    </div> *@
-
-    <!-- Metadata Section -->
-    @* <div class="card @(MetadataExpanded ? "" : "collapsed") mt-3">
-        <div class="card-header" @onclick="() => ToggleSection(nameof(MetadataExpanded))">
-            <h5>Metadata Management</h5>
-        </div>
-        <div class="card-body" style="@GetSectionStyle(MetadataExpanded)">
-            <button class="btn btn-primary" @onclick="UpdateMetadata" title="Create pre-training metadata from company details.">
-                Update Company Metadata
-            </button>
-            <button class="btn btn-danger" @onclick="DeleteMetadata" title="Permanently remove the metadata associated with this company.">
-                Delete Company Metadata
-            </button>
-            <button class="btn btn-secondary" @onclick="ToggleMetadataView" title="View the currently stored metadata.">
-                Show Metadata
-            </button>
-            <button class="btn btn-warning" @onclick="CreateCompanyIndex" title="Create or rebuild the Azure Search index for this company.">
-                Create Search Index
-            </button>
-
-            @if (IsCreatingIndex)
-            {
-                <LoadingIndicator Message="Creating search index..." IsDark="false" />
-            }
-            @if (IsMetadataBusy)
-            {
-                <LoadingIndicator Message="Creating pre-training metadata..." IsDark="false" />
-            }
-
-            @if (ShowMetadata)
-            {
-                <textarea class="form-control mt-2" rows="10" readonly>@CurrentMetadata</textarea>
-            }
-        </div>
-    </div>     *@
+    <EmailsComponent Company="Company" OnActionCompleted="OnActionCompleted" />
+}
+@if (IsEditMode && ActiveSection == Section.Phones)
+{
+    <PhoneNumbersComponent Company="Company" OnActionCompleted="OnActionCompleted" />
+}
+@if (IsEditMode && ActiveSection == Section.Files)
+{
+    <FilesUploadComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
+}
+@if (IsEditMode && ActiveSection == Section.Metadata)
+{
+    <MetadataComponent CompanyId="@Company.Id" OnActionCompleted="OnActionCompleted" />
 }
 
 @code {
-    [Parameter]
-    public bool IsEditMode { get; set; } = false;
-    [Parameter]
-    public string CompanyId { get; set; }
-    [Parameter]
-    public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
+    [Parameter] public bool IsEditMode { get; set; } = false;
+    [Parameter] public string CompanyId { get; set; }
+    [Parameter] public EventCallback<ApiNotificationResultVM> OnActionCompleted { get; set; }
 
     private string Title => IsEditMode ? $"Edit {Company.CompanyName} Details" : "Create New Company";
-    private string GetSectionStyle(bool isExpanded) => isExpanded ? "display: block;" : "display: none;";
-    private bool CompanyDetailsExpanded { get; set; } = true;
-
-    private bool ShowEmails { get; set; } = false;
-    private bool ShowPhones { get; set; } = false;
-    private bool ShowFiles { get; set; } = false;
-    private bool ShowMetadata { get; set; } = false;
-    private bool ShowDetails { get; set; } = true;
-
-    // private bool EmailsExpanded { get; set; } = false;
-    // private bool PhoneNumbersExpanded { get; set; } = false;
-    // private bool FilesExpanded { get; set; } = false;
-    // private bool MetadataExpanded { get; set; } = false;
-    // private bool ShowMetadata { get; set; } = false;
-
-    private string CurrentMetadata { get; set; } = string.Empty;
-
-    private CompanyDTO Company = new CompanyDTO();
-    private List<CompanyEmailDTO> CompanyEmails { get; set; } = new();
-    private List<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new();
-    private List<PretrainDataFileDTO> UploadedFiles { get; set; } = new();
-    private List<ProcessedPretrainDataDTO> ExistingFiles { get; set; } = new();
-
+    private enum Section { Details, Emails, Phones, Files, Metadata }
+    private Section ActiveSection = Section.Details;
     private bool _isInitialized = false;
-    private bool IsCreatingIndex = false;
-    private bool IsMetadataBusy = false;
-    private bool IsLoadingFiles = false;
-
-    private InputFile fileInput;
+    private CompanyDTO Company = new CompanyDTO();
 
     protected override async Task OnParametersSetAsync()
     {
         if (_isInitialized) return;
         if (string.IsNullOrEmpty(CompanyId)) return;
-
         Company = await CompanyManagementService.GetCompanyByIdAsync(CompanyId) ?? new CompanyDTO();
-
-        CompanyEmails = Company.CompanyEmails?.ToList() ?? new List<CompanyEmailDTO>();
-        if (CompanyEmails.Count == 0) AddEmail();
-
-        CompanyPhoneNumbers = Company.CompanyPhoneNumbers?.ToList() ?? new List<CompanyPhoneNumberDTO>();
-        if (CompanyPhoneNumbers.Count == 0) AddPhoneNumber();
-
-        Company.PretrainDataFilesDTO ??= new List<PretrainDataFileDTO>();
         _isInitialized = true;
         await base.OnParametersSetAsync();
     }
 
-    private void ToggleSection(string section)
+    private void ToggleSection(Section section)
     {
-        // Clear all
-        ShowDetails = false;
-        ShowEmails = false;
-        ShowPhones = false;
-        ShowFiles = false;
-        ShowMetadata = false;
-
-        // Activate requested one
-        switch (section)
-        {
-            case nameof(ShowDetails): ShowDetails = true; break;
-            case nameof(ShowEmails): ShowEmails = true; break;
-            case nameof(ShowPhones): ShowPhones = true; break;
-            case nameof(ShowFiles): ShowFiles = true; break;
-            case nameof(ShowMetadata): ShowMetadata = true; break;
-        }
+        ActiveSection = section;
     }
-
-
-    // private async Task ToggleSection(string section)
-    // {
-    //     switch (section)
-    //     {
-    //         case nameof(CompanyDetailsExpanded):
-    //             CompanyDetailsExpanded = !CompanyDetailsExpanded;
-    //             break;
-    //         case nameof(EmailsExpanded):
-    //             EmailsExpanded = !EmailsExpanded;
-    //             break;
-    //         case nameof(PhoneNumbersExpanded):
-    //             PhoneNumbersExpanded = !PhoneNumbersExpanded;
-    //             break;
-    //         case nameof(FilesExpanded):
-    //             FilesExpanded = !FilesExpanded;
-    //             await LoadExistingFiles();
-    //             break;
-    //         case nameof(MetadataExpanded):
-    //             MetadataExpanded = !MetadataExpanded;
-    //             break;
-    //     }
-    // }
-
-    #region Create or Update Company Logic
-    private async Task HandleCompanySubmit()
-    {
-        var result = IsEditMode
-            ? await CompanyManagementService.UpdateCompanyDetailsAsync(Company)
-            : await CompanyManagementService.CreateCompanyAsync(Company);
-
-        await OnActionCompleted.InvokeAsync(result);
-    }
-    #endregion
-
-    #region Company Emails Logic
-    private void AddEmail()
-    {
-        CompanyEmails.Add(new CompanyEmailDTO
-            {
-                Id = Guid.NewGuid().ToString(),
-                CompanyId = Company.Id
-            });
-        StateHasChanged();
-    }
-    private void RemoveEmail(CompanyEmailDTO email)
-    {
-        CompanyEmails.Remove(email);
-
-        if (CompanyEmails.Count == 0)
-        {
-            AddEmail();
-        }
-    }
-    private async Task SaveCompanyEmails()
-    {
-        var result = await CompanyManagementService.UpdateCompanyEmailsAsync(CompanyEmails);
-        await OnActionCompleted.InvokeAsync(result);
-
-        StateHasChanged();
-    }
-    #endregion
-
-    #region Company Phone Numbers Logic
-    private void AddPhoneNumber()
-    {
-        CompanyPhoneNumbers.Add(new CompanyPhoneNumberDTO
-            {
-                Id = Guid.NewGuid().ToString(),
-                CompanyId = Company.Id
-            });
-        StateHasChanged();
-    }
-    private void RemovePhoneNumber(CompanyPhoneNumberDTO phone)
-    {
-        CompanyPhoneNumbers.Remove(phone);
-
-        if (CompanyPhoneNumbers.Count == 0)
-        {
-            AddPhoneNumber();
-        }
-    }
-    private async Task SaveCompanyPhoneNumbers()
-    {
-        var result = await CompanyManagementService.UpdateCompanyPhoneNumbersAsync(CompanyPhoneNumbers);
-        await OnActionCompleted.InvokeAsync(result);
-
-        StateHasChanged();
-    }
-    #endregion
-
-    #region Company MetaData Logic
-    private async Task ToggleMetadataView()
-    {
-        ShowMetadata = !ShowMetadata;
-        if (ShowMetadata)
-        {
-            await LoadMetadata();
-            StateHasChanged();
-        }
-    }
-
-    private async Task LoadMetadata()
-    {
-
-        IsMetadataBusy = true;
-        var (result, metadata) = await CompanyManagementService.GetCompanyMetadataAsync(Company.Id);
-        IsMetadataBusy = false;
-        if (result.IsSuccess)
-        {
-            CurrentMetadata = metadata;
-        }
-        else if (!string.IsNullOrWhiteSpace(result.Message))
-        {
-            await OnActionCompleted.InvokeAsync(result);
-        }
-    }
-
-    private async Task UpdateMetadata()
-    {
-        IsMetadataBusy = true;
-        var result = await CompanyManagementService.GenerateAndUploadCompanyMetadataAsync(Company.Id);
-        IsMetadataBusy = false;
-        await OnActionCompleted.InvokeAsync(result);
-    }
-
-    private async Task DeleteMetadata()
-    {
-        var result = await CompanyManagementService.DeleteCompanyMetadataAsync(Company.Id);
-
-        await OnActionCompleted.InvokeAsync(result);
-
-        if (result.IsSuccess) CurrentMetadata = string.Empty;
-    }
-
-    private async Task CreateCompanyIndex()
-    {
-        IsCreatingIndex = true;
-        var result = await CompanyManagementService.CreateAzureAiSearchIndexAndUploadFilesAsync(Company.Id);
-        IsCreatingIndex = false;
-        await OnActionCompleted.InvokeAsync(result);
-    }
-    #endregion
-
-    #region Company FileHandling Logic
-    private async Task LoadExistingFiles()
-    {
-        IsLoadingFiles = true;
-        var (result, files) = await CompanyManagementService.GetCompanyPretrainingFilesAsync(Company.Id);
-        IsLoadingFiles = false;
-        if (result.IsSuccess)
-        {
-            ExistingFiles = files;
-        }
-        else if (!string.IsNullOrWhiteSpace(result.Message))
-        {
-            await OnActionCompleted.InvokeAsync(result);
-        }
-    }
-
-    private async Task HandleFileSelection(InputFileChangeEventArgs e)
-    {
-        var allowedExtensions = new[] { ".json", ".csv", ".txt", ".xlsx", ".pdf", ".xml", ".docx", ".md", ".log" };
-
-        const long maxFileSize = 5 * 1024 * 1024; // 5 MB
-
-        foreach (var file in e.GetMultipleFiles())
-        {
-            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext) || file.Size > maxFileSize)
-            {
-                await OnActionCompleted.InvokeAsync(new ApiNotificationResultVM
-                    {
-                        Message = $"File '{file.Name}' is not allowed.",
-                        IsSuccess = false
-                    });
-                continue;
-            }
-
-            using var stream = file.OpenReadStream(maxFileSize);
-            var fileData = new MemoryStream();
-            await stream.CopyToAsync(fileData);
-            fileData.Position = 0;
-
-            if (!UploadedFiles.Any(f => f.FileName == file.Name))
-            {
-                UploadedFiles.Add(new PretrainDataFileDTO
-                    {
-                        CompanyId = Company.Id,
-                        FileName = file.Name,
-                        FileDescription = "",
-                        FileContent = fileData
-                    });
-            }
-        }
-    }
-
-    private async Task UploadAllFiles()
-    {
-        var result = await CompanyManagementService.UploadCompanyFilesAsync(UploadedFiles);
-
-        await OnActionCompleted.InvokeAsync(result);
-
-        if (result.IsSuccess)
-        {
-            UploadedFiles.Clear();
-            await LoadExistingFiles();
-        }
-    }
-
-    private async Task DeleteExistingFile(ProcessedPretrainDataDTO file)
-    {
-        var result = await CompanyManagementService.DeleteCompanyFileAsync(file);
-
-        await OnActionCompleted.InvokeAsync(result);
-
-        if (result.IsSuccess)
-        {
-            ExistingFiles.Remove(file);
-        }
-    }
-
-    private void RemovePendingFile(PretrainDataFileDTO file)
-    {
-        UploadedFiles.Remove(file);
-    }
-    #endregion
 }
