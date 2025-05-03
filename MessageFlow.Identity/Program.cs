@@ -10,6 +10,7 @@ using Azure.Core;
 using Azure.Identity;
 using MessageFlow.Identity.Configuration;
 using MessageFlow.Identity.MediatR.CommandHandlers;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 var environment = builder.Environment.EnvironmentName;
@@ -78,6 +79,17 @@ builder.Services.AddCorsPolicy(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.File(
+        "logs/identity-log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 
