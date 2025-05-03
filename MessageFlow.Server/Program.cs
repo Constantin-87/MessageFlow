@@ -11,6 +11,10 @@ Log.Logger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
     )
+    .WriteTo.ApplicationInsights(
+        builder.Configuration["AppInsights--ConnectionString"],
+        TelemetryConverter.Traces
+    )
     .CreateLogger();
 
 builder.Host.UseSerilog();
