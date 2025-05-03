@@ -31,7 +31,7 @@ if (!string.IsNullOrEmpty(keyVaultUrl))
     builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
 }
 
-var aiConnectionString = builder.Configuration["AppInsights--ConnectionString"];
+var aiConnectionString = builder.Configuration["AppInsights:ConnectionString"];
 if (!string.IsNullOrEmpty(aiConnectionString))
 {
     builder.Services.AddApplicationInsightsTelemetry(options =>
@@ -122,4 +122,11 @@ app.UseEndpoints(endpoints =>
     _ = endpoints.MapControllers();
 });
 
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}

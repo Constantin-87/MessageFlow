@@ -12,7 +12,7 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
     )
     .WriteTo.ApplicationInsights(
-        builder.Configuration["AppInsights--ConnectionString"],
+        builder.Configuration["AppInsights:ConnectionString"],
         TelemetryConverter.Traces
     )
     .CreateLogger();
@@ -22,4 +22,11 @@ builder.Host.UseSerilog();
 builder.ConfigureApp();
 var app = builder.Build();
 app.ConfigurePipelineAsync();
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}
