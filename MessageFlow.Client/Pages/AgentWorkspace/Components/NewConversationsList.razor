@@ -32,7 +32,6 @@
     [Parameter, Required] public string? UserId { get; set; }
     [Parameter, Required] public string? TeamId { get; set; }
     [Parameter, Required] public HubConnection HubConnection { get; set; }
-    [Parameter, Required] public ChatWindow ChatWindowRef { get; set; }
 
     private List<ConversationVM> Conversations = new();
     private bool isLoading = true;
