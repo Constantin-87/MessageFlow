@@ -29,10 +29,9 @@
 
     private List<CompanyPhoneNumberDTO> CompanyPhoneNumbers { get; set; } = new();
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
         if (string.IsNullOrWhiteSpace(Company.Id)) return;
-
         CompanyPhoneNumbers = Company?.CompanyPhoneNumbers?.ToList() ?? new();
         if (CompanyPhoneNumbers.Count == 0)
             AddPhoneNumber();

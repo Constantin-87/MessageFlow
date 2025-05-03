@@ -10,6 +10,7 @@ using System.Text;
 using MessageFlow.DataAccess.Models;
 using MessageFlow.Server.DataTransferObjects.Internal;
 using MessageFlow.AzureServices.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.CommandHandlers
 {
@@ -68,7 +69,7 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.CommandHandlers
                 });
 
                 var content = completion.Content?.FirstOrDefault()?.Text ?? "";
-                var (redirect, teamId, teamName) = TryExtractRedirect(content);
+                var (redirect, teamId, teamName) = TryExtractRedirect(content, _logger);
                 return new UserQueryResponseDTO
                 {
                     Answered = true,
@@ -90,7 +91,7 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.CommandHandlers
             }
         }
 
-        private static (bool Redirect, string? TeamId, string? TeamName) TryExtractRedirect(string input)
+        private static (bool Redirect, string? TeamId, string? TeamName) TryExtractRedirect(string input, ILogger logger)
         {
             try
             {
@@ -112,7 +113,7 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.CommandHandlers
             }
             catch (Exception ex)
             {
-                // optional: log error
+                logger.LogError(ex, "GPT error while parsing redirect JSON block");
             }
 
             return (false, null, null);

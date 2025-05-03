@@ -130,9 +130,8 @@ namespace MessageFlow.Server.Configuration
             });
         }
 
-        public static async Task ConfigurePipelineAsync(this WebApplication app)
+        public static void ConfigurePipelineAsync(this WebApplication app)
         {
-
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
