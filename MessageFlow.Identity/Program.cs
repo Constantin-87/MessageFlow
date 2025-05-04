@@ -40,6 +40,21 @@ if (!string.IsNullOrEmpty(aiConnectionString))
     });
 }
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.File(
+        "logs/identity-log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+    )
+    .WriteTo.ApplicationInsights(
+        builder.Configuration["AppInsights:ConnectionString"],
+        TelemetryConverter.Traces
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
 // Retrieve Connection String from Key Vault
 var connectionString = builder.Configuration.GetConnectionString("DBConnectionString");
 if (string.IsNullOrEmpty(connectionString))
@@ -89,20 +104,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .WriteTo.File(
-        "logs/identity-log-.txt",
-        rollingInterval: RollingInterval.Day,
-        outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
-    )
-    .WriteTo.ApplicationInsights(
-        builder.Configuration["AppInsights--ConnectionString"],
-        TelemetryConverter.Traces
-    )
-    .CreateLogger();
 
-builder.Host.UseSerilog();
 
 var app = builder.Build();
 

@@ -6,6 +6,7 @@ using MessageFlow.Infrastructure.Mappings;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 using MessageFlow.Server.Middleware;
 using Microsoft.AspNetCore.Identity;
+using Serilog;
 
 namespace MessageFlow.Server.Configuration
 {
@@ -45,7 +46,7 @@ namespace MessageFlow.Server.Configuration
                 WhatsAppWebhookVerifyToken = builder.Configuration["whatsapp-webhook-verify-token"]
             };
 
-            var aiConnectionString = builder.Configuration["AppInsights--ConnectionString"];
+            var aiConnectionString = builder.Configuration["AppInsights:ConnectionString"];
             if (!string.IsNullOrEmpty(aiConnectionString))
             {
                 builder.Services.AddApplicationInsightsTelemetry(options =>
@@ -53,6 +54,23 @@ namespace MessageFlow.Server.Configuration
                     options.ConnectionString = aiConnectionString;
                 });
             }
+
+            // Set up Serilog
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .WriteTo.File(
+                    "logs/server-log-.txt",
+                    rollingInterval: RollingInterval.Day,
+                    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+                )
+                .WriteTo.ApplicationInsights(
+                    builder.Configuration["AppInsights:ConnectionString"],
+                    TelemetryConverter.Traces
+                )
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
+
             // Validate Secrets Before Starting
             void ValidateConfig(GlobalChannelSettings settings)
             {
