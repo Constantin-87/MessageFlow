@@ -9,8 +9,6 @@
 		<PublishIISAssets>true</PublishIISAssets>
 		<IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
 		<RunAOTCompilation>true</RunAOTCompilation>
-		<PublishTrimmed>true</PublishTrimmed>
-		<TrimMode>partial</TrimMode>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Include="Properties\launchSettings.json" />
