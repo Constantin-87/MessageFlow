@@ -37,3 +37,13 @@ p {
     .channel-title img {
         height: 56px;
     }
+
+.settings-form {
+    min-width: 700px;
+    margin-bottom: 1rem;
+}
+
+.collapsed-card {
+    min-width: 300px;
+    margin-bottom: 1rem;
+}

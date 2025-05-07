@@ -1,5 +1,6 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using MessageFlow.AzureServices.Helpers.Interfaces;
 using MessageFlow.AzureServices.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -11,13 +12,18 @@ namespace MessageFlow.AzureServices.Services
         private readonly BlobServiceClient _blobServiceClient;
         private readonly string _containerName = "company-files";
         private readonly ILogger<AzureBlobStorageService> _logger;
+        private readonly IBlobRagHelper _blobRagHelper;
 
-        public AzureBlobStorageService(IConfiguration configuration, ILogger<AzureBlobStorageService> logger, BlobServiceClient blobServiceClient = null)
+        public AzureBlobStorageService(
+            ILogger<AzureBlobStorageService> logger,
+            BlobServiceClient blobServiceClient,
+            IBlobRagHelper blobRagHelper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            _blobServiceClient = blobServiceClient ?? new BlobServiceClient(configuration["azure-storage-account-conn-string"]
-                ?? throw new InvalidOperationException("Azure Blob Storage connection string is missing."));
+            _blobRagHelper = blobRagHelper ?? throw new ArgumentNullException(nameof(blobRagHelper));
+            _blobServiceClient = blobServiceClient ?? throw new ArgumentNullException(nameof(blobServiceClient));
+            //_blobServiceClient = blobServiceClient ?? new BlobServiceClient(configuration["azure-storage-account-conn-string"]
+            //    ?? throw new InvalidOperationException("Azure Blob Storage connection string is missing."));
         }
 
         /// <summary>
@@ -53,15 +59,10 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+                string blobName = ExtractBlobName(fileUrl);
 
-                // Extract the correct blob name without container prefix
-                string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
-
-                string blobName = fullBlobPath.Replace($"{_containerName}/", "");
                 blobName = Uri.UnescapeDataString(blobName);
-
-                var blobClient = blobContainerClient.GetBlobClient(blobName);;
+                var blobClient = GetBlobClientFromUrl(fileUrl);
 
                 var response = await blobClient.DeleteIfExistsAsync();
                 return response.Value;
@@ -80,11 +81,8 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-                string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
-                string blobName = fullBlobPath.Replace($"{_containerName}/", "");
-
-                var blobClient = blobContainerClient.GetBlobClient(blobName);
+                string blobName = ExtractBlobName(fileUrl);
+                var blobClient = GetBlobClientFromUrl(fileUrl);
 
                 var existsResponse = await blobClient.ExistsAsync();
 
@@ -116,11 +114,8 @@ namespace MessageFlow.AzureServices.Services
         {
             try
             {
-                var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-                string fullBlobPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
-                string blobName = fullBlobPath.Replace($"{_containerName}/", "");
-
-                var blobClient = blobContainerClient.GetBlobClient(blobName);
+                string blobName = ExtractBlobName(fileUrl);
+                var blobClient = GetBlobClientFromUrl(fileUrl);
 
                 if (!await blobClient.ExistsAsync())
                 {
@@ -147,31 +142,16 @@ namespace MessageFlow.AzureServices.Services
                 var blobContainerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
                 string baseFolderPath = $"company_{companyId}/CompanyRAGData/";
 
-                List<string> fileContents = new List<string>();
+                var contents = await _blobRagHelper.GetCompanyRagJsonContentsAsync(blobContainerClient, baseFolderPath);
 
-                // List all blobs in the CompanyRAGData folder
-                await foreach (BlobItem blobItem in blobContainerClient.GetBlobsAsync(prefix: baseFolderPath))
-                {
-                    if (blobItem.Name.EndsWith(".json"))
-                    {
-                        var blobClient = blobContainerClient.GetBlobClient(blobItem.Name);
-
-                        // Download and read file content
-                        var response = await blobClient.DownloadContentAsync();
-                        string content = response.Value.Content.ToString();
-
-                        fileContents.Add(content);
-                    }
-                }
-
-                if (fileContents.Count == 0)
+                if (!contents.Any())
                 {
                     _logger.LogError($"No JSON files found in {baseFolderPath}");
                     return string.Empty;
                 }
 
                 // Combine all JSON file contents into a single string
-                return string.Join("\n", fileContents);
+                return string.Join("\n", contents);
             }
             catch (Azure.RequestFailedException ex)
             {
@@ -188,6 +168,18 @@ namespace MessageFlow.AzureServices.Services
                 _logger.LogError(ex, "Unexpected error while uploading file.");
                 return string.Empty;
             }
+        }
+
+        private BlobClient GetBlobClientFromUrl(string fileUrl)
+        {
+            var container = _blobServiceClient.GetBlobContainerClient(_containerName);
+            return container.GetBlobClient(ExtractBlobName(fileUrl));
+        }
+
+        private string ExtractBlobName(string fileUrl)
+        {
+            var fullPath = new Uri(fileUrl).AbsolutePath.TrimStart('/');
+            return Uri.UnescapeDataString(fullPath.Replace($"{_containerName}/", ""));
         }
     }
 }

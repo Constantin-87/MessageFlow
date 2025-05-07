@@ -16,6 +16,13 @@ textarea.form-control {
         outline: none;
     }
 
+    .form-control:disabled {
+        background-color: var(--bg-disabled);
+        color: var(--text-muted);
+        opacity: 1; /* prevent browser from lowering contrast */
+        border-color: var(--border-dark);
+    }
+
 /* Label */
 label,
 label.form-label {

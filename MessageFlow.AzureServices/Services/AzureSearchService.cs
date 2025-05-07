@@ -60,10 +60,89 @@ namespace MessageFlow.AzureServices.Services
             await indexClient.CreateIndexAsync(definition);
         }
 
+        //public async Task UploadDocumentsToIndexAsync(string companyId, List<ProcessedPretrainDataDTO> processedFiles)
+        //{
+        //    string indexName = SearchIndexHelper.GetIndexName(companyId);
+
+        //    var searchClient = GetSearchClient(indexName);
+
+        //    if (processedFiles == null || processedFiles.Count == 0)
+        //    {
+        //        _logger.LogWarning("No documents to upload for index {IndexName}", indexName);
+        //        return;
+        //    }
+
+        //    var documents = new List<Dictionary<string, object>>();
+
+        //    try
+        //    {
+        //        foreach (var file in processedFiles)
+        //        {
+        //            if (string.IsNullOrEmpty(file.FileUrl))
+        //            {
+        //                _logger.LogWarning("Skipping file {FileId} - No associated FileUrl", file.Id);
+        //                continue;
+        //            }
+
+        //            try
+        //            {
+        //                // Retrieve file content from Azure Blob Storage
+        //                string jsonContent = await _azureBlobStorageService.DownloadFileContentAsync(file.FileUrl);
+
+        //                if (string.IsNullOrEmpty(jsonContent))
+        //                {
+        //                    _logger.LogWarning("Skipping file {FileId} - Empty content retrieved", file.Id);
+        //                    continue;
+        //                }
+
+        //                // Prepare document for indexing
+        //                var document = new Dictionary<string, object>
+        //                {
+        //                    { "document_id", file.Id },
+        //                    { "file_description", file.FileDescription },
+        //                    { "company_id", file.CompanyId },
+        //                    { "content", jsonContent },
+        //                    { "processed_at", file.ProcessedAt }
+        //                };
+
+        //                documents.Add(document);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                _logger.LogError(ex, "Error processing file {FileId} from {FileUrl}", file.Id, file.FileUrl);
+        //            }
+        //        }
+
+        //        if (documents.Count == 0)
+        //        {
+        //            _logger.LogWarning("No valid documents to upload for index {IndexName}", indexName);
+        //            return;
+        //        }
+
+        //        // Upload structured documents to Azure Search
+        //        var response = await searchClient.UploadDocumentsAsync(documents);
+
+        //        foreach (var result in response.Value.Results)
+        //        {
+        //            if (!result.Succeeded)
+        //            {
+        //                _logger.LogError("Failed to index document with key: {Key}", result.Key);
+        //            }
+        //        }
+        //    }
+        //    catch (RequestFailedException ex)
+        //    {
+        //        _logger.LogError(ex, "Azure Search API Error - Status: {StatusCode}", ex.Status);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "General error uploading documents to index {IndexName}", indexName);
+        //    }
+        //}
+
         public async Task UploadDocumentsToIndexAsync(string companyId, List<ProcessedPretrainDataDTO> processedFiles)
         {
             string indexName = SearchIndexHelper.GetIndexName(companyId);
-
             var searchClient = GetSearchClient(indexName);
 
             if (processedFiles == null || processedFiles.Count == 0)
@@ -74,61 +153,24 @@ namespace MessageFlow.AzureServices.Services
 
             var documents = new List<Dictionary<string, object>>();
 
+            foreach (var file in processedFiles)
+            {
+                var doc = await ProcessFileAsync(file);
+                if (doc != null)
+                    documents.Add(doc);
+            }
+
+            if (documents.Count == 0)
+            {
+                _logger.LogWarning("No valid documents to upload for index {IndexName}", indexName);
+                return;
+            }
+
             try
             {
-                foreach (var file in processedFiles)
-                {
-                    if (string.IsNullOrEmpty(file.FileUrl))
-                    {
-                        _logger.LogWarning("Skipping file {FileId} - No associated FileUrl", file.Id);
-                        continue;
-                    }
-
-                    try
-                    {
-                        // Retrieve file content from Azure Blob Storage
-                        string jsonContent = await _azureBlobStorageService.DownloadFileContentAsync(file.FileUrl);
-
-                        if (string.IsNullOrEmpty(jsonContent))
-                        {
-                            _logger.LogWarning("Skipping file {FileId} - Empty content retrieved", file.Id);
-                            continue;
-                        }
-
-                        // Prepare document for indexing
-                        var document = new Dictionary<string, object>
-                        {
-                            { "document_id", file.Id },
-                            { "file_description", file.FileDescription },
-                            { "company_id", file.CompanyId },
-                            { "content", jsonContent },
-                            { "processed_at", file.ProcessedAt }
-                        };
-
-                        documents.Add(document);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error processing file {FileId} from {FileUrl}", file.Id, file.FileUrl);
-                    }
-                }
-
-                if (documents.Count == 0)
-                {
-                    _logger.LogWarning("No valid documents to upload for index {IndexName}", indexName);
-                    return;
-                }
-
-                // Upload structured documents to Azure Search
                 var response = await searchClient.UploadDocumentsAsync(documents);
-
-                foreach (var result in response.Value.Results)
-                {
-                    if (!result.Succeeded)
-                    {
-                        _logger.LogError("Failed to index document with key: {Key}", result.Key);
-                    }
-                }
+                foreach (var result in response.Value.Results.Where(r => !r.Succeeded))
+                    _logger.LogError("Failed to index document with key: {Key}", result.Key);
             }
             catch (RequestFailedException ex)
             {
@@ -137,6 +179,39 @@ namespace MessageFlow.AzureServices.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "General error uploading documents to index {IndexName}", indexName);
+            }
+        }
+
+        private async Task<Dictionary<string, object>?> ProcessFileAsync(ProcessedPretrainDataDTO file)
+        {
+            if (string.IsNullOrEmpty(file.FileUrl))
+            {
+                _logger.LogWarning("Skipping file {FileId} - No associated FileUrl", file.Id);
+                return null;
+            }
+
+            try
+            {
+                string jsonContent = await _azureBlobStorageService.DownloadFileContentAsync(file.FileUrl);
+                if (string.IsNullOrEmpty(jsonContent))
+                {
+                    _logger.LogWarning("Skipping file {FileId} - Empty content retrieved", file.Id);
+                    return null;
+                }
+
+                return new Dictionary<string, object>
+                {
+                    { "document_id", file.Id },
+                    { "file_description", file.FileDescription },
+                    { "company_id", file.CompanyId },
+                    { "content", jsonContent },
+                    { "processed_at", file.ProcessedAt }
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing file {FileId} from {FileUrl}", file.Id, file.FileUrl);
+                return null;
             }
         }
 

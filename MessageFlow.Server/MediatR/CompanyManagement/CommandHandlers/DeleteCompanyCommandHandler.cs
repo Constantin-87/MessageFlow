@@ -52,11 +52,15 @@ namespace MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers
                     return (false, "Failed to delete teams for this company.");
                 }
 
-                var deleteMetadataResult = await _mediator.Send(new DeleteCompanyMetadataCommand(request.CompanyId));
-                if (!deleteMetadataResult.success)
+                var metadataFiles = await _unitOfWork.ProcessedPretrainData.GetProcessedFilesByCompanyIdAsync(request.CompanyId);
+                if (metadataFiles.Any())
                 {
-                    _logger.LogError("Failed to delete metadata for company {CompanyId}. Reason: {Error}", request.CompanyId, deleteMetadataResult.errorMessage);
-                    return (false, "Failed to delete metadata for this company.");
+                    var deleteMetadataResult = await _mediator.Send(new DeleteCompanyMetadataCommand(request.CompanyId));
+                    if (!deleteMetadataResult.success)
+                    {
+                        _logger.LogError("Failed to delete metadata for company {CompanyId}. Reason: {Error}", request.CompanyId, deleteMetadataResult.errorMessage);
+                        return (false, "Failed to delete metadata for this company.");
+                    }
                 }
 
                 await _unitOfWork.Companies.RemoveEntityAsync(company);
@@ -67,7 +71,7 @@ namespace MessageFlow.Server.MediatR.CompanyManagement.CommandHandlers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting company");
-                return (false, "An error occurred while deleting the company.");
+                return (false, "Failed to delete metadata for this company.");
             }
         }
     }

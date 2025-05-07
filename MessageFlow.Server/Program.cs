@@ -1,16 +1,24 @@
 ﻿using MessageFlow.Server.Configuration;
 using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+namespace MessageFlow.Server;
 
-builder.ConfigureApp();
-var app = builder.Build();
-app.ConfigurePipelineAsync();
-try
+public class Program
 {
-    app.Run();
-}
-finally
-{
-    Log.CloseAndFlush();
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.ConfigureApp();
+        var app = builder.Build();
+        app.ConfigurePipelineAsync();
+        try
+        {
+            app.Run();
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
+    }
 }

@@ -22,7 +22,7 @@ else
 
         <div class="mb-3">
             <label>Access Token</label>
-            <InputTextArea class="form-control" @bind-Value="facebookSettings.AccessToken" />
+            <InputTextArea class="form-control scrollable" @bind-Value="facebookSettings.AccessToken" />
             <ValidationMessage For="@(() => facebookSettings.AccessToken)" class="text-danger" />
         </div>
 

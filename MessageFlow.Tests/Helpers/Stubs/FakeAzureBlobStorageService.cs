@@ -5,7 +5,16 @@ namespace MessageFlow.Tests.Helpers.Stubs
     public class FakeAzureBlobStorageService : IAzureBlobStorageService
     {
         public Task<string> GetAllCompanyRagDataFilesAsync(string companyId)
-            => Task.FromResult("mock content");
+        {
+            if (companyId == "1")
+            {
+                return Task.FromResult("mock content"); // Simulating valid metadata
+            }
+            else
+            {
+                return Task.FromResult<string>(null); // Simulate metadata not found for invalid company ID
+            }
+        }
 
         public Task<bool> DeleteFileAsync(string fileUrl)
             => Task.FromResult(true);

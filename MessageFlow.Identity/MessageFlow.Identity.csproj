@@ -23,4 +23,6 @@
 	  <ProjectReference Include="..\MessageFlow.Shared\MessageFlow.Shared.csproj" />
 	</ItemGroup>
 
+	<ProjectExtensions><VisualStudio><UserProperties appsettings_1test_1json__JsonSchema="https://json.schemastore.org/assetlinks.json" /></VisualStudio></ProjectExtensions>
+
 </Project>

@@ -20,7 +20,7 @@ else
 
         <div class="mb-3">
             <label>Access Token</label>
-            <InputTextArea class="form-control" @bind-Value="whatsAppSettings.AccessToken" />
+            <InputTextArea class="form-control scrollable" @bind-Value="whatsAppSettings.AccessToken" />
             <ValidationMessage For="@(() => whatsAppSettings.AccessToken)" class="text-danger" />
         </div>
 
@@ -29,7 +29,6 @@ else
 
     <EditForm Model="phoneNumbers" OnValidSubmit="SavePhoneNumberSettings">
         <DataAnnotationsValidator />
-        <ValidationSummary />
 
         <h4>Phone Numbers</h4>
 
@@ -60,6 +59,7 @@ else
                             </td>
                             <td>
                                 <InputText class="form-control" @bind-Value="phoneNumber.PhoneNumberDesc" />
+                                <ValidationMessage For="@(() => phoneNumber.PhoneNumberDesc)" class="text-danger" />
                             </td>
                             <td>
                                 <button type="button" class="btn btn-danger btn-sm" @onclick="() => DeletePhoneNumber(phoneNumber)">Delete</button>

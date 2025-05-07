@@ -11,34 +11,48 @@ using Serilog;
 namespace MessageFlow.Server.Configuration
 {
     public static class WebApplicationBuilderExtensions
-    {
+    {       
+
         public static void ConfigureApp(this WebApplicationBuilder builder)
         {
-            var environment = builder.Environment.EnvironmentName;
+            ConfigureConfiguration(builder);
+            ConfigureKeyVault(builder);
+            var globalSettings = LoadAndValidateSettings(builder);
+            ConfigureApplicationInsights(builder);
+            ConfigureLogging(builder);
+            ConfigureServices(builder, globalSettings);
+        }
 
-            if (!builder.Environment.ApplicationName?.Contains("MessageFlow.Tests") ?? true)
-            {
-
-                builder.Configuration
+        private static void ConfigureConfiguration(WebApplicationBuilder builder)
+        {
+            builder.Configuration
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables();
-            }
+        }
+
+        private static void ConfigureKeyVault(WebApplicationBuilder builder)
+        {
             var keyVaultUrl = builder.Configuration["AzureKeyVaultURL"];
+            if (builder.Environment.IsEnvironment("Test"))
+            {
+                return;
+            }
 
             if (!string.IsNullOrEmpty(keyVaultUrl))
             {
-                // Choose credential based on environment
                 TokenCredential credential = builder.Environment.IsDevelopment()
-                    ? new InteractiveBrowserCredential() // For local development
-                    : new DefaultAzureCredential(); // For production
+                    ? new InteractiveBrowserCredential()
+                    : new DefaultAzureCredential();
 
                 builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
             }
+        }
 
-            // Load secrets from Azure Key Vault
-            var globalSettings = new GlobalChannelSettings
+        private static GlobalChannelSettings LoadAndValidateSettings(WebApplicationBuilder builder)
+        {
+            var settings = new GlobalChannelSettings
             {
                 AppId = builder.Configuration["meta-app-id"],
                 AppSecret = builder.Configuration["meta-app-secret"],
@@ -46,16 +60,28 @@ namespace MessageFlow.Server.Configuration
                 WhatsAppWebhookVerifyToken = builder.Configuration["whatsapp-webhook-verify-token"]
             };
 
-            var aiConnectionString = builder.Configuration["AppInsights:ConnectionString"];
-            if (!string.IsNullOrEmpty(aiConnectionString))
+            if (string.IsNullOrEmpty(settings.AppId) ||
+                string.IsNullOrEmpty(settings.AppSecret) ||
+                string.IsNullOrEmpty(settings.FacebookWebhookVerifyToken) ||
+                string.IsNullOrEmpty(settings.WhatsAppWebhookVerifyToken))
             {
-                builder.Services.AddApplicationInsightsTelemetry(options =>
-                {
-                    options.ConnectionString = aiConnectionString;
-                });
+                throw new InvalidOperationException("Configuration values are missing. Application startup aborted.");
             }
 
-            // Set up Serilog
+            return settings;
+        }
+
+        private static void ConfigureApplicationInsights(WebApplicationBuilder builder)
+        {
+            var connStr = builder.Configuration["AppInsights:ConnectionString"];
+            if (!builder.Environment.IsEnvironment("Test") && !string.IsNullOrEmpty(connStr))
+            {
+                builder.Services.AddApplicationInsightsTelemetry(options => options.ConnectionString = connStr);
+            }
+        }
+
+        private static void ConfigureLogging(WebApplicationBuilder builder)
+        {
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
                 .WriteTo.File(
@@ -70,61 +96,42 @@ namespace MessageFlow.Server.Configuration
                 .CreateLogger();
 
             builder.Host.UseSerilog();
+        }
 
-            // Validate Secrets Before Starting
-            void ValidateConfig(GlobalChannelSettings settings)
+        private static void ConfigureServices(WebApplicationBuilder builder, GlobalChannelSettings settings)
+        {
+            var services = builder.Services;
+
+            services.Configure<GlobalChannelSettings>(opts =>
             {
-                if (string.IsNullOrEmpty(settings.AppId) ||
-                    string.IsNullOrEmpty(settings.AppSecret) ||
-                    string.IsNullOrEmpty(settings.FacebookWebhookVerifyToken) ||
-                    string.IsNullOrEmpty(settings.WhatsAppWebhookVerifyToken))
-                {
-                    throw new InvalidOperationException("Configuration values are missing. Application startup aborted.");
-                }
-            }
-
-            ValidateConfig(globalSettings);
-
-            builder.Services.Configure<GlobalChannelSettings>(options =>
-            {
-                options.AppId = globalSettings.AppId;
-                options.AppSecret = globalSettings.AppSecret;
-                options.FacebookWebhookVerifyToken = globalSettings.FacebookWebhookVerifyToken;
-                options.WhatsAppWebhookVerifyToken = globalSettings.WhatsAppWebhookVerifyToken;
+                opts.AppId = settings.AppId;
+                opts.AppSecret = settings.AppSecret;
+                opts.FacebookWebhookVerifyToken = settings.FacebookWebhookVerifyToken;
+                opts.WhatsAppWebhookVerifyToken = settings.WhatsAppWebhookVerifyToken;
             });
 
-            builder.Services.AddHttpContextAccessor();
+            services.AddHttpContextAccessor();
+            services.AddJwtAuthentication(builder.Configuration);
 
-            builder.Services.AddJwtAuthentication(builder.Configuration);
-
-            builder.Services.AddControllers().AddJsonOptions(opts =>
+            services.AddControllers().AddJsonOptions(opts =>
             {
                 opts.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 opts.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
 
-            builder.Services.AddApplicationServices();
+            services.AddApplicationServices();
+            services.AddAutoMapper(typeof(MappingProfile));
 
-            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ProcessMessageHandler).Assembly));
+            services.AddMediatorHandlers();
 
-            // Register MediatR
-            builder.Services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssembly(typeof(ProcessMessageHandler).Assembly);
-            });
+            services.AddCorsPolicy(builder.Configuration);
+            services.AddAzureServices(builder.Configuration);
+            services.AddRepositoriesAndDataAccess(builder.Configuration);
 
-            // Query + Command Handlers
-            builder.Services.AddMediatorHandlers();
+            services.AddAuthorization();
 
-            builder.Services.AddCorsPolicy(builder.Configuration);
-
-            builder.Services.AddAzureServices(builder.Configuration);
-
-            builder.Services.AddRepositoriesAndDataAccess(builder.Configuration);
-
-            builder.Services.AddAuthorization();
-
-            builder.Services.AddIdentityCore<ApplicationUser>(options =>
+            services.AddIdentityCore<ApplicationUser>(options =>
             {
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 8;
@@ -141,19 +148,16 @@ namespace MessageFlow.Server.Configuration
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-            // Register HttpClient to call .Identity APIs
-            builder.Services.AddHttpClient("IdentityAPI", client =>
+            services.AddHttpClient("IdentityAPI", client =>
             {
                 client.BaseAddress = new Uri(builder.Configuration["MessageFlow-Identity-Uri"]);
             });
 
-            builder.Services.AddSignalR(options =>
-            {
-                options.EnableDetailedErrors = true;
-            }).AddJsonProtocol(options =>
-            {
-                options.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-            });
+            services.AddSignalR(opts => opts.EnableDetailedErrors = true)
+                .AddJsonProtocol(opts =>
+                {
+                    opts.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+                });
         }
 
         public static void ConfigurePipelineAsync(this WebApplication app)

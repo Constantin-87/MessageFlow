@@ -1,4 +1,7 @@
-﻿using MessageFlow.AzureServices.Interfaces;
+﻿using Azure.Storage.Blobs;
+using MessageFlow.AzureServices.Helpers.Interfaces;
+using MessageFlow.AzureServices.Helpers;
+using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.AzureServices.Services;
 
 namespace MessageFlow.Server.Configuration
@@ -9,10 +12,17 @@ namespace MessageFlow.Server.Configuration
         {
             var searchServiceEndpoint = config["azure-ai-search-url"];
             var searchServiceApiKey = config["azure-ai-search-key"];
+            var BlobStorageConn = config["azure-storage-account-conn-string"];
 
-            if (string.IsNullOrEmpty(searchServiceEndpoint) || string.IsNullOrEmpty(searchServiceApiKey))
-                throw new InvalidOperationException("Azure Search configuration is missing.");
+            if (string.IsNullOrEmpty(searchServiceEndpoint) || string.IsNullOrEmpty(searchServiceApiKey) || string.IsNullOrEmpty(BlobStorageConn))
+                throw new InvalidOperationException("Azure configuration is missing.");
 
+            services.AddScoped(provider =>
+            {
+                return new BlobServiceClient(BlobStorageConn);
+            });
+
+            services.AddScoped<IBlobRagHelper, BlobRagHelper>();
             services.AddScoped<IAzureBlobStorageService, AzureBlobStorageService>();
 
             services.AddScoped<IAzureSearchService>(provider =>
@@ -23,6 +33,7 @@ namespace MessageFlow.Server.Configuration
             });
 
             services.AddScoped<AzureSearchQueryService>();
+            services.AddScoped<IAzureOpenAIClientService, AzureOpenAIClientService>();
 
             return services;
         }
