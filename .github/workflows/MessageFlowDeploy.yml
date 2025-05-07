@@ -29,6 +29,9 @@ jobs:
       run: echo "Deploying to ${{ env.DEPLOY_ENV }}"
       shell: bash
 
+    - name: Install wasm-tools workload
+      run: dotnet workload install wasm-tools
+
     - name: Publish Server Project
       run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
 
