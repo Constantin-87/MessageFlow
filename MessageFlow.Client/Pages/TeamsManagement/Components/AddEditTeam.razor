@@ -1,7 +1,6 @@
 ﻿@inject UserManagementService UserManagementService
 @inject TeamsManagementService TeamsManagementService
 @rendermode RenderMode.InteractiveWebAssembly
-@inject ILogger<AddEditTeam> Logger
 
 <div class="border p-3 mb-3">
     <h5>@(NewTeam ? "Create New Team" : $"Edit Team: {Team?.TeamName}")</h5>

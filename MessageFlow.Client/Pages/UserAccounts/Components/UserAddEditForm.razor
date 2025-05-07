@@ -4,7 +4,6 @@
 @inject UserManagementService UserManagementService
 @inject CompanyManagementService CompanyManagementService
 @inject NavigationManager NavigationManager
-@inject ILogger<UserAddEditForm> Logger
 
 @if (ApplicationUser is not null)
 {
@@ -171,7 +170,6 @@
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "An error occurred while handling user creation/update.");
             await OnValidSubmit.InvokeAsync(new ApiNotificationResultVM
                 {
                     IsSuccess = false,
