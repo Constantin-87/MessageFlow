@@ -18,6 +18,9 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 8.0.x
+            
+    - name: Install wasm-tools workload
+      run: dotnet workload install wasm-tools
 
     - name: Restore Dependencies
       run: dotnet restore
@@ -28,10 +31,7 @@ jobs:
     - name: Display Deploy Environment
       run: echo "Deploying to ${{ env.DEPLOY_ENV }}"
       shell: bash
-
-    - name: Install wasm-tools workload
-      run: dotnet workload install wasm-tools
-
+      
     - name: Publish Server Project
       run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
 
