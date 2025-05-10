@@ -1,6 +1,6 @@
-﻿:root {
+﻿.dark-theme {
     /* Backgrounds */
-    --bg-dark: #1f2937;
+    --bg-main: #1f2937;
     --bg-mid: #2d3748;
     --bg-light: #2c3e50;
     --bg-chat-tab: #434D5F;

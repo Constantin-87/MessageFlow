@@ -60,5 +60,6 @@ builder.Services.AddHttpClient<ChannelService>("ServerAPI");
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<CurrentUserService>();
 builder.Services.AddScoped<UserHeartbeatService>();
+builder.Services.AddScoped<ThemeService>();
 
 await builder.Build().RunAsync();

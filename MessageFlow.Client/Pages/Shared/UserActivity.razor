@@ -6,7 +6,7 @@
         <div>@CurrentUser.CompanyName</div>
         <small>
             @CurrentUser.Username
-            <img class="status-icon"
+            <img class="small-icon"
                  src="images/@(IsActive ? "activeClock.svg" : "inactiveClock.svg")"
                  title="@GetActivityStatus()"
                  alt="Status" />

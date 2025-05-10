@@ -1,30 +1,25 @@
-﻿.container {
+﻿.form-select {
+    max-width: 200px;
+}
+.container {
     margin-left: 0;
     margin-right: auto;
     padding: 0;
 }
 
-p {
-    color: #a0aec0;
-}
-
-.form-select {
-    background-color: #2d3748;
-    color: #d1d5db;
-    border: 1px solid #3a4756;
-    max-width: 250px;
-}
-
 .card-body h5 {
     font-size: 2rem;
     font-weight: bold;
+    color: var(--text-light);
 }
 
 .settings-form {
-    background-color: #2d3748;
+    min-width: 700px;
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
     padding: 1rem;
     border-radius: 10px;
-    margin-top: 0.75rem;
+    background-color: var(--bg-mid);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
@@ -34,14 +29,10 @@ p {
     align-items: center;
     cursor: pointer;
 }
+
     .channel-title img {
         height: 56px;
     }
-
-.settings-form {
-    min-width: 700px;
-    margin-bottom: 1rem;
-}
 
 .collapsed-card {
     min-width: 300px;

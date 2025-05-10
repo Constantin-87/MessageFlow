@@ -26,7 +26,7 @@ else
                 <div class="chat-tab @(tab.Conversation.IsActive ? "active-tab" : "")" @onclick="() => SwitchTab(tab)">
                     <span class="tab-sender">
                         @tab.Conversation.SenderUsername
-                        <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="source-icon me-1" />
+                        <img src="@tab.GetSourceIcon()" alt="@tab.GetSourceAltText()" class="small-icon" />
                     </span>
                     <button class="close-btn" @onclick:stopPropagation @onclick="() => ConfirmCloseTab(tab)">X</button>
                 </div>
@@ -47,7 +47,7 @@ else
                             @if (message.UserId != activeChat.Conversation.SenderId)
                             {
                                 <span class="delivery-time"> @message.SentAt.ToString("HH:mm") </span>
-                                <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="status-icon" />
+                                <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="small-icon" />
                             }
                             else
                             {

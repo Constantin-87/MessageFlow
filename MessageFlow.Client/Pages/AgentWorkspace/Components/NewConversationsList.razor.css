@@ -1,22 +1,19 @@
 ﻿.new-conversations-list {
     background-color: #2c3e50;
-    color: #ffffff;
     padding: 15px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
     border: 1px solid #34495e;
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    flex: 0 0 20%;
     overflow-y: auto;
     height: 60%;
+    font-size: 1rem;
+    color: #1abc9c;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
 }
-
-    .new-conversations-list {
-        font-size: 1.4rem;
-        color: #1abc9c;
-        border-bottom: 1px solid #444455;
-        padding-bottom: 8px;
-        margin-bottom: 12px;
-    }
 
     .new-conversations-list ul {
         list-style-type: none;
@@ -28,35 +25,23 @@
         background-color: #3a3a4d;
         border: 1px solid #444455;
         border-radius: 5px;
-        padding: 10px;
-        margin-bottom: 10px;
-        display: flex;
-        justify-content: space-between;
+        padding: 5px 10px;
+        display: grid;
+        grid-template-columns: auto auto;
         align-items: center;
+        gap: 12px;
         transition: background-color 0.3s ease;
+        width: fit-content;
+        max-width: 100%;
     }
 
         .new-conversations-list li:hover {
             background-color: #505068;
         }
 
-    .new-conversations-list button {
-        background-color: #11545F;
-        color: #ffffff;
-        border: none;
-        border-radius: 5px;
-        padding: 8px 12px;
-        font-size: 0.9em;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
-
-        .new-conversations-list button:hover {
-            background-color: #166976;
-        }
-
-.source-icon {
-    width: 16px;
-    height: 16px;
-    vertical-align: middle;
+.conversation-meta {
+    line-height: 0.9;
+    display: flex;
+    gap: 3px;
+    flex-direction: row;
 }

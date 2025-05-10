@@ -1,5 +1,5 @@
 ﻿.private-layout {
-    background-color: #1f2937;
+    background-color: var(--bg-main);
 }
 
 /* Navigation Menu*/

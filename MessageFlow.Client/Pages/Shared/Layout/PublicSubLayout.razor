@@ -1,12 +1,13 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
+@inject ThemeService ThemeService
 
 <!-- Full-page wrapper -->
-<div class="d-flex flex-column min-vh-100">
+<div class="@ThemeService.GetCssClass() d-flex flex-column min-vh-100">
 
     <!-- Header -->
-    <header class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
+    <header class="navbar navbar-expand-lg navbar-dark bg-main sticky-top shadow-sm">
         <div class="container d-flex align-items-center justify-content-between">
             <a href="/"><img src="images/MessageFlow_icon_wide.webp" width="160" height="40" alt="MessageFlow Logo" style="height: 40px;" /></a>
             <nav class="mx-auto">
@@ -20,6 +21,9 @@
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-light" @onclick='() => NavigationManager.NavigateTo("/Accounts/Login")'>Login</button>
             </div>
+            <button class="btn btn-sm" @onclick="ThemeService.ToggleTheme">
+                @(ThemeService.CurrentTheme == "dark" ? "☀️" : "🌙")
+            </button>
         </div>
     </header>
 
@@ -28,7 +32,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white pt-5">
+    <footer class="bg-main text-white pt-5">
         <div class="container text-center">
             <div class="d-flex flex-wrap justify-content-center align-items-center gap-3 mb-3">
                 <a href="/"><img src="images/MessageFlow_icon_wide.webp" width="160" height="40" alt="MessageFlow Logo" style="height: 40px;" /></a>
@@ -48,3 +52,15 @@
 <button class="btn btn-warning rounded-pill position-fixed" style="bottom: 20px; right: 20px; z-index: 1050;" @onclick='() => NavigationManager.NavigateTo("/contact")'>
     Contact Us 💬
 </button>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ThemeService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnChange -= StateHasChanged;
+    }
+}

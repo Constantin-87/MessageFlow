@@ -14,17 +14,18 @@
             @foreach (var vm in FilteredConversations)
             {
                 <li>
-                    <span>
-                        Chat with @vm.Conversation.SenderUsername<img src="@vm.GetSourceIcon()" alt="@vm.GetSourceAltText()" class="me-2 source-icon" />
-                    </span>
-                    <button @onclick="async () => await AssignToSelf(vm)">Assign to Myself</button>
+                    <div class="conversation-meta">
+                        <img src="@vm.GetSourceIcon()" alt="@vm.GetSourceAltText()" class="small-icon" />
+                        @ShortenedUsername(vm.Conversation.SenderUsername)
+                    </div>
+                    <button class="btn btn-sm btn-primary" @onclick="async () => await AssignToSelf(vm)">Assign</button>
                 </li>
             }
         </ul>
     }
     else
     {
-    <p>No new conversations.</p>
+        <p>No new conversations.</p>
     }
 </div>
 
@@ -117,5 +118,11 @@
         {
             Console.WriteLine("hubConnection or UserId is null. Cannot assign conversation.");
         }
+    }
+
+    private string ShortenedUsername(string? name)
+    {
+        if (string.IsNullOrEmpty(name)) return string.Empty;
+        return name.Length > 10 ? name.Substring(0, 10) + "..." : name;
     }
 }

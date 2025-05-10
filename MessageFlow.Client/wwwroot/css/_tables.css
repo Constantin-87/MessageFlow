@@ -9,7 +9,7 @@
 
     /* Table headers */
     .table thead {
-        background-color: var(--bg-dark);
+        background-color: var(--bg-main);
         color: var(--text-muted);
     }
 

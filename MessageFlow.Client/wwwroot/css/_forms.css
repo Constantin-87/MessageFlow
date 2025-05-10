@@ -58,3 +58,9 @@ input::placeholder {
     color: var(--text-error);
     font-size: 0.875rem;
 }
+
+.form-select {
+    background-color: var(--bg-mid);
+    color: var(--text-light);
+    border: 1px solid var(--border-dark);
+}

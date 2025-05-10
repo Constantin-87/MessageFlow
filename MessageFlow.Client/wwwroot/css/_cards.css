@@ -1,5 +1,5 @@
 ﻿.card {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-main);
     color: var(--text-muted);
     border: 1px solid var(--border-dim);
     border-radius: 8px;
@@ -22,7 +22,7 @@
         }
 
 .card-header {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-main);
     color: var(--text-muted);
     cursor: pointer;
 }
@@ -37,7 +37,7 @@
     }
 
 .card-body {
-    background-color: var(--bg-dark);
+    background-color: var(--bg-main);
     color: var(--text-light);
     white-space: nowrap;
     text-overflow: ellipsis;

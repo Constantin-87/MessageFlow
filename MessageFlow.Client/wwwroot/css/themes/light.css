@@ -1,0 +1,50 @@
+﻿.light-theme {
+    /* Backgrounds */
+    --bg-main: #ffffff;
+    --bg-mid: #f0f0f0;
+    --bg-light: #e6e6e6;
+    --bg-chat-tab: #d9d9d9;
+    --bg-hover: #cccccc;
+    --bg-muted: #f7f7f7;
+    --bg-danger: #f8d7da;
+    --bg-danger-dark: #f5c6cb;
+    --bg-success: #d4edda;
+    --bg-success-dark: #c3e6cb;
+    --bg-warning: #fff3cd;
+    --bg-disabled: #e0e0e0;
+    /* Borders */
+    --border-dark: #cccccc;
+    --border-muted: #dddddd;
+    --border-light: #eeeeee;
+    --border-grey: #999;
+    --border-dim: rgba(0, 0, 0, 0.1);
+    --border-accent: rgba(0, 123, 255, 0.4);
+    /* Text */
+    --text-light: #212529;
+    --text-muted: #6c757d;
+    --text-white: #000000;
+    --text-gray: #343a40;
+    --text-info: #0d6efd;
+    --text-placeholder: #adb5bd;
+    --text-danger: #dc3545;
+    --text-danger-dark: #a71d2a;
+    --text-success: #198754;
+    --text-error: #ff0000;
+    /* Buttons */
+    --btn-primary: #0d6efd;
+    --btn-primary-hover: #0b5ed7;
+    --btn-primary-border-hover: #0a58ca;
+    --btn-danger: #dc3545;
+    --btn-danger-hover: #bb2d3b;
+    --btn-danger-border: #a71d2a;
+    --btn-danger-border-hover: #8b1e28;
+    --btn-secondary: #6c757d;
+    --btn-secondary-hover: #5a6268;
+    --btn-success: #198754;
+    --btn-success-hover: #157347;
+    --btn-success-border-hover: #0f5132;
+    --btn-warning: #ffc107;
+    /* Scrollbar */
+    --scrollbar-thumb: #0d6efd;
+    --scrollbar-track: #f0f0f0;
+}
