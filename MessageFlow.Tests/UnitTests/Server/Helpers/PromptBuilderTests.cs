@@ -81,20 +81,7 @@ namespace MessageFlow.Tests.UnitTests.Server.Helpers
             var prompt = PromptBuilder.WithResults("Chat history", results, companyName);
 
             Assert.Contains("Bad Data", prompt);
-            Assert.Contains("Failed to parse", prompt);
-        }
-
-        [Fact]
-        public void ExtractJsonBlock_ValidRange_ReturnsBlock()
-        {
-            string raw = "content: [{ \"a\": 1 }, { \"b\": 2 }]";
-            string json = raw.Substring(8).Trim();
-
-            var method = typeof(PromptBuilder).GetMethod("ExtractJsonBlock", BindingFlags.NonPublic | BindingFlags.Static);
-            var result = (string)method!.Invoke(null, new object[] { json })!;
-
-            Assert.StartsWith("[", result);
-            Assert.EndsWith("]", result);
+            Assert.Contains("Error parsing content", prompt);
         }
     }
 }

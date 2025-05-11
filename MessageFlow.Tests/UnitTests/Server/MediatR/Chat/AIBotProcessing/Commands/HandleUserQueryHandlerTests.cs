@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using MessageFlow.Server.MediatR.Chat.AiBotProcessing.Helpers;
+using Azure.AI.OpenAI;
+using OpenAI.Chat;
 
 namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Commands
 {
@@ -36,9 +38,6 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
             _config = new ConfigurationBuilder()
                 .AddInMemoryCollection(inMemorySettings)
                 .Build();
-
-
-
         }
 
         [Fact]
@@ -53,16 +52,34 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
             );
 
             _searchServiceMock.Setup(s => s.QueryIndexAsync("user query", "c1"))
-                .ReturnsAsync(new List<SearchResultDTO>());
+                .ReturnsAsync(new List<SearchResultDTO>()); // no results
 
             _searchServiceMock.Setup(s => s.QueryIndexAsync("company teams", "c1"))
                 .ReturnsAsync(new List<SearchResultDTO>
                 {
-                    new() { FileDescription = "Team A", Content = "{\"teamId\":\"1\",\"teamName\":\"Support\"}" }
+            new() { FileDescription = "Team A", Content = "{\"teamId\":\"1\",\"teamName\":\"Support\"}" }
                 });
 
             _unitOfWorkMock.Setup(u => u.Messages.GetMessagesByConversationIdAsync(It.IsAny<string>(), It.IsAny<int>()))
                 .ReturnsAsync(new List<Message>());
+
+            _unitOfWorkMock.Setup(u => u.Companies.GetByIdStringAsync(It.IsAny<string>()))
+                .ReturnsAsync(new Company { CompanyName = "TestCo" });
+
+            // ✅ Add missing GPT mock (simulate failure or short-circuit)
+            var mockChatClient = new Mock<ChatClient>();
+            mockChatClient
+                .Setup(c => c.CompleteChatAsync(It.IsAny<List<ChatMessage>>(), It.IsAny<ChatCompletionOptions>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Simulated GPT failure"));
+
+            var mockAzureClient = new Mock<AzureOpenAIClient>();
+            mockAzureClient
+                .Setup(c => c.GetChatClient(It.IsAny<string>()))
+                .Returns(mockChatClient.Object);
+
+            _openAiClientServiceMock
+                .Setup(s => s.GetAzureClient())
+                .Returns(mockAzureClient.Object);
 
             var command = new HandleUserQueryCommand("user query", "c1", "conv1");
 
@@ -72,9 +89,24 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
             Assert.False(result.Answered);
         }
 
+
         [Fact]
         public async Task Handle_GptFailure_ReturnsUnanswered()
         {
+            var mockChatClient = new Mock<ChatClient>();
+            mockChatClient
+                .Setup(c => c.CompleteChatAsync(It.IsAny<List<ChatMessage>>(), It.IsAny<ChatCompletionOptions>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Simulated GPT failure"));
+
+            var mockAzureClient = new Mock<AzureOpenAIClient>();
+            mockAzureClient
+                .Setup(c => c.GetChatClient(It.IsAny<string>()))
+                .Returns(mockChatClient.Object);
+
+            _openAiClientServiceMock
+                .Setup(s => s.GetAzureClient())
+                .Returns(mockAzureClient.Object);
+
             var handler = new HandleUserQueryHandler(
                 _searchServiceMock.Object,
                 _openAiClientServiceMock.Object,
@@ -88,6 +120,9 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
 
             _unitOfWorkMock.Setup(u => u.Messages.GetMessagesByConversationIdAsync(It.IsAny<string>(), 5))
                 .ReturnsAsync(new List<Message>());
+
+            _unitOfWorkMock.Setup(u => u.Companies.GetByIdStringAsync(It.IsAny<string>()))
+                .ReturnsAsync(new Company { CompanyName = "TestCo" });
 
             var result = await handler.Handle(new HandleUserQueryCommand("any", "x", "cid"), default);
 
@@ -185,6 +220,9 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
                 }
             };
 
+            _unitOfWorkMock.Setup(u => u.Companies.GetByIdStringAsync(It.IsAny<string>()))
+                .ReturnsAsync(new Company { CompanyName = "TestCo" });
+
             _searchServiceMock.Setup(s => s.QueryIndexAsync("no match", "c9"))
                 .ReturnsAsync(new List<SearchResultDTO>());
 
@@ -193,6 +231,26 @@ namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.AIBotProcessing.Comman
 
             _unitOfWorkMock.Setup(u => u.Messages.GetMessagesByConversationIdAsync(It.IsAny<string>(), It.IsAny<int>()))
                 .ReturnsAsync(new List<Message>());
+
+            // 1. Mock the GPT chat client
+            var mockChatClient = new Mock<ChatClient>();
+            mockChatClient
+                .Setup(c => c.CompleteChatAsync(It.IsAny<List<ChatMessage>>(), It.IsAny<ChatCompletionOptions>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Simulated GPT failure"));
+
+
+            // 2. Mock the client service to return the mocked chat client
+            var mockAzureClient = new Mock<AzureOpenAIClient>();
+            mockAzureClient
+                .Setup(c => c.GetChatClient(It.IsAny<string>()))
+                .Returns(mockChatClient.Object);
+
+            // 3. Inject the chain
+            _openAiClientServiceMock
+                .Setup(s => s.GetAzureClient())
+                .Returns(mockAzureClient.Object);
+
+
 
             var handler = new HandleUserQueryHandler(
                 _searchServiceMock.Object,

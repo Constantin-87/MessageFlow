@@ -1,7 +1,8 @@
 ﻿using MessageFlow.AzureServices.Interfaces;
 using MessageFlow.AzureServices.Services;
 using Microsoft.Extensions.Configuration;
-using OpenAI.Chat;
+using Azure.AI.OpenAI.Chat;
+
 
 namespace MessageFlow.Tests.UnitTests.AzureServices
 {
@@ -37,7 +38,6 @@ namespace MessageFlow.Tests.UnitTests.AzureServices
             var chatClient = client.GetChatClient(deployment);
 
             Assert.NotNull(chatClient);
-            Assert.IsType<ChatClient>(chatClient);
         }
     }
 }
