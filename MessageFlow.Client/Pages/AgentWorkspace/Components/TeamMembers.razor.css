@@ -1,9 +1,9 @@
 ﻿.team-members {
     flex: 0 0 30%;
-    background-color: #2c3e50;
-    color: #ecf0f1;
+    background-color: var(--bg-light);
+    color: var(--text-info);
     padding: 1rem;
-    border: 1px solid #34495e;
+    border: 1px solid var(--border-muted);
     border-radius: 5px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     overflow-y: auto;
@@ -13,9 +13,8 @@
 
 .team-members {
     text-align: center;
-    font-size: 1.4rem;
-    color: #1abc9c;
-    border-bottom: 1px solid #444455;
+    color: var(--text-info);
+    border-bottom: 1px solid var(--border-light);
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
@@ -26,38 +25,18 @@
 
     .team-group button {
         width: 100%;
-        background-color: #11545F;
-        color: #ecf0f1;
-        border: none;
-        border-radius: 5px;
-        padding: 0.5rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
     }
-
-        .team-group button:hover {
-            background-color: #166976;
-        }
 
     .team-group ul {
         list-style: none;
         padding: 0;
         margin: 0.5rem 0;
-        border-left: 2px solid #1abc9c;
+        border-left: 2px solid var(--text-info);        
         padding-left: 0.5rem;
     }
 
     .team-group li {
         margin-bottom: 0.5rem;
         font-size: 0.9rem;
-        color: #bdc3c7;
+        color: var(--text-muted);
     }
-
-        .team-group li::before {
-            content: "\2022";
-            color: #1abc9c;
-            font-weight: bold;
-            display: inline-block;
-            width: 1rem;
-        }

@@ -22,15 +22,20 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.Helpers
                 "**Chat History:**");
 
             sb.AppendLine(history);
-            sb.AppendLine(
-                "Instructions:\n" +
-                "- Respond strictly in this JSON format if redirection is needed:\n" +
-                "  {\n" +
-                "    \"redirect\": true,\n" +
-                "    \"teamId\": \"<team_id_string>\",\n" +
-                "    \"teamName\": \"<team_name>\"\n" +
-                "  }\n\n" +
-                "Relevant Information:");
+            sb.AppendLine("""
+        
+                Instructions:
+                - If the user asks to speak with a human agent, determine the most relevant team based on the provided data.
+                - Respond strictly in the following JSON format if redirection is needed:
+                  {
+                    "redirect": true,
+                    "teamId": "<team_id_string>",
+                    "teamName": "<team_name>"
+                  }
+                - **Ensure `teamId` is always returned as a string (even if it's a number).** Convert numeric values to strings.
+
+                Relevant Information:
+                """);
 
             sb.AppendLine(FormatSearchResults(results));
             return sb.ToString();
@@ -52,17 +57,22 @@ namespace MessageFlow.Server.MediatR.Chat.AiBotProcessing.Helpers
                 "- \"It seems I don't have specific data here. Would you like to be redirected to Sales or Support?\"\n\n" +
                 "**Chat History:**");
 
-            sb.AppendLine(history);
-            sb.AppendLine(
-                "Instructions:\n" +
-                "- Ask user which team they’d like to be redirected to.\n" +
-                "- Respond in this JSON format if redirection is needed:\n" +
-                "  {\n" +
-                "    \"redirect\": true,\n" +
-                "    \"teamId\": \"<team_id_string>\",\n" +
-                "    \"teamName\": \"<team_name>\"\n" +
-                "  }\n\n" +
-                "Available Company Teams:");
+            sb.AppendLine(history);            
+            sb.AppendLine("""
+        
+                Instructions:
+                - If the user asks to speak with a human agent, determine the most relevant team based on the provided data.
+                - Respond strictly in the following JSON format if redirection is needed:
+                  {
+                    "redirect": true,
+                    "teamId": "<team_id_string>",
+                    "teamName": "<team_name>"
+                  }
+                - **Ensure `teamId` is always returned as a string (even if it's a number).** Convert numeric values to strings.
+
+                Available Company Teams:
+                """);
+
 
             sb.AppendLine(FormatSearchResults(fallbackTeams));
             return sb.ToString();

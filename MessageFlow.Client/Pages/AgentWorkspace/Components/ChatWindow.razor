@@ -43,23 +43,26 @@ else
                     @foreach (var message in activeChat.Conversation.Messages)
                     {
                         <div class="message-item @(message.UserId == activeChat.Conversation.SenderId ? "customer-message" : "app-message") @(message.UserId == "AI" ? "ai-message" : "")">
-                            <span>@message.Content</span>
-                            @if (message.UserId != activeChat.Conversation.SenderId)
-                            {
-                                <span class="delivery-time"> @message.SentAt.ToString("HH:mm") </span>
-                                <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="small-icon" />
-                            }
-                            else
-                            {
-                                <span class="delivery-time">@message.SentAt.ToString("HH:mm")</span>
-                            }
+                            <div class="message-text">@message.Content</div>
+
+                            <div class="message-meta">
+                                @if (message.UserId != activeChat.Conversation.SenderId)
+                                {
+                                    <span class="delivery-time"> @message.SentAt.ToString("HH:mm") </span>
+                                    <img src="@message.GetStatusIcon()" title="@message.GetTooltip()" alt="Status Icon" class="small-icon" />
+                                }
+                                else
+                                {
+                                    <span class="delivery-time">@message.SentAt.ToString("HH:mm")</span>
+                                }
+                            </div>
                         </div>
                     }
                 </div>
 
                 <div class="chat-input-area">
                     <input @bind="MessageText" @bind:event="oninput" placeholder="Type a message..." @onkeydown="HandleEnterKey" />
-                    <button @onclick="() => SendMessage(activeChat)">Send</button>
+                    <button class="btn btn-primary" @onclick="() => SendMessage(activeChat)">Send</button>
                 </div>
             </div>
         }

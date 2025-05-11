@@ -10,6 +10,7 @@
     background-color: var(--btn-primary);
     border: 1px solid var(--btn-primary-hover);
     color: var(--text-light);
+    transition: background-color 0.5s ease;
 }
 
     .btn-primary:hover {

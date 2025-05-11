@@ -1,15 +1,15 @@
 ﻿.workspace-container {
+    background-color: var(--bg-main);
     display: flex;
     gap: 1rem;
     height: 85vh;
-    background-color: #1f2937;
     padding: 0.5rem;
     box-sizing: border-box;
 }
 
 .chat-section {
+    background-color: var(--bg-mid);
     flex: 1;
-    background-color: #2d3748;
     padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);

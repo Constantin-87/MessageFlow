@@ -3,7 +3,9 @@
     --bg-main: #ffffff;
     --bg-mid: #f0f0f0;
     --bg-light: #e6e6e6;
-    --bg-chat-tab: #d9d9d9;
+    --bg-chat-tab: #74b9b5;
+    --bg-active-chat-tab: #84cec9;
+    --bg-hover-chat-tab: #c6f4f1;
     --bg-hover: #cccccc;
     --bg-muted: #f7f7f7;
     --bg-danger: #f8d7da;
@@ -12,6 +14,9 @@
     --bg-success-dark: #c3e6cb;
     --bg-warning: #fff3cd;
     --bg-disabled: #e0e0e0;
+    --bg-disabled-lt: #6c757d;
+    --bg-customer-msg: #f1f1f1;
+    --bg-app-msg: #d1ecf1;
     /* Borders */
     --border-dark: #cccccc;
     --border-muted: #dddddd;

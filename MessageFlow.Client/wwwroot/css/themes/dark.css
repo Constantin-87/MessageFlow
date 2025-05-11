@@ -4,6 +4,8 @@
     --bg-mid: #2d3748;
     --bg-light: #2c3e50;
     --bg-chat-tab: #434D5F;
+    --bg-active-chat-tab: #12625E;
+    --bg-hover-chat-tab: #16716D;
     --bg-hover: #3a4756;
     --bg-muted: #273140;
     --bg-danger: #5F1111;
@@ -12,6 +14,9 @@
     --bg-success-dark: #166534;
     --bg-warning: #d69e2e;
     --bg-disabled: #3a3a4d;
+    --bg-disabled-lt: #505068;
+    --bg-customer-msg: #454545;
+    --bg-app-msg: #255F54;
     /* Borders */
     --border-dark: #3a4756;
     --border-muted: #34495e;
