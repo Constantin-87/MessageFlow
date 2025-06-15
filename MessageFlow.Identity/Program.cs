@@ -45,18 +45,20 @@ public class Program
             });
         }
 
-        Log.Logger = new LoggerConfiguration()
+        var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.Information()
             .WriteTo.File(
                 "logs/identity-log-.txt",
                 rollingInterval: RollingInterval.Day,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
-            )
-            .WriteTo.ApplicationInsights(
-                builder.Configuration["AppInsights:ConnectionString"],
-                TelemetryConverter.Traces
-            )
-            .CreateLogger();
+            );
+
+        if (!string.IsNullOrEmpty(aiConnectionString))
+        {
+            loggerConfig.WriteTo.ApplicationInsights(aiConnectionString, TelemetryConverter.Traces);
+        }
+
+        Log.Logger = loggerConfig.CreateLogger();
 
         builder.Host.UseSerilog();
 

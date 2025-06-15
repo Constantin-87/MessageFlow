@@ -35,18 +35,24 @@ namespace MessageFlow.Server.Configuration
         private static void ConfigureKeyVault(WebApplicationBuilder builder)
         {
             var keyVaultUrl = builder.Configuration["AzureKeyVaultURL"];
-            if (builder.Environment.IsEnvironment("Test"))
-            {
+            if (string.IsNullOrEmpty(keyVaultUrl) || builder.Environment.IsEnvironment("Test"))
                 return;
-            }
 
-            if (!string.IsNullOrEmpty(keyVaultUrl))
+            TokenCredential credential = builder.Environment.IsDevelopment()
+        ? new InteractiveBrowserCredential()
+        : new DefaultAzureCredential();
+
+            var keyVaultConfig = new ConfigurationBuilder()
+                .AddAzureKeyVault(new Uri(keyVaultUrl), credential)
+                .Build();
+
+            // Loading local DBConnectionString from local development.appsettings.json, to be removed once we have a test db
+            foreach (var kvp in keyVaultConfig.AsEnumerable())
             {
-                TokenCredential credential = builder.Environment.IsDevelopment()
-                    ? new InteractiveBrowserCredential()
-                    : new DefaultAzureCredential();
-
-                builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
+                if (!string.Equals(kvp.Key, "ConnectionStrings:DBConnectionString", StringComparison.OrdinalIgnoreCase))
+                {
+                    builder.Configuration[kvp.Key] = kvp.Value;
+                }
             }
         }
 
@@ -82,19 +88,21 @@ namespace MessageFlow.Server.Configuration
 
         private static void ConfigureLogging(WebApplicationBuilder builder)
         {
-            Log.Logger = new LoggerConfiguration()
+            var loggerConfig = new LoggerConfiguration()
                 .ReadFrom.Configuration(builder.Configuration)
                 .WriteTo.File(
                     "logs/server-log-.txt",
                     rollingInterval: RollingInterval.Day,
                     outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}"
-                )
-                .WriteTo.ApplicationInsights(
-                    builder.Configuration["AppInsights:ConnectionString"],
-                    TelemetryConverter.Traces
-                )
-                .CreateLogger();
+                );
 
+            var aiConnStr = builder.Configuration["AppInsights:ConnectionString"];
+            if (!string.IsNullOrEmpty(aiConnStr))
+            {
+                loggerConfig.WriteTo.ApplicationInsights(aiConnStr, TelemetryConverter.Traces);
+            }
+
+            Log.Logger = loggerConfig.CreateLogger();
             builder.Host.UseSerilog();
         }
 
