@@ -39,21 +39,14 @@ namespace MessageFlow.Server.Configuration
                 return;
 
             TokenCredential credential = builder.Environment.IsDevelopment()
-        ? new InteractiveBrowserCredential()
-        : new DefaultAzureCredential();
+                ? new InteractiveBrowserCredential()
+                : new DefaultAzureCredential();
 
             var keyVaultConfig = new ConfigurationBuilder()
                 .AddAzureKeyVault(new Uri(keyVaultUrl), credential)
                 .Build();
 
-            // Loading local DBConnectionString from local development.appsettings.json, to be removed once we have a test db
-            foreach (var kvp in keyVaultConfig.AsEnumerable())
-            {
-                if (!string.Equals(kvp.Key, "ConnectionStrings:DBConnectionString", StringComparison.OrdinalIgnoreCase))
-                {
-                    builder.Configuration[kvp.Key] = kvp.Value;
-                }
-            }
+            builder.Configuration.AddAzureKeyVault(new Uri(keyVaultUrl), credential);
         }
 
         private static GlobalChannelSettings LoadAndValidateSettings(WebApplicationBuilder builder)

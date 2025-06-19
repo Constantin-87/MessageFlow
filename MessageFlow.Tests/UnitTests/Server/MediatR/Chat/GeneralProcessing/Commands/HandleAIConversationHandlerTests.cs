@@ -7,6 +7,7 @@ using MessageFlow.Server.MediatR.Chat.GeneralProcessing.Commands;
 using MessageFlow.Server.MediatR.Chat.GeneralProcessing.CommandHandlers;
 using MessageFlow.Server.MediatR.Chat.AiBotProcessing.Commands;
 using MessageFlow.Server.DataTransferObjects.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace MessageFlow.Tests.UnitTests.Server.MediatR.Chat.GeneralProcessing.Commands;
 
@@ -15,12 +16,14 @@ public class HandleAIConversationHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly Mock<IMediator> _mediatorMock = new();
     private readonly HandleAIConversationHandler _handler;
+    private readonly Mock<ILogger<HandleAIConversationHandler>> _loggerMock = new();
 
     public HandleAIConversationHandlerTests()
     {
         _handler = new HandleAIConversationHandler(
             _unitOfWorkMock.Object,
-            _mediatorMock.Object
+            _mediatorMock.Object,
+            _loggerMock.Object
         );
     }
 

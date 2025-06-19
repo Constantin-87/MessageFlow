@@ -63,7 +63,7 @@ public class Program
         builder.Host.UseSerilog();
 
         // Retrieve Connection String from Key Vault
-        var connectionString = builder.Configuration.GetConnectionString("DBConnectionString");
+        var connectionString = builder.Configuration["azure-database-connection-string"];
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new InvalidOperationException("Database connection string is missing from Azure Key Vault.");

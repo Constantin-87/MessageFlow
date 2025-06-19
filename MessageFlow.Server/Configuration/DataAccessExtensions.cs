@@ -10,7 +10,7 @@ namespace MessageFlow.Server.Configuration
     {
         public static IServiceCollection AddRepositoriesAndDataAccess(this IServiceCollection services, IConfiguration config)
         {
-            var connectionString = config.GetConnectionString("DBConnectionString");
+            var connectionString = config["azure-database-connection-string"];
             if (string.IsNullOrEmpty(connectionString))
                 throw new InvalidOperationException("Database connection string is missing.");
 

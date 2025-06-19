@@ -11,7 +11,7 @@
     <ProjectReference Include="..\MessageFlow.DataAccess\MessageFlow.DataAccess.csproj" />
     <ProjectReference Include="..\MessageFlow.Infrastructure\MessageFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\MessageFlow.Shared\MessageFlow.Shared.csproj" />
-    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.4.0" />
     <PackageReference Include="MediatR" Version="12.5.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />

@@ -1,6 +1,6 @@
-﻿namespace MessageFlow.Server.Configuration
-{
-    public class StartupConfigurator
-    {
-    }
-}
+﻿//namespace MessageFlow.Server.Configuration
+//{
+//    public class StartupConfigurator
+//    {
+//    }
+//}
