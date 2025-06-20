@@ -117,16 +117,6 @@ jobs:
         "@
             $json | Out-File -FilePath $path -Encoding utf8 -Force   
 
-    - name: Apply Entity Framework Migrations
-      shell: pwsh
-      run: |        
-        $env:DOTNET_HOST_FACTORY_RESOLVER_DEFAULT_TIMEOUT_IN_SECONDS = 15    
-        dotnet tool install --global dotnet-ef --version 8.0.10
-        dotnet ef database update `
-          --project "${{ github.workspace }}/MessageFlow.DataAccess/MessageFlow.DataAccess.csproj" `
-          --startup-project "${{ github.workspace }}/MessageFlow.Server/MessageFlow.Server.csproj" `
-          --connection "${{ env.DB_CONNECTION_STRING }}"
-
     - name: Stop IIS before Deployment
       shell: pwsh
       run: |
