@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - preprod
 
 jobs:
   build-and-deploy:
@@ -18,9 +17,6 @@ jobs:
       uses: actions/setup-dotnet@v2
       with:
         dotnet-version: 8.0.x
-            
-    - name: Install wasm-tools workload
-      run: dotnet workload install wasm-tools
 
     - name: Restore Dependencies
       run: dotnet restore
@@ -36,26 +32,23 @@ jobs:
       run: dotnet publish MessageFlow.Server/MessageFlow.Server.csproj -c Release -o ${{ github.workspace }}/publish/Server
 
     - name: Publish Identity Project
-      run: dotnet publish MessageFlow.Identity/MessageFlow.Identity.csproj -c Release -o ${{ github.workspace }}/publish/Identity
-
-    - name: Publish Client Project
-      run: dotnet publish MessageFlow.Client/MessageFlow.Client.csproj -c Release -o ${{ github.workspace }}/publish/Client    
+      run: dotnet publish MessageFlow.Identity/MessageFlow.Identity.csproj -c Release -o ${{ github.workspace }}/publish/Identity   
 
     - name: Set Deployment Environment
       id: set-env
       shell: pwsh
       run: |
         if ("${{ github.ref }}" -eq "refs/heads/master") {
-          "DEPLOY_ENV=Production" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_PROD }}" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_PROD }}" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_PROD }}" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_PROD }}" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_PROD }}" >> $env:GITHUB_ENV
-          "APPSETTINGS_FILE=appsettings.production.json" >> $env:GITHUB_ENV
-          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_PRODUCTION }}" >> $env:GITHUB_ENV
-          "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL }}" >> $env:GITHUB_ENV
-          "WEB_DEPLOY_DOMAIN=${{ vars.WEB_DEPLOY_DOMAIN_PROD }}" >> $env:GITHUB_ENV
+          "DEPLOY_ENV=TEST" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SERVER=${{ secrets.WEB_DEPLOY_SERVER_TEST }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_USER=${{ secrets.WEB_DEPLOY_USER_TEST }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PASSWORD=${{ secrets.WEB_DEPLOY_PASSWORD_TEST }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_SITE=${{ vars.WEB_DEPLOY_SITE_TEST }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_PATH=${{ vars.WEB_DEPLOY_PATH_TEST }}" >> $env:GITHUB_ENV
+          "APPSETTINGS_FILE=appsettings.WEB_DEPLOY_SITE_TEST.json" >> $env:GITHUB_ENV
+          "DB_CONNECTION_STRING=${{ secrets.DB_CONNECTION_STRING_TEST }}" >> $env:GITHUB_ENV
+          "AzureKeyVaultURL=${{ vars.AZURE_KEY_VAULT_URL_TEST }}" >> $env:GITHUB_ENV
+          "WEB_DEPLOY_DOMAIN=${{ vars.WEB_DEPLOY_DOMAIN_TEST }}" >> $env:GITHUB_ENV
         }
         elseif ("${{ github.ref }}" -eq "refs/heads/preprod") {
           "DEPLOY_ENV=Preprod" >> $env:GITHUB_ENV
@@ -122,30 +115,7 @@ jobs:
           "AllowedHosts": "*"
         }
         "@
-            $json | Out-File -FilePath $path -Encoding utf8 -Force
-
-    - name: Create Client appsettings.json
-      shell: pwsh
-      run: |
-        $path = "${{ github.workspace }}/publish/Client/wwwroot/appsettings.json"
-        echo '{
-          "Logging": {
-            "LogLevel": {
-              "Default": "Information",
-              "Microsoft.AspNetCore": "Warning"
-            }
-          },
-          "AllowedHosts": "*",
-          "IdentityApiUrl": "https://${{ env.WEB_DEPLOY_DOMAIN }}/identity/",
-          "ServerApiUrl": "https://${{ env.WEB_DEPLOY_DOMAIN }}/server/",
-          "SocialLinks": {
-            "LinkedIn": "https://www.linkedin.com/in/constantin-gavrila-dev/",
-            "Twitter": "https://twitter.com/DontHaveATwitterPage",
-            "GitHub": "https://github.com/Constantin-87",
-            "YouTube": "https://www.youtube.com/watch?v=xvFZjo5PgG0&ab_channel=Duran",
-            "Facebook": "https://www.facebook.com/profile.php?id=61566864236921"
-          }
-        }' | Out-File -FilePath $path -Encoding utf8 -Force
+            $json | Out-File -FilePath $path -Encoding utf8 -Force   
 
     - name: Apply Entity Framework Migrations
       shell: pwsh
@@ -161,16 +131,7 @@ jobs:
       shell: pwsh
       run: |
         Write-Host "Stopping IIS to release locked files..."
-        iisreset /stop
-
-    - name: Deploy Client
-      shell: cmd
-      run: |
-        "C:\Program Files (x86)\IIS\Microsoft Web Deploy V3\msdeploy.exe" ^
-        -verb:sync ^
-        -source:contentPath="${{ github.workspace }}\publish\Client\wwwroot" ^
-        -dest:contentPath="${{ env.WEB_DEPLOY_SITE }}",computerName="https://${{ env.WEB_DEPLOY_SERVER }}:8172/msdeploy.axd?site=${{ env.WEB_DEPLOY_SITE }}",userName="${{ env.WEB_DEPLOY_USER }}",password="${{ env.WEB_DEPLOY_PASSWORD }}",authType="Basic" ^
-        -allowUntrusted
+        iisreset /stop    
 
     - name: Deploy Server
       shell: cmd
